@@ -109,11 +109,11 @@
 
 ## FAZ 6 — Backend Tamamlandi Kontrolu
 
-- [ ] Tum endpointler Swagger UI'da gorunuyor
-- [ ] Auth middleware token olmadan 401 donuyor
-- [ ] CORS hatasi yok (frontend'den test et)
-- [ ] DB'de 3 tablo mevcut: `users`, `watchlist`, `recommendation_history`
-- [ ] `.env` dosyasi `.gitignore`'da
+- [x] Tum endpointler Swagger UI'da gorunuyor (12 endpoint)
+- [x] Auth middleware token olmadan 401 donuyor
+- [x] CORS hatasi yok (frontend'den test et)
+- [x] DB'de 3 tablo mevcut: `users`, `watchlist`, `recommendation_history`
+- [x] `.env` dosyasi `.gitignore`'da
 
 ---
 
