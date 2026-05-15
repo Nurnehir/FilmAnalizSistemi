@@ -119,20 +119,20 @@
 
 ## FAZ 7 — Frontend Temeli
 
-- [ ] `npm create vite@latest frontend -- --template react`
-- [ ] `cd frontend && npm install`
-- [ ] TailwindCSS kur: `npm install -D tailwindcss postcss autoprefixer && npx tailwindcss init -p`
-- [ ] `tailwind.config.js` content ayarla
-- [ ] `src/index.css`'e Tailwind directives ekle
-- [ ] `src/api/client.js` — Axios instance + interceptorlar (auth + 401 logout)
-- [ ] `src/context/AuthContext.jsx` — `user`, `token`, `login`, `logout`, `register`
-- [ ] `src/components/PrivateRoute.jsx` — auth yoksa /login'e yonlendir
-- [ ] `src/App.jsx` — tum route tanimlari
-- [ ] `src/pages/Login.jsx` — giris formu
-- [ ] `src/pages/Register.jsx` — kayit formu
+- [x] `npm create vite@latest frontend -- --template react`
+- [x] `cd frontend && npm install`
+- [x] TailwindCSS kur: `npm install -D tailwindcss postcss autoprefixer && npx tailwindcss init -p`
+- [x] `tailwind.config.js` content ayarla
+- [x] `src/index.css`'e Tailwind directives ekle
+- [x] `src/api/client.js` — Axios instance + interceptorlar (auth + 401 logout)
+- [x] `src/context/AuthContext.jsx` — `user`, `token`, `login`, `logout`, `register`
+- [x] `src/components/PrivateRoute.jsx` — auth yoksa /login'e yonlendir
+- [x] `src/App.jsx` — tum route tanimlari
+- [x] `src/pages/Login.jsx` — giris formu
+- [x] `src/pages/Register.jsx` — kayit formu
 
 **Kontrol:**
-- [ ] `npm run dev` → `http://localhost:5173` acilir
+- [x] `npm run dev` → `http://localhost:5173` acilir (200 OK)
 - [ ] Kayit ol → otomatik giris → dashboard'a yonlendirir
 - [ ] Yanlis sifre → hata mesaji gosterilir
 - [ ] Sayfayi yenile → oturum korunur (localStorage'dan token okunur)
