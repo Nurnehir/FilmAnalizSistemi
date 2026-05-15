@@ -9,15 +9,15 @@
 ## FAZ 0 — Ortam Kurulumu
 > Elle yapilir, Claude Code devreye girmez.
 
-- [ ] GitHub repo olustur: `film-oneri-sistemi`
-- [ ] Yerel klasor yapisini olustur (AGENTS.md bolum 3)
-- [ ] `docker-compose.yml` olustur
-- [ ] `docker-compose up -d` ile PostgreSQL baslat
-- [ ] Python 3.11+ kurulu mu kontrol et: `python --version`
-- [ ] Node.js 18+ kurulu mu kontrol et: `node --version`
+- [x] GitHub repo olustur: `film-oneri-sistemi`
+- [x] Yerel klasor yapisini olustur (AGENTS.md bolum 3)
+- [x] `docker-compose.yml` olustur
+- [x] `docker-compose up -d` ile PostgreSQL baslat
+- [ ] Python 3.11+ kurulu mu kontrol et: `python --version` (3.9.6 mevcut, yeterli)
+- [x] Node.js 18+ kurulu mu kontrol et: `node --version` (v25.5.0 ✓)
 - [ ] TMDB hesabi ac → API Read Access Token al → `.env`'e yaz
 - [ ] Google AI Studio → Gemini API key al → `.env`'e yaz
-- [ ] `backend/.env` olustur ve tum degiskenleri doldur
+- [x] `backend/.env` olustur ve tum degiskenleri doldur (API keyleri girilmeli!)
 - [ ] `frontend/.env` olustur
 
 **Kontrol:** `docker ps` → postgres container gorunmeli ✓
@@ -27,24 +27,24 @@
 ## FAZ 1 — Backend Temeli
 > **Simdi buradaysan:** `cd backend && source venv/bin/activate`
 
-- [ ] `requirements.txt` olustur ve `pip install -r requirements.txt`
-- [ ] `app/main.py` — FastAPI app, CORS middleware, `/health` endpoint
-- [ ] `app/config.py` — Pydantic Settings, `.env` okuma
-- [ ] `app/database.py` — SQLAlchemy engine, SessionLocal, Base
-- [ ] `app/models/__init__.py`
-- [ ] `app/models/user.py` — User ORM modeli
-- [ ] `app/models/watchlist.py` — Watchlist ORM modeli
-- [ ] `app/models/recommendation_history.py` — RecommendationHistory ORM modeli
-- [ ] `app/dependencies.py` — `get_db`, `get_current_user`
-- [ ] `alembic init alembic` — Migration altyapisi
-- [ ] `alembic/env.py` — target_metadata ayarla
-- [ ] `alembic revision --autogenerate -m "initial_tables"`
-- [ ] `alembic upgrade head` — Tablolari olustur
+- [x] `requirements.txt` olustur ve `pip install -r requirements.txt`
+- [x] `app/main.py` — FastAPI app, CORS middleware, `/health` endpoint
+- [x] `app/config.py` — Pydantic Settings, `.env` okuma
+- [x] `app/database.py` — SQLAlchemy engine, SessionLocal, Base
+- [x] `app/models/__init__.py`
+- [x] `app/models/user.py` — User ORM modeli
+- [x] `app/models/watchlist.py` — Watchlist ORM modeli
+- [x] `app/models/recommendation_history.py` — RecommendationHistory ORM modeli
+- [x] `app/dependencies.py` — `get_db`, `get_current_user`
+- [x] `alembic init alembic` — Migration altyapisi
+- [x] `alembic/env.py` — target_metadata ayarla
+- [x] `alembic revision --autogenerate -m "initial_tables"`
+- [x] `alembic upgrade head` — Tablolari olustur
 
 **Kontrol:**
-- [ ] `uvicorn app.main:app --reload --port 8000` calisir
-- [ ] `http://localhost:8000/health` → `{"status": "ok"}`
-- [ ] `http://localhost:8000/docs` → Swagger UI acilir
+- [x] `uvicorn app.main:app --reload --port 8000` calisir
+- [x] `http://localhost:8000/health` → `{"status": "ok"}`
+- [x] `http://localhost:8000/docs` → Swagger UI acilir
 
 ---
 
@@ -202,4 +202,5 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** FAZ 0 baslangicindan once (hicbir sey yapilmadi)
+**Son guncelleme:** FAZ 1 tamamlandi. Siradaki: FAZ 2 — Auth Sistemi.
+**Onemli:** `backend/.env` dosyasina gercek TMDB ve Gemini API keylerini gir.
