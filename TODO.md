@@ -65,16 +65,16 @@
 
 ## FAZ 3 — TMDB Entegrasyonu
 
-- [ ] `app/services/tmdb_service.py` — `get_trending`, `search_movies`, `get_movie_detail`, `discover_movies`, `get_similar`
-- [ ] `app/schemas/movie.py` — `MovieOut`, `MovieDetail`
-- [ ] `app/routers/movies.py` — `GET /movies/trending`, `/movies/search`, `/movies/{id}`, `/movies/{id}/similar`
-- [ ] `app/main.py`'e movies router'i ekle
+- [x] `app/services/tmdb_service.py` — `get_trending`, `search_movies`, `get_movie_detail`, `discover_movies`, `get_similar`
+- [x] `app/schemas/movie.py` — `MovieOut`, `MovieDetail`
+- [x] `app/routers/movies.py` — `GET /movies/trending`, `/movies/search`, `/movies/{id}`, `/movies/{id}/similar`
+- [x] `app/main.py`'e movies router'i ekle
 
 **Kontrol:**
-- [ ] `GET /movies/trending` → TMDB'den gercek film listesi doner
-- [ ] `GET /movies/search?q=inception` → sonuclar gelir
-- [ ] `GET /movies/27205` → Inception detaylari gelir
-- [ ] Poster URL'leri tam ve gecerli
+- [x] `GET /movies/trending` → TMDB'den gercek film listesi doner
+- [x] `GET /movies/search?q=inception` → sonuclar gelir
+- [x] `GET /movies/27205` → Inception detaylari gelir
+- [x] Poster URL'leri tam ve gecerli
 
 ---
 
