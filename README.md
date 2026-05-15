@@ -4,39 +4,40 @@ LLM destekli film/dizi öneri uygulaması. Kullanıcı ruh halini doğal dilde y
 
 ---
 
-## Hızlı Başlangıç (Her Oturumda)
+## Portlar (diğer projelerle çakışmaz)
 
-### 1. PostgreSQL Başlat
+| Servis | Port |
+|---|---|
+| Frontend | **5174** |
+| Backend | **8001** |
+| PostgreSQL | **5433** |
+
+---
+
+## Hızlı Başlangıç — `Cmd+Shift+R`
+
+VS Code'da `Cmd+Shift+R` ile her şey otomatik başlar (Docker + Backend + Frontend).
+
+Ya da manuel:
+
 ```bash
+# Terminal 1 — PostgreSQL
 docker-compose up -d
+
+# Terminal 2 — Backend
+cd backend && source venv/bin/activate
+uvicorn app.main:app --reload --port 8001
+
+# Terminal 3 — Frontend
+cd frontend && npm run dev
 ```
 
-### 2. Backend Başlat (Terminal 1)
-```bash
-cd backend
-source venv/bin/activate
-uvicorn app.main:app --reload --port 8000
-```
-
-### 3. Frontend Başlat (Terminal 2)
-```bash
-cd frontend
-npm run dev
-```
-
-Uygulama: **http://localhost:5173**  
-API Docs: **http://localhost:8000/docs**
+Uygulama: **http://localhost:5174**  
+API Docs: **http://localhost:8001/docs**
 
 ---
 
 ## İlk Kurulum (Bir Kez)
-
-### Gereksinimler
-- Python 3.9+
-- Node.js 18+
-- Docker Desktop
-
-### Adımlar
 
 ```bash
 # 1. PostgreSQL başlat
@@ -47,20 +48,12 @@ cd backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-
-# .env dosyasını oluştur (API keylerini doldur)
-cp .env.example .env
-
-# Veritabanı tablolarını oluştur
+cp .env.example .env   # API keylerini doldur!
 alembic upgrade head
 
-# Backend başlat
-uvicorn app.main:app --reload --port 8000
-
-# 3. Frontend kur (yeni terminal)
-cd frontend
+# 3. Frontend kur
+cd ../frontend
 npm install
-npm run dev
 ```
 
 ---
@@ -68,18 +61,14 @@ npm run dev
 ## Ortam Değişkenleri (`backend/.env`)
 
 ```env
-DATABASE_URL=postgresql://filmuser:filmpass@localhost:5432/filmdb
+DATABASE_URL=postgresql://filmuser:filmpass@localhost:5433/filmdb
 SECRET_KEY=en-az-32-karakter-gizli-anahtar
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_HOURS=24
 TMDB_API_KEY=<TMDB Read Access Token (JWT)>
 GEMINI_API_KEY=<Google AI Studio API Key>
 ```
 
-**TMDB API Key:** https://www.themoviedb.org/settings/api  
-→ "API Read Access Token" (uzun JWT) kullan, kısa API Key değil.
-
-**Gemini API Key:** https://aistudio.google.com
+**TMDB:** https://www.themoviedb.org/settings/api → "API Read Access Token" (uzun JWT)  
+**Gemini:** https://aistudio.google.com
 
 ---
 
@@ -91,7 +80,7 @@ GEMINI_API_KEY=<Google AI Studio API Key>
 | Backend | FastAPI + SQLAlchemy |
 | Veritabanı | PostgreSQL 15 (Docker) |
 | AI | Gemini 2.0 Flash |
-| Film Verisi | TMDB API |
+| Film Verisi | TMDB API v3 |
 | Auth | JWT (24 saat) |
 
 ---
@@ -117,20 +106,14 @@ GEMINI_API_KEY=<Google AI Studio API Key>
 
 ## Sorun Giderme
 
-**CORS hatası:** Frontend 5173 dışı bir portta çalışıyordur.
-```bash
-# Eski Vite process'leri öldür, tekrar başlat
-pkill -f vite
-cd frontend && npm run dev
-```
+**Port zaten kullanımda:** `Cmd+Shift+R` bunu otomatik çözer (eski process'leri öldürür).
 
-**Backend başlamıyor:** venv aktif değildir.
+**Backend başlamıyor:**
 ```bash
 cd backend && source venv/bin/activate
 ```
 
-**DB bağlantı hatası:** Docker çalışmıyordur.
+**DB bağlantı hatası:**
 ```bash
-docker-compose up -d
-docker ps  # postgres görünmeli
+docker-compose up -d && docker ps
 ```

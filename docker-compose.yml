@@ -1,13 +1,14 @@
-version: '3.8'
 services:
-  postgres:
+
+  db:
+    container_name: film-db
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: filmuser
       POSTGRES_PASSWORD: filmpass
       POSTGRES_DB: filmdb
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -15,6 +16,35 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  backend:
+    container_name: film-backend
+    build: ./backend
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend:/app
+    environment:
+      DATABASE_URL: postgresql://filmuser:filmpass@db:5432/filmdb
+      SECRET_KEY: film-oneri-sistemi-super-gizli-anahtar-2026-firat
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_HOURS: "24"
+      TMDB_API_KEY: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3ZDY0ODg3ZDA2ZjcyY2VjZjBhM2EzMDgwOWUzNTM2OSIsIm5iZiI6MTc3ODg3ODczMi41MDgsInN1YiI6IjZhMDc4OTBjYjU3MDIzZjQ4YTYzNGQyZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AzmqmQP9wYRCiQ8vh5u3317ouv0fqzSoJ-anOAFR8is
+      GEMINI_API_KEY: AIzaSyBp62JOS6Gs4pPv3X0NcIVgzWKyyMSlWCg
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    container_name: film-frontend
+    build: ./frontend
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:8001
 
 volumes:
   pgdata:
