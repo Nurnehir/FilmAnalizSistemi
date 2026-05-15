@@ -95,15 +95,15 @@
 
 ## FAZ 5 — Watchlist
 
-- [ ] `app/schemas/watchlist.py` — `WatchlistItem`, `WatchlistOut`
-- [ ] `app/routers/watchlist.py` — `GET /watchlist`, `POST /watchlist`, `DELETE /watchlist/{id}`
-- [ ] `app/main.py`'e watchlist router'i ekle
+- [x] `app/schemas/watchlist.py` — `WatchlistItem`, `WatchlistOut`
+- [x] `app/routers/watchlist.py` — `GET /watchlist`, `POST /watchlist`, `DELETE /watchlist/{id}`
+- [x] `app/main.py`'e watchlist router'i ekle
 
 **Kontrol:**
-- [ ] `POST /watchlist` → 201, DB'ye kaydedilir
-- [ ] `GET /watchlist` → kullanicinin listesi doner
-- [ ] `DELETE /watchlist/1` → 200, kayit silinir
-- [ ] Ayni filmi 2 kez ekleyince → 409 Conflict doner
+- [x] `POST /watchlist` → 201, DB'ye kaydedilir
+- [x] `GET /watchlist` → kullanicinin listesi doner
+- [x] `DELETE /watchlist/1` → 200, kayit silinir
+- [x] Ayni filmi 2 kez ekleyince → 409 Conflict doner
 
 ---
 
