@@ -13,12 +13,12 @@
 - [x] Yerel klasor yapisini olustur (AGENTS.md bolum 3)
 - [x] `docker-compose.yml` olustur
 - [x] `docker-compose up -d` ile PostgreSQL baslat
-- [ ] Python 3.11+ kurulu mu kontrol et: `python --version` (3.9.6 mevcut, yeterli)
+- [x] Python 3.11+ kurulu mu kontrol et: `python --version` (3.9.6 mevcut, uyumlu)
 - [x] Node.js 18+ kurulu mu kontrol et: `node --version` (v25.5.0 ✓)
-- [ ] TMDB hesabi ac → API Read Access Token al → `.env`'e yaz
-- [ ] Google AI Studio → Gemini API key al → `.env`'e yaz
-- [x] `backend/.env` olustur ve tum degiskenleri doldur (API keyleri girilmeli!)
-- [ ] `frontend/.env` olustur
+- [x] TMDB hesabi ac → API Read Access Token al → `.env`'e yaz
+- [x] Google AI Studio → Gemini API key al → `.env`'e yaz
+- [x] `backend/.env` olustur ve tum degiskenleri doldur
+- [x] `frontend/.env` olustur
 
 **Kontrol:** `docker ps` → postgres container gorunmeli ✓
 
@@ -50,16 +50,16 @@
 
 ## FAZ 2 — Auth Sistemi
 
-- [ ] `app/schemas/user.py` — `UserCreate`, `UserOut`, `Token`, `LoginRequest`
-- [ ] `app/services/auth_service.py` — `hash_password`, `verify_password`, `create_token`, `verify_token`
-- [ ] `app/routers/auth.py` — `POST /auth/register`, `POST /auth/login`, `GET /auth/me`
-- [ ] `app/main.py`'e auth router'i ekle
+- [x] `app/schemas/user.py` — `UserCreate`, `UserOut`, `Token`, `LoginRequest`
+- [x] `app/services/auth_service.py` — `hash_password`, `verify_password`, `create_token`, `verify_token`
+- [x] `app/routers/auth.py` — `POST /auth/register`, `POST /auth/login`, `GET /auth/me`
+- [x] `app/main.py`'e auth router'i ekle
 
 **Kontrol:**
-- [ ] `POST /auth/register` → 201, kullanici olusur
-- [ ] `POST /auth/login` → `access_token` doner
-- [ ] `GET /auth/me` → token ile kullanici bilgisi doner
-- [ ] Yanlis sifre → 401 doner
+- [x] `POST /auth/register` → 201, kullanici olusur
+- [x] `POST /auth/login` → `access_token` doner
+- [x] `GET /auth/me` → token ile kullanici bilgisi doner
+- [x] Yanlis sifre → 401 doner
 
 ---
 
