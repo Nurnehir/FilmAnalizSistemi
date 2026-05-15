@@ -80,16 +80,16 @@
 
 ## FAZ 4 — Gemini AI Entegrasyonu
 
-- [ ] `app/services/gemini_service.py` — `analyze_mood`, `generate_recommendations`
-- [ ] `app/schemas/recommendation.py` — `RecommendRequest`, `RecommendResponse`, `MovieRecommendation`
-- [ ] `app/routers/recommendations.py` — `POST /recommendations`, `GET /recommendations/history`
-- [ ] `app/main.py`'e recommendations router'i ekle
+- [x] `app/services/gemini_service.py` — `analyze_mood`, `generate_recommendations`
+- [x] `app/schemas/recommendation.py` — `RecommendRequest`, `RecommendResponse`, `MovieRecommendation`
+- [x] `app/routers/recommendations.py` — `POST /recommendations`, `GET /recommendations/history`
+- [x] `app/main.py`'e recommendations router'i ekle
 
 **Kontrol:**
-- [ ] `POST /recommendations` body: `{"prompt": "Bugun yorgunum komedi istiyorum"}` → 5 film + reason doner
-- [ ] Oneri `recommendation_history` tablosuna kaydedildi mi? (DB kontrol)
-- [ ] `GET /recommendations/history` → gecmis oneriler listelenir
-- [ ] Gemini hata verdigi durumda fallback calisir mi?
+- [x] `POST /recommendations` body: `{"prompt": "Bugun yorgunum komedi istiyorum"}` → 5 film + reason doner
+- [x] Oneri `recommendation_history` tablosuna kaydedildi mi? (DB kontrol) ✓
+- [x] `GET /recommendations/history` → gecmis oneriler listelenir
+- [x] Gemini hata verdigi durumda fallback calisir mi? ✓ (429 rate limit → fallback)
 
 ---
 
