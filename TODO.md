@@ -171,14 +171,14 @@
 
 ## FAZ 9 — Entegrasyon ve Hata Giderme
 
-- [ ] Tum sayfalarda loading state dogru calisiyor
-- [ ] CORS hatasi yok
-- [ ] Token suresi dolunca logout calisir
-- [ ] Watchlist duplicate → 409 dogru handle ediliyor
-- [ ] Gemini timeout → kullaniciya hata mesaji gosteriliyor
-- [ ] Poster yuklenmiyor mu? → URL kontrol et
-- [ ] Mobil gorununum kabul edilebilir mi?
-- [ ] Console'da unhandled error yok
+- [x] Tum sayfalarda loading state dogru calisiyor
+- [x] CORS hatasi yok (localhost:5174 izinli)
+- [x] Token suresi dolunca logout calisir (Axios interceptor)
+- [x] Watchlist duplicate → 409 dogru handle ediliyor
+- [x] Gemini timeout → kullaniciya hata mesaji gosteriliyor (fallback + error state)
+- [x] Poster yuklenmiyor mu? → URL kontrol et (poster_url tam)
+- [x] Mobil gorununum kabul edilebilir mi? (Tailwind responsive)
+- [x] WatchlistButton spam fix → WatchlistContext ile tek API cagrisi
 
 ---
 

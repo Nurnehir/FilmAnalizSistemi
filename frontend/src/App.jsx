@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { WatchlistProvider } from './context/WatchlistContext';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
@@ -13,6 +14,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <WatchlistProvider>
         <Navbar />
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -23,6 +25,7 @@ function App() {
           <Route path="/movie/:id" element={<MovieDetail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </WatchlistProvider>
       </AuthProvider>
     </BrowserRouter>
   );
