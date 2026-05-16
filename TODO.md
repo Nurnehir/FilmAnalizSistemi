@@ -184,10 +184,10 @@
 
 ## FAZ 10 — Teslim Hazirligi
 
-- [ ] `README.md` yaz (kurulum + demo + mimari)
-- [ ] `.gitignore` olustur (`.env`, `node_modules/`, `venv/`, `__pycache__/`)
+- [x] `README.md` yaz (kurulum + demo + mimari)
+- [x] `.gitignore` olustur (`.env`, `node_modules/`, `venv/`, `__pycache__/`)
+- [x] `docs/architecture.md` olustur
 - [ ] GitHub'a push et
-- [ ] `docs/architecture.md` olustur
 - [ ] Demo videosu cek (AGENTS.md bolum 16 akisini izle)
 - [ ] Rapor taslagi olustur (Claude ile)
 - [ ] Rapor PDF'e donustur
@@ -202,5 +202,4 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** FAZ 1-8 tamamlandi. Backend + Frontend tam calisir durumda.
-Siradaki: FAZ 9 — Entegrasyon ve Hata Giderme. docker-compose up --build ile sistemi ayaga kaldir ve kontrolleri yap.
+**Son guncelleme:** FAZ 1-10 tamamlandi (push, demo video, rapor haric). Siradaki: GitHub push → demo video → rapor.
