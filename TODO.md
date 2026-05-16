@@ -142,21 +142,21 @@
 ## FAZ 8 — Frontend Sayfalar
 
 ### Bilesen ve API katmani
-- [ ] `src/components/LoadingSpinner.jsx`
-- [ ] `src/components/Navbar.jsx` — logo, navigasyon, logout
-- [ ] `src/components/MovieCard.jsx` — poster, baslik, puan, watchlist butonu
-- [ ] `src/components/MovieGrid.jsx` — kartlari grid'de listele
-- [ ] `src/components/WatchlistButton.jsx` — ekle/cikar toggle
-- [ ] `src/api/movies.js` — `getTrending`, `searchMovies`, `getMovieDetail`, `getSimilar`
-- [ ] `src/api/recommendations.js` — `getRecommendations`, `getHistory`
-- [ ] `src/api/watchlist.js` — `getWatchlist`, `addToWatchlist`, `removeFromWatchlist`
-- [ ] `src/hooks/useWatchlist.js` — watchlist state hook
+- [x] `src/components/LoadingSpinner.jsx`
+- [x] `src/components/Navbar.jsx` — logo, navigasyon, logout
+- [x] `src/components/MovieCard.jsx` — poster, baslik, puan, watchlist butonu
+- [x] `src/components/MovieGrid.jsx` — kartlari grid'de listele
+- [x] `src/components/WatchlistButton.jsx` — ekle/cikar toggle
+- [x] `src/api/movies.js` — `getTrending`, `searchMovies`, `getMovieDetail`, `getSimilar`
+- [x] `src/api/recommendations.js` — `getRecommendations`, `getHistory`
+- [x] `src/api/watchlist.js` — `getWatchlist`, `addToWatchlist`, `removeFromWatchlist`
+- [x] `src/hooks/useWatchlist.js` — watchlist state hook
 
 ### Sayfalar
-- [ ] `src/pages/Home.jsx` — dashboard: trend filmler + son 3 oneri
-- [ ] `src/pages/Recommend.jsx` — LLM oneri sayfasi (ana ozellik)
-- [ ] `src/pages/MovieDetail.jsx` — film detay + benzer filmler
-- [ ] `src/pages/Watchlist.jsx` — kullanicinin izleme listesi
+- [x] `src/pages/Home.jsx` — dashboard: trend filmler + son 3 oneri
+- [x] `src/pages/Recommend.jsx` — LLM oneri sayfasi (ana ozellik)
+- [x] `src/pages/MovieDetail.jsx` — film detay + benzer filmler
+- [x] `src/pages/Watchlist.jsx` — kullanicinin izleme listesi
 
 **Kontrol:**
 - [ ] Dashboard'da gercek filmler gorunuyor
@@ -202,5 +202,5 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** FAZ 1 tamamlandi. Siradaki: FAZ 2 — Auth Sistemi.
-**Onemli:** `backend/.env` dosyasina gercek TMDB ve Gemini API keylerini gir.
+**Son guncelleme:** FAZ 1-8 tamamlandi. Backend + Frontend tam calisir durumda.
+Siradaki: FAZ 9 — Entegrasyon ve Hata Giderme. docker-compose up --build ile sistemi ayaga kaldir ve kontrolleri yap.

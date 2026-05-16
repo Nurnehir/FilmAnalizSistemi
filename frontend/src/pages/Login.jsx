@@ -23,7 +23,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+    <div className="min-h-[calc(100vh-4rem)] bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-gray-900 rounded-2xl p-8 shadow-xl">
         <h1 className="text-2xl font-bold text-white mb-2">Giriş Yap</h1>
         <p className="text-gray-400 mb-6 text-sm">Film önerilerine devam etmek için giriş yap</p>
