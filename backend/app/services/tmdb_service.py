@@ -76,7 +76,7 @@ async def discover_movies(genre_ids: list, sort_by: str = "popularity.desc") -> 
         "page": 1,
     }
     if genre_ids:
-        extra["with_genres"] = ",".join(map(str, genre_ids))
+        extra["with_genres"] = "|".join(map(str, genre_ids))
     async with httpx.AsyncClient() as client:
         r = await client.get(
             f"{BASE_URL}/discover/movie",

@@ -61,14 +61,34 @@ def _extract_json(text: str) -> str:
     return text
 
 
+KEYWORD_GENRE_MAP = {
+    "komedi": 35, "gülmek": 35, "güldüren": 35, "eğlenceli": 35, "hafif": 35,
+    "korku": 27, "korkunç": 27, "gerilim": 53, "gerilimli": 53, "gerilimli": 53,
+    "aksiyon": 28, "macera": 12, "romantik": 10749, "aşk": 10749,
+    "aile": 10751, "çocuk": 10751, "animasyon": 16, "çizgi": 16,
+    "bilim": 878, "bilim kurgu": 878, "fantezi": 14, "fantastik": 14,
+    "drama": 18, "dram": 18, "suç": 80, "polisiye": 80,
+    "belgesel": 99, "western": 37, "kovboy": 37, "gizem": 9648,
+}
+
+def _fallback_genres(prompt: str) -> list:
+    prompt_lower = prompt.lower()
+    found = []
+    for keyword, genre_id in KEYWORD_GENRE_MAP.items():
+        if keyword in prompt_lower and genre_id not in found:
+            found.append(genre_id)
+    return found[:2] if found else [35]
+
+
 async def analyze_mood(prompt: str) -> dict:
     try:
         response = model.generate_content(MOOD_ANALYSIS_PROMPT.format(prompt=prompt))
         return json.loads(_extract_json(response.text))
     except Exception:
+        genres = _fallback_genres(prompt)
         return {
-            "mood_summary": "Genel oneri",
-            "genre_ids": [18, 35],
+            "mood_summary": "Prompt analizi yapıldı",
+            "genre_ids": genres,
             "keywords": [],
             "sort_by": "popularity.desc",
         }
@@ -93,10 +113,11 @@ async def generate_recommendations(prompt: str, movies: list) -> dict:
         response = model.generate_content(formatted)
         return json.loads(_extract_json(response.text))
     except Exception:
+        sorted_movies = sorted(movies_simple, key=lambda m: m.get("vote_average", 0), reverse=True)
         return {
-            "analysis": "Size populer filmler oneriyorum.",
+            "analysis": "Yapay zeka analizi geçici olarak kullanılamıyor. Size en yüksek puanlı filmler öneriliyor.",
             "recommendations": [
-                {"tmdb_id": m["tmdb_id"], "reason": "Populer ve begenilen bir yapim."}
-                for m in movies_simple[:5]
+                {"tmdb_id": m["tmdb_id"], "reason": f"IMDB puanı {m.get('vote_average', 0):.1f} olan popüler bir yapım."}
+                for m in sorted_movies[:5]
             ],
         }
