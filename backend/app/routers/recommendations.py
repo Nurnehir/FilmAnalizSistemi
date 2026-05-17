@@ -23,6 +23,7 @@ async def recommend(
         tmdb_data = await tmdb_service.discover_movies(
             genre_ids=mood.get("genre_ids", []),
             sort_by=mood.get("sort_by", "popularity.desc"),
+            exclude_genre_ids=mood.get("exclude_genre_ids", []),
         )
         movies = tmdb_data.get("results", [])
     except Exception:

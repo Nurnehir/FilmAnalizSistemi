@@ -68,7 +68,11 @@ async def get_movie_detail(tmdb_id: int, media_type: str = "movie") -> dict:
     return data
 
 
-async def discover_movies(genre_ids: list, sort_by: str = "popularity.desc") -> dict:
+async def discover_movies(
+    genre_ids: list,
+    sort_by: str = "popularity.desc",
+    exclude_genre_ids: list = None,
+) -> dict:
     extra = {
         "language": "tr-TR",
         "sort_by": sort_by,
@@ -77,6 +81,8 @@ async def discover_movies(genre_ids: list, sort_by: str = "popularity.desc") -> 
     }
     if genre_ids:
         extra["with_genres"] = "|".join(map(str, genre_ids))
+    if exclude_genre_ids:
+        extra["without_genres"] = "|".join(map(str, exclude_genre_ids))
     async with httpx.AsyncClient() as client:
         r = await client.get(
             f"{BASE_URL}/discover/movie",
