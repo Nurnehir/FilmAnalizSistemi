@@ -30,7 +30,7 @@ services:
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_HOURS: "24"
       TMDB_API_KEY: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3ZDY0ODg3ZDA2ZjcyY2VjZjBhM2EzMDgwOWUzNTM2OSIsIm5iZiI6MTc3ODg3ODczMi41MDgsInN1YiI6IjZhMDc4OTBjYjU3MDIzZjQ4YTYzNGQyZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AzmqmQP9wYRCiQ8vh5u3317ouv0fqzSoJ-anOAFR8is
-      GEMINI_API_KEY: AIzaSyBp62JOS6Gs4pPv3X0NcIVgzWKyyMSlWCg
+      GEMINI_API_KEY: AIzaSyBCqMHBXha05wNkKAEBqkv2vi8e28yzBSE
     depends_on:
       db:
         condition: service_healthy
