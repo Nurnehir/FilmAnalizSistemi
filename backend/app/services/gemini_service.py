@@ -1,33 +1,9 @@
 import json
-import google.generativeai as genai
+from google import genai
 from app.config import settings
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
-
-COMBINED_PROMPT = """
-Kullanicinin film/dizi istegi: "{prompt}"
-
-Önce hangi TMDB türlerini önereceğini belirle, sonra asagidaki film listesinden
-bu kullaniciya en uygun 5 filmi seç ve her biri için Türkçe 2-3 cümle gerekçe yaz.
-
-Film Listesi:
-{movies_json}
-
-Yanitini SADECE su JSON formatinda ver, baska hicbir sey yazma:
-{{
-  "analysis": "kullanicinin isteginin kisa analizi (1-2 cumle, Turkce)",
-  "recommendations": [
-    {{
-      "tmdb_id": 12345,
-      "reason": "Bu filmi önermem sebebi: ..."
-    }}
-  ]
-}}
-
-Önemli: Sadece yukarıdaki film listesinden seç. Kullanıcının istediği ruh haline
-ve türe uygun olmayan filmleri dahil etme.
-"""
+client = genai.Client(api_key=settings.GEMINI_API_KEY)
+MODEL = "gemini-2.0-flash-lite"
 
 MOOD_PROMPT = """
 Kullanicinin asagidaki mesajini analiz et ve hangi tur filmler onereceğini belirle.
@@ -54,7 +30,29 @@ TMDB Tur ID Referansi:
 - "aksiyon macera" → genre_ids:[28,12], exclude_genre_ids:[]
 """
 
-# Anahtar kelime → (dahil edilecek türler, hariç tutulacak türler)
+RECOMMENDATION_PROMPT = """
+Kullanici sunu soyluyor: "{prompt}"
+
+Asagidaki film listesinden bu kullaniciya en uygun 5 tanesini sec.
+Her biri icin neden onerdgini Turkce, 2-3 cumleyle acikla.
+
+Film Listesi:
+{movies_json}
+
+Yanitini SADECE su JSON formatinda ver:
+{{
+  "analysis": "kullanicinin isteginin kisa analizi (1-2 cumle, Turkce)",
+  "recommendations": [
+    {{
+      "tmdb_id": 12345,
+      "reason": "Bu filmi onermem sebebi: ..."
+    }}
+  ]
+}}
+
+Onemli: Sadece yukaridaki listeden sec. Kullanicinin ruh haline uymayan filmleri dahil etme.
+"""
+
 KEYWORD_MAP = {
     "komedi":    ([35], [27, 53, 18]),
     "güldüren":  ([35], [27, 53, 18]),
@@ -121,14 +119,17 @@ def _extract_json(text: str) -> str:
 
 async def analyze_mood(prompt: str) -> dict:
     try:
-        response = model.generate_content(MOOD_PROMPT.format(prompt=prompt))
-        print(f"=== GEMINI MOOD YANIT: {response.text[:200]} ===", flush=True)
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=MOOD_PROMPT.format(prompt=prompt),
+        )
+        print(f"=== GEMINI MOOD: {response.text[:150]} ===", flush=True)
         result = json.loads(_extract_json(response.text))
         if "exclude_genre_ids" not in result:
             result["exclude_genre_ids"] = []
         return result
     except Exception as e:
-        print(f"=== GEMINI MOOD HATA: {type(e).__name__}: {e} ===")
+        print(f"=== GEMINI MOOD HATA: {type(e).__name__}: {str(e)[:200]} ===", flush=True)
         return _fallback_mood(prompt)
 
 
@@ -144,17 +145,15 @@ async def generate_recommendations(prompt: str, movies: list) -> dict:
         for m in movies[:20]
     ]
     try:
-        formatted = COMBINED_PROMPT.format(
+        formatted = RECOMMENDATION_PROMPT.format(
             prompt=prompt,
             movies_json=json.dumps(movies_simple, ensure_ascii=False),
         )
-        response = model.generate_content(formatted)
-        print("=== GEMINI HAM YANIT ===")
-        print(response.text)
-        print("=======================")
+        response = client.models.generate_content(model=MODEL, contents=formatted)
+        print(f"=== GEMINI REC: {response.text[:200]} ===", flush=True)
         return json.loads(_extract_json(response.text))
     except Exception as e:
-        print(f"=== GEMINI HATA: {type(e).__name__}: {e} ===")
+        print(f"=== GEMINI REC HATA: {type(e).__name__}: {str(e)[:200]} ===", flush=True)
         sorted_movies = sorted(movies_simple, key=lambda m: m.get("vote_average", 0), reverse=True)
         return {
             "analysis": "Yapay zeka şu an yoğun. Size bu türdeki en beğenilen filmler öneriliyor.",
