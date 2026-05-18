@@ -117,7 +117,7 @@ export default function Watchlist() {
                       disabled={removing === item.id}
                       className="w-full text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 border border-red-200 dark:border-red-900/50 hover:border-red-400 dark:hover:border-red-700 py-1.5 rounded-lg transition-colors disabled:opacity-40"
                     >
-                      {removing === item.id ? 'Siliniyor...' : t.wl_remove}
+                      {removing === item.id ? t.loading : t.wl_remove}
                     </button>
                   </div>
                 </div>
