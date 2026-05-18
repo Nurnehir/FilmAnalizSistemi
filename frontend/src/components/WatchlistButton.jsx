@@ -37,7 +37,7 @@ export default function WatchlistButton({ movie, className = '' }) {
       className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 ${
         inList
           ? 'bg-purple-600 hover:bg-purple-700 text-white'
-          : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+          : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
       } ${className}`}
     >
       {inList ? '✓ Listede' : '+ Listeye Ekle'}

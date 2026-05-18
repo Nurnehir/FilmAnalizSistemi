@@ -7,9 +7,9 @@ export default function MovieCard({ movie, reason }) {
   const poster = movie.poster_url || (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null);
 
   return (
-    <div className="group bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-purple-700 transition-all duration-200 flex flex-col">
+    <div className="group bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-700 transition-all duration-200 flex flex-col">
       <Link to={`/movie/${movie.tmdb_id || movie.id}?type=${movie.media_type || 'movie'}`} className="block relative">
-        <div className="aspect-[2/3] bg-gray-800 overflow-hidden">
+        <div className="aspect-[2/3] bg-gray-100 dark:bg-gray-800 overflow-hidden">
           {poster ? (
             <img
               src={poster}
@@ -18,7 +18,7 @@ export default function MovieCard({ movie, reason }) {
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-600 text-4xl">
+            <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600 text-4xl">
               🎬
             </div>
           )}
@@ -34,15 +34,15 @@ export default function MovieCard({ movie, reason }) {
         <div>
           <Link
             to={`/movie/${movie.tmdb_id || movie.id}?type=${movie.media_type || 'movie'}`}
-            className="text-white font-semibold text-sm leading-tight hover:text-purple-400 transition-colors line-clamp-2"
+            className="text-gray-900 dark:text-white font-semibold text-sm leading-tight hover:text-purple-600 dark:hover:text-purple-400 transition-colors line-clamp-2"
           >
             {title}
           </Link>
-          {year && <p className="text-gray-500 text-xs mt-0.5">{year}</p>}
+          {year && <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">{year}</p>}
         </div>
 
         {reason && (
-          <p className="text-gray-400 text-xs leading-relaxed line-clamp-3 bg-gray-800/50 rounded-lg p-2 italic">
+          <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed line-clamp-3 bg-gray-100 dark:bg-gray-800/50 rounded-lg p-2 italic">
             "{reason}"
           </p>
         )}

@@ -237,15 +237,15 @@
 - [x] Frontend: profil resmi yükleme + önizleme (avatar placeholder)
 - [x] Frontend: kullanıcı adı düzenleme formu
 - [x] Frontend: şifre güncelleme formu (eski şifre + yeni şifre + tekrar)
-- [ ] Koyu/açık mod + TR/EN uyumlu (5 ve 6. maddeler tamamlanınca)
+- [x] Koyu/açık mod + TR/EN uyumlu (5 ve 6. maddeler tamamlandı)
 
 ### 3. Ayarlar Sayfası (`/settings`)
-- [ ] `src/pages/Settings.jsx` oluştur — PrivateRoute ile korunacak
-- [ ] App.jsx'e `/settings` route ekle
-- [ ] Koyu/Açık mod toggle (ThemeContext ile bağlı)
-- [ ] Dil seçimi TR/EN (LangContext ile bağlı)
-- [ ] Tercihler localStorage'a kaydedilsin
-- [ ] Koyu/açık mod + TR/EN uyumlu
+- [x] `src/pages/Settings.jsx` oluştur — PrivateRoute ile korunacak
+- [x] App.jsx'e `/settings` route ekle
+- [x] Koyu/Açık mod toggle (ThemeContext ile bağlı)
+- [x] Dil seçimi TR/EN (LangContext ile bağlı)
+- [x] Tercihler localStorage'a kaydedilsin
+- [x] Koyu/açık mod + TR/EN uyumlu
 
 ### 4. Şifremi Unuttum
 - [ ] Backend: `POST /auth/forgot-password` endpoint (token üret, konsola yaz — mail altyapısı gerekmez)
@@ -256,20 +256,19 @@
 - [ ] Koyu/açık mod + TR/EN uyumlu
 
 ### 5. Koyu / Açık Mod
-- [ ] `tailwind.config.js` — `darkMode: 'class'` aktif et
-- [ ] `src/context/ThemeContext.jsx` — dark/light state, localStorage'a kaydet
-- [ ] App.jsx'te `<html>` etiketine `dark` class'ı toggle et
-- [ ] Navbar'a ikon butonu ekle: koyu moddayken ☀ (açık moda geç), açık moddayken ☽ (koyu moda geç)
-- [ ] Login, Register, Navbar, Home, Recommend, MovieDetail, Watchlist, Profile, Settings açık mod renkleri ile güncelle
+- [x] `tailwind.config.js` — `darkMode: 'class'` aktif et
+- [x] `src/context/ThemeContext.jsx` — dark/light state, localStorage'a kaydet
+- [x] App.jsx'te `<html>` etiketine `dark` class'ı toggle et
+- [x] Navbar'a ikon butonu ekle: koyu moddayken ☀ (açık moda geç), açık moddayken ☽ (koyu moda geç)
+- [x] Login, Register, Navbar, Home, Recommend, MovieDetail, Watchlist, Profile, Settings açık mod renkleri ile güncelle
 
 ### 6. TR / EN Dil Desteği
-- [ ] `src/context/LangContext.jsx` — tr/en state, localStorage'a kaydet
-- [ ] `src/i18n/tr.js` — tüm Türkçe metinler
-- [ ] `src/i18n/en.js` — tüm İngilizce metinler
-- [ ] `src/hooks/useLang.js` — `t('key')` şeklinde kolay erişim hook'u
-- [ ] Navbar'a dil seçici ekle (TR / EN)
-- [ ] Login, Register, Home, Recommend, MovieDetail, Watchlist, Profile, Settings, ForgotPassword sayfaları dil destekli hale getir
-- [ ] Navbar linkleri ve dropdown dil destekli hale getir
+- [x] `src/context/LangContext.jsx` — tr/en state, localStorage'a kaydet
+- [x] `src/i18n/tr.js` — tüm Türkçe metinler
+- [x] `src/i18n/en.js` — tüm İngilizce metinler
+- [x] Navbar'a dil seçici ekle (TR / EN)
+- [x] Login, Register, Home, Recommend, MovieDetail, Watchlist, Profile, Settings sayfaları dil destekli hale getir
+- [x] Navbar linkleri ve dropdown dil destekli hale getir
 
 ---
 
@@ -280,7 +279,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** Arayüz yenilendi, Groq migrasyonu tamam. Sıradaki: Şifremi Unuttum → Koyu/Açık Mod → TR/EN dil desteği → GitHub push → demo → rapor.
+**Son guncelleme:** 3-5-6 tamamlandı (ThemeContext, LangContext, i18n, Settings sayfası, tüm sayfalarda dark mode + TR/EN desteği). Sıradaki: 4. Şifremi Unuttum → GitHub push → demo → rapor.
 
 ---
 
