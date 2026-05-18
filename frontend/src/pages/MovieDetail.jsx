@@ -34,7 +34,7 @@ export default function MovieDetail() {
         setSimilar(sim.results?.slice(0, 10) || []);
         setTrailer(videos[0] || null);
       } catch {
-        setError('Film bilgileri yüklenemedi.');
+        setError(t.detail_load_error);
       } finally {
         setIsLoading(false);
       }

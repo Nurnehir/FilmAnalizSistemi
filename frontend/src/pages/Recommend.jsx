@@ -89,7 +89,7 @@ export default function Recommend() {
             <LoadingSpinner size="lg" />
             <div className="text-center">
               <p className="text-gray-900 dark:text-white font-medium">{t.rec_loading}</p>
-              <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">İsteğiniz analiz ediliyor, size özel filmler seçiliyor</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">{t.rec_analyzing_sub}</p>
             </div>
           </div>
         )}

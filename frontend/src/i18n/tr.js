@@ -137,6 +137,12 @@ const tr = {
   settings_lang_tr: 'Türkçe',
   settings_lang_en: 'English',
 
+  // Errors
+  login_failed: 'Giriş yapılamadı',
+  register_failed: 'Kayıt olunamadı',
+  detail_load_error: 'Film bilgileri yüklenemedi.',
+  rec_analyzing_sub: 'İsteğiniz analiz ediliyor, size özel filmler seçiliyor',
+
   // Common
   loading: 'Yükleniyor...',
   error_generic: 'Bir hata oluştu.',

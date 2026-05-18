@@ -137,6 +137,12 @@ const en = {
   settings_lang_tr: 'Türkçe',
   settings_lang_en: 'English',
 
+  // Errors
+  login_failed: 'Unable to sign in',
+  register_failed: 'Unable to create account',
+  detail_load_error: 'Failed to load film details.',
+  rec_analyzing_sub: 'Analyzing your request and picking films just for you',
+
   // Common
   loading: 'Loading...',
   error_generic: 'Something went wrong.',

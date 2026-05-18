@@ -18,7 +18,7 @@ export default function Login() {
     try {
       await login(email, password);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Giriş yapılamadı');
+      setError(err.response?.data?.detail || t.login_failed);
     } finally {
       setIsLoading(false);
     }

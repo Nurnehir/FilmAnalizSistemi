@@ -19,7 +19,7 @@ export default function Register() {
     try {
       await register(form.email, form.username, form.password);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Kayıt olunamadı');
+      setError(err.response?.data?.detail || t.register_failed);
     } finally {
       setIsLoading(false);
     }

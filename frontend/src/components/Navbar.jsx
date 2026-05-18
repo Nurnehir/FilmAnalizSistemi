@@ -151,16 +151,24 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-3 ml-1">
+              <div className="flex items-center gap-2 ml-1">
                 <Link
                   to="/login"
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors font-medium"
+                  className={`text-sm px-4 py-1.5 rounded-lg font-medium transition-colors border ${
+                    isActive('/login')
+                      ? 'bg-purple-600 border-purple-600 text-white'
+                      : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400'
+                  }`}
                 >
                   {t.login_btn}
                 </Link>
                 <Link
                   to="/register"
-                  className="text-sm bg-purple-600 hover:bg-purple-500 text-white px-4 py-1.5 rounded-lg transition-colors font-medium"
+                  className={`text-sm px-4 py-1.5 rounded-lg font-medium transition-colors border ${
+                    isActive('/register')
+                      ? 'bg-purple-600 border-purple-600 text-white'
+                      : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400'
+                  }`}
                 >
                   {t.register_btn}
                 </Link>
