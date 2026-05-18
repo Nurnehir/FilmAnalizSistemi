@@ -11,3 +11,6 @@ export const getMovieDetail = (tmdbId, mediaType = 'movie') =>
 
 export const getSimilar = (tmdbId, mediaType = 'movie') =>
   client.get(`/movies/${tmdbId}/similar`, { params: { media_type: mediaType } }).then((r) => r.data);
+
+export const getMovieVideos = (tmdbId, mediaType = 'movie') =>
+  client.get(`/movies/${tmdbId}/videos`, { params: { media_type: mediaType } }).then((r) => r.data);

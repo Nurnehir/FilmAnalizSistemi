@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { getMovieDetail, getSimilar } from '../api/movies';
+import { getMovieDetail, getSimilar, getMovieVideos } from '../api/movies';
 import WatchlistButton from '../components/WatchlistButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import MovieCard from '../components/MovieCard';
+import TrailerModal from '../components/TrailerModal';
 
 export default function MovieDetail() {
   const { id } = useParams();
@@ -12,6 +13,8 @@ export default function MovieDetail() {
 
   const [movie, setMovie] = useState(null);
   const [similar, setSimilar] = useState([]);
+  const [trailer, setTrailer] = useState(null);
+  const [showTrailer, setShowTrailer] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,12 +23,14 @@ export default function MovieDetail() {
       setIsLoading(true);
       setError(null);
       try {
-        const [detail, sim] = await Promise.all([
+        const [detail, sim, videos] = await Promise.all([
           getMovieDetail(id, mediaType),
           getSimilar(id, mediaType),
+          getMovieVideos(id, mediaType),
         ]);
         setMovie(detail);
         setSimilar(sim.results?.slice(0, 10) || []);
+        setTrailer(videos[0] || null);
       } catch {
         setError('Film bilgileri yüklenemedi.');
       } finally {
@@ -60,6 +65,9 @@ export default function MovieDetail() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
+      {showTrailer && trailer && (
+        <TrailerModal trailer={trailer} onClose={() => setShowTrailer(false)} />
+      )}
       {/* Backdrop */}
       {movie.backdrop_url && (
         <div className="relative h-72 sm:h-96 overflow-hidden">
@@ -125,10 +133,20 @@ export default function MovieDetail() {
               <p className="text-gray-300 text-sm leading-relaxed">{movie.overview}</p>
             )}
 
-            <WatchlistButton
-              movie={{ ...movie, tmdb_id: movie.tmdb_id, media_type: mediaType }}
-              className="px-5 py-2"
-            />
+            <div className="flex flex-wrap gap-3">
+              <WatchlistButton
+                movie={{ ...movie, tmdb_id: movie.tmdb_id, media_type: mediaType }}
+                className="px-5 py-2"
+              />
+              {trailer && (
+                <button
+                  onClick={() => setShowTrailer(true)}
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-semibold px-5 py-2 rounded-lg transition-colors"
+                >
+                  ▶ Fragmanı İzle
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

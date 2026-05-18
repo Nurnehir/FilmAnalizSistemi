@@ -97,6 +97,32 @@ async def discover_movies(
     return data
 
 
+async def get_videos(tmdb_id: int, media_type: str = "movie") -> list:
+    async with httpx.AsyncClient() as client:
+        r = await client.get(
+            f"{BASE_URL}/{media_type}/{tmdb_id}/videos",
+            headers=HEADERS,
+            params={"language": "tr-TR"},
+        )
+        r.raise_for_status()
+    results = r.json().get("results", [])
+    if not results:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                f"{BASE_URL}/{media_type}/{tmdb_id}/videos",
+                headers=HEADERS,
+                params={"language": "en-US"},
+            )
+            r.raise_for_status()
+        results = r.json().get("results", [])
+    trailers = [
+        v for v in results
+        if v.get("type") in ("Trailer", "Teaser")
+        and v.get("site") in ("YouTube", "Vimeo")
+    ]
+    return trailers or [v for v in results if v.get("site") in ("YouTube", "Vimeo")]
+
+
 async def get_similar(tmdb_id: int, media_type: str = "movie") -> dict:
     async with httpx.AsyncClient() as client:
         r = await client.get(

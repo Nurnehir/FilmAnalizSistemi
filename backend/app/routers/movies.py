@@ -27,6 +27,17 @@ async def search(
         raise HTTPException(status_code=503, detail="TMDB servisine ulasilamiyor")
 
 
+@router.get("/{tmdb_id}/videos")
+async def videos(
+    tmdb_id: int,
+    media_type: str = Query("movie", pattern="^(movie|tv)$"),
+):
+    try:
+        return await tmdb_service.get_videos(tmdb_id, media_type)
+    except Exception:
+        raise HTTPException(status_code=503, detail="TMDB servisine ulasilamiyor")
+
+
 @router.get("/{tmdb_id}/similar")
 async def similar(
     tmdb_id: int,
