@@ -42,11 +42,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="max-w-2xl">
             <h1 className="text-4xl sm:text-5xl font-bold mb-4 leading-tight text-gray-900 dark:text-white">
-              Ruh haline göre{' '}
-              <span className="text-purple-600 dark:text-purple-400">film önerileri</span>
+              {t.home_hero_title}{' '}
+              <span className="text-purple-600 dark:text-purple-400">{t.home_hero_highlight}</span>
             </h1>
             <p className="text-gray-500 dark:text-gray-400 text-lg mb-8">
-              Ne izlemek istediğini yaz, yapay zeka ruh haline göre sana özel öneriler hazırlasın.
+              {t.home_hero_sub}
             </p>
             {user ? (
               <Link
@@ -61,10 +61,10 @@ export default function Home() {
                   to="/register"
                   className="inline-flex bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
                 >
-                  Ücretsiz Başla
+                  {t.home_free_start}
                 </Link>
                 <Link to="/login" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  {t.login_btn} →
+                  {t.home_login_cta}
                 </Link>
               </div>
             )}
@@ -93,7 +93,7 @@ export default function Home() {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
-                    {h.tmdb_ids?.length > 0 && ` · ${h.tmdb_ids.length} film önerildi`}
+                    {h.tmdb_ids?.length > 0 && ` · ${h.tmdb_ids.length} ${t.home_films_suggested}`}
                   </p>
                 </div>
               ))}
@@ -105,7 +105,7 @@ export default function Home() {
         <section>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold">{t.home_trending}</h2>
-            <span className="text-gray-400 dark:text-gray-500 text-xs">TMDB · Canlı veri</span>
+            <span className="text-gray-400 dark:text-gray-500 text-xs">{t.home_tmdb_live}</span>
           </div>
 
           {isLoading ? (

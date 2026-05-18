@@ -19,7 +19,7 @@ export default function Watchlist() {
         const data = await getWatchlist();
         setItems(data.items || []);
       } catch {
-        setError('İzleme listesi yüklenemedi.');
+        setError(t.wl_load_error);
       } finally {
         setIsLoading(false);
       }

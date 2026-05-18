@@ -39,18 +39,14 @@ export default function Register() {
               <span className="text-white font-bold text-xl tracking-tight">FilmAI</span>
             </div>
             <h2 className="text-white text-2xl font-bold leading-snug mb-3">
-              Film deneyimini kişiselleştir
+              {t.register_brand_title}
             </h2>
             <p className="text-purple-200/70 text-sm leading-relaxed">
-              Ücretsiz hesap oluştur, yapay zeka sana özel film önerileri sunsun.
+              {t.register_brand_sub}
             </p>
           </div>
           <ul className="space-y-3">
-            {[
-              'Sınırsız yapay zeka önerisi',
-              'Kişisel izleme listesi oluştur',
-              'Öneri geçmişini takip et',
-            ].map((f) => (
+            {[t.register_feat_1, t.register_feat_2, t.register_feat_3].map((f) => (
               <li key={f} className="flex items-center gap-2 text-purple-100/80 text-sm">
                 <span className="w-5 h-5 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-300 text-xs flex-shrink-0">✓</span>
                 {f}

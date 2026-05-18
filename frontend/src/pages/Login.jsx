@@ -38,18 +38,14 @@ export default function Login() {
               <span className="text-white font-bold text-xl tracking-tight">FilmAI</span>
             </div>
             <h2 className="text-white text-2xl font-bold leading-snug mb-3">
-              Sana özel film dünyasına hoş geldin
+              {t.login_brand_title}
             </h2>
             <p className="text-purple-200/70 text-sm leading-relaxed">
-              Ruh haline göre kişiselleştirilmiş öneriler, fragmanlar ve izleme listesi — hepsi bir arada.
+              {t.login_brand_sub}
             </p>
           </div>
           <ul className="space-y-3">
-            {[
-              'Yapay zeka destekli kişisel öneriler',
-              'Fragman izleme ve film detayları',
-              'Kişisel izleme listesi',
-            ].map((f) => (
+            {[t.login_feat_1, t.login_feat_2, t.login_feat_3].map((f) => (
               <li key={f} className="flex items-center gap-2 text-purple-100/80 text-sm">
                 <span className="w-5 h-5 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-300 text-xs flex-shrink-0">✓</span>
                 {f}

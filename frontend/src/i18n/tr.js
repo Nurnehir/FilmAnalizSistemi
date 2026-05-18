@@ -7,6 +7,19 @@ const tr = {
   nav_settings: 'Ayarlar',
   nav_logout: 'Çıkış Yap',
 
+  // Auth — Sol panel branding
+  login_brand_title: 'Sana özel film dünyasına hoş geldin',
+  login_brand_sub: 'Ruh haline göre kişiselleştirilmiş öneriler, fragmanlar ve izleme listesi — hepsi bir arada.',
+  login_feat_1: 'Yapay zeka destekli kişisel öneriler',
+  login_feat_2: 'Fragman izleme ve film detayları',
+  login_feat_3: 'Kişisel izleme listesi',
+
+  register_brand_title: 'Film deneyimini kişiselleştir',
+  register_brand_sub: 'Ücretsiz hesap oluştur, yapay zeka sana özel film önerileri sunsun.',
+  register_feat_1: 'Sınırsız yapay zeka önerisi',
+  register_feat_2: 'Kişisel izleme listesi oluştur',
+  register_feat_3: 'Öneri geçmişini takip et',
+
   // Auth
   login_title: 'Tekrar Hoş Geldin',
   login_subtitle: 'Hesabına giriş yap',
@@ -27,6 +40,16 @@ const tr = {
   register_loading: 'Kayıt olunuyor...',
   register_has_account: 'Zaten hesabın var mı?',
   register_login_link: 'Giriş Yap',
+
+  // Home — Hero
+  home_hero_title: 'Ruh haline göre',
+  home_hero_highlight: 'film önerileri',
+  home_hero_sub: 'Ne izlemek istediğini yaz, yapay zeka ruh haline göre sana özel öneriler hazırlasın.',
+  home_free_start: 'Ücretsiz Başla',
+  home_login_cta: 'Giriş Yap →',
+  home_tmdb_live: 'TMDB · Canlı veri',
+  home_films_suggested: 'film önerildi',
+  wl_load_error: 'İzleme listesi yüklenemedi.',
 
   // Home
   home_trending: 'Bu Hafta Trend',

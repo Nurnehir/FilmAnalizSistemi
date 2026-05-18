@@ -7,6 +7,19 @@ const en = {
   nav_settings: 'Settings',
   nav_logout: 'Log Out',
 
+  // Auth — Left panel branding
+  login_brand_title: 'Your personal film world awaits',
+  login_brand_sub: 'Mood-based recommendations, trailers, and a watchlist — all in one place.',
+  login_feat_1: 'AI-powered personal recommendations',
+  login_feat_2: 'Watch trailers and explore film details',
+  login_feat_3: 'Personal watchlist',
+
+  register_brand_title: 'Personalize your film experience',
+  register_brand_sub: 'Create a free account and let AI pick films just for you.',
+  register_feat_1: 'Unlimited AI recommendations',
+  register_feat_2: 'Build your personal watchlist',
+  register_feat_3: 'Track your recommendation history',
+
   // Auth
   login_title: 'Welcome Back',
   login_subtitle: 'Sign in to your account',
@@ -27,6 +40,16 @@ const en = {
   register_loading: 'Creating account...',
   register_has_account: 'Already have an account?',
   register_login_link: 'Sign In',
+
+  // Home — Hero
+  home_hero_title: 'Mood-based',
+  home_hero_highlight: 'film recommendations',
+  home_hero_sub: 'Describe what you want to watch and AI will pick films tailored to your mood.',
+  home_free_start: 'Get Started Free',
+  home_login_cta: 'Sign In →',
+  home_tmdb_live: 'TMDB · Live data',
+  home_films_suggested: 'films suggested',
+  wl_load_error: 'Failed to load watchlist.',
 
   // Home
   home_trending: 'Trending This Week',
