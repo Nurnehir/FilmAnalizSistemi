@@ -1,9 +1,9 @@
 import json
-from google import genai
+from groq import Groq
 from app.config import settings
 
-client = genai.Client(api_key=settings.GEMINI_API_KEY)
-MODEL = "gemini-2.0-flash-lite"
+client = Groq(api_key=settings.GROQ_API_KEY)
+MODEL = "llama-3.3-70b-versatile"
 
 MOOD_PROMPT = """
 Kullanicinin asagidaki mesajini analiz et ve hangi tur filmler onereceğini belirle.
@@ -119,17 +119,20 @@ def _extract_json(text: str) -> str:
 
 async def analyze_mood(prompt: str) -> dict:
     try:
-        response = client.models.generate_content(
+        response = client.chat.completions.create(
             model=MODEL,
-            contents=MOOD_PROMPT.format(prompt=prompt),
+            messages=[{"role": "user", "content": MOOD_PROMPT.format(prompt=prompt)}],
+            temperature=0.3,
+            max_tokens=256,
         )
-        print(f"=== GEMINI MOOD: {response.text[:150]} ===", flush=True)
-        result = json.loads(_extract_json(response.text))
+        text = response.choices[0].message.content
+        print(f"=== GROQ MOOD: {text[:150]} ===", flush=True)
+        result = json.loads(_extract_json(text))
         if "exclude_genre_ids" not in result:
             result["exclude_genre_ids"] = []
         return result
     except Exception as e:
-        print(f"=== GEMINI MOOD HATA: {type(e).__name__}: {str(e)[:200]} ===", flush=True)
+        print(f"=== GROQ MOOD HATA: {type(e).__name__}: {str(e)[:200]} ===", flush=True)
         return _fallback_mood(prompt)
 
 
@@ -149,11 +152,17 @@ async def generate_recommendations(prompt: str, movies: list) -> dict:
             prompt=prompt,
             movies_json=json.dumps(movies_simple, ensure_ascii=False),
         )
-        response = client.models.generate_content(model=MODEL, contents=formatted)
-        print(f"=== GEMINI REC: {response.text[:200]} ===", flush=True)
-        return json.loads(_extract_json(response.text))
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": formatted}],
+            temperature=0.5,
+            max_tokens=1024,
+        )
+        text = response.choices[0].message.content
+        print(f"=== GROQ REC: {text[:200]} ===", flush=True)
+        return json.loads(_extract_json(text))
     except Exception as e:
-        print(f"=== GEMINI REC HATA: {type(e).__name__}: {str(e)[:200]} ===", flush=True)
+        print(f"=== GROQ REC HATA: {type(e).__name__}: {str(e)[:200]} ===", flush=True)
         sorted_movies = sorted(movies_simple, key=lambda m: m.get("vote_average", 0), reverse=True)
         return {
             "analysis": "Yapay zeka şu an yoğun. Size bu türdeki en beğenilen filmler öneriliyor.",

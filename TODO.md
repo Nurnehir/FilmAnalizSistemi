@@ -202,4 +202,16 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** FAZ 1-10 tamamlandi (push, demo video, rapor haric). Siradaki: GitHub push → demo video → rapor.
+**Son guncelleme:** FAZ 1-10 tamamlandi. Gemini → Groq/Llama 3.3 migrasyonu tamamlandi. Siradaki: GitHub push → demo video → rapor.
+
+---
+
+## AI MODEL MİGRASYONU (Gemini → Groq)
+
+- [x] Gemini API kota sorunu tespit edildi (ücretsiz tier Türkiye'de limit:0)
+- [x] `requirements.txt` — `google-genai` kaldırıldı, `groq==0.13.0` eklendi
+- [x] `app/services/gemini_service.py` — Groq client + Llama 3.3-70b-versatile modeline geçildi
+- [x] `app/config.py` — `GEMINI_API_KEY` → `GROQ_API_KEY` olarak yeniden adlandırıldı
+- [x] `docker-compose.yml` — `GROQ_API_KEY` ile güncellendi
+- [x] `backend/.env` — `GROQ_API_KEY` ile güncellendi
+- [x] Backend rebuild edildi, yeni anahtar container'a yüklendi
