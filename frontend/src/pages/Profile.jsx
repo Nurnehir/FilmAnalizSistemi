@@ -111,13 +111,14 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
         <div>
           <h1 className="text-2xl font-bold">{t.profile_title}</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{t.profile_subtitle}</p>
         </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profil Resmi */}
         <section className={cardCls}>
           <h2 className="text-base font-semibold mb-4">{t.profile_photo}</h2>
@@ -190,7 +191,7 @@ export default function Profile() {
         </section>
 
         {/* Şifre */}
-        <section className={cardCls}>
+        <section className={`${cardCls} lg:col-span-2`}>
           <h2 className="text-base font-semibold mb-4">{t.profile_password_section}</h2>
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
             {[
@@ -218,6 +219,7 @@ export default function Profile() {
             </div>
           </form>
         </section>
+        </div>
 
       </div>
     </div>
