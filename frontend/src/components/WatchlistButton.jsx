@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useWatchlistContext } from '../context/WatchlistContext';
+import { useLang } from '../context/LangContext';
 
 export default function WatchlistButton({ movie, className = '' }) {
   const { user } = useAuth();
   const { isInList, getItem, add, remove } = useWatchlistContext();
+  const { t } = useLang();
   const [loading, setLoading] = useState(false);
 
   if (!user) return null;
@@ -40,7 +42,7 @@ export default function WatchlistButton({ movie, className = '' }) {
           : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
       } ${className}`}
     >
-      {inList ? '✓ Listede' : '+ Listeye Ekle'}
+      {inList ? `✓ ${t.wl_added}` : `+ ${t.wl_add}`}
     </button>
   );
 }
