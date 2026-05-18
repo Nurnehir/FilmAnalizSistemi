@@ -333,6 +333,66 @@
 - [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
 - [ ] **Ön koşul:** 11 (izlendi işareti) ve 12 (puanlama) tamamlanmış olmalı
 
+### 14. Öneri Geçmişi Detay Görünümü (Göz İkonu)
+> Home sayfasındaki "Son Önerilerim" listesindeki her satırın sağında göz ikonu olacak.
+> Tıklayınca o öneri oturumuna ait prompt + önerilen filmler görüntülenecek.
+
+- [ ] **Backend:** `GET /recommendations/{id}` endpoint — tek öneri kaydını getir
+  - `recommendation_history` tablosundan ilgili kaydı çek (user_id kontrolü yapılacak)
+  - `ai_response` JSON'unu parse et → `analysis` + `[{tmdb_id, reason}]` çıkar
+  - Her `tmdb_id` için `tmdb_service.get_movie_detail()` çağır (paralel, `asyncio.gather`)
+  - Yanıt: `{ id, user_prompt, analysis, created_at, movies: [{tmdb_id, title, poster_url, vote_average, reason}] }`
+- [ ] **Backend:** `app/schemas/recommendation.py` — `RecommendDetailResponse` şeması ekle
+- [ ] **Backend:** `app/routers/recommendations.py` — yeni endpoint'i `GET /recommendations/{id}` olarak ekle
+- [ ] **Frontend:** `src/pages/RecommendationDetail.jsx` oluştur
+  - Sayfa mount'unda `GET /recommendations/{id}` çağır
+  - Üstte kullanıcının orijinal promptu kutu içinde göster
+  - Altında AI analiz metni
+  - Film kartları grid halinde — her kartta `reason` (neden önerildi) metni de görünsün
+  - Film kartına tıklayınca `/movie/:id` detay sayfasına git
+  - Watchlist butonu çalışır olacak
+- [ ] **Frontend:** `src/api/recommendations.js` — `getRecommendationById(id)` fonksiyonu ekle
+- [ ] **Frontend:** `App.jsx`'e `/recommendations/:id` route ekle (PrivateRoute ile korumalı)
+- [ ] **Frontend:** `src/pages/Home.jsx` — "Son Önerilerim" listesindeki her satırın sağına göz ikonu ekle
+  - İkon: `👁` veya SVG eye icon (Heroicons tarzı)
+  - `navigate('/recommendations/' + rec.id)` ile yönlendirme
+  - İkon koyu modda `text-gray-400 hover:text-purple-400`, açık modda `text-gray-400 hover:text-purple-600`
+- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+  - i18n: `rec_detail_title`, `rec_detail_prompt_label`, `rec_detail_analysis_label`, `rec_detail_back`, `rec_detail_loading`, `rec_detail_not_found` anahtarları ekle
+
+### 15. Uygulama Adı Değişikliği
+> "FilmAI" ismi değiştirilecek. Yeni isim belirlendikten sonra tüm görünen yerlerde güncellenecek.
+
+- [ ] **Karar:** Yeni uygulama adını belirle (örn: "CineMatch", "FilmRadar", "MoodCine", "Sinefil" vb.)
+- [ ] **Frontend:** `frontend/index.html` — `<title>` etiketi güncelle
+- [ ] **Frontend:** `src/components/Navbar.jsx` — logo/marka adı güncelle (sol üst köşe metni)
+- [ ] **Frontend:** `src/pages/Login.jsx` — sol panel branding başlığı güncelle (eğer uygulama adı geçiyorsa)
+- [ ] **Frontend:** `src/pages/Register.jsx` — sol panel branding güncelle (eğer uygulama adı geçiyorsa)
+- [ ] **Frontend:** `src/i18n/tr.js` ve `src/i18n/en.js` — uygulama adı içeren string anahtarları güncelle
+- [ ] **Diğer:** `README.md` başlığı ve açıklaması güncelle
+- [ ] **Diğer:** `CLAUDE.md` / `AGENTS.md` içinde geçen referanslar güncelle (opsiyonel)
+
+### 16. Şifre Göster / Gizle (Göz İkonu — Password Toggle)
+> Login, Register ve Profile sayfalarındaki şifre alanlarının sağında göz ikonu olacak.
+> Tıklayınca `type="password"` ↔ `type="text"` toggle olacak.
+> Backend değişikliği yok, tamamen frontend UI özelliği.
+
+- [ ] **Frontend:** `src/components/PasswordInput.jsx` reusable bileşen oluştur
+  - Props: `value`, `onChange`, `placeholder`, `required`, `className`
+  - İçinde `showPassword` boolean state tut
+  - Sağda toggle butonu: göz açık SVG (gizli modda) ↔ göz kapalı SVG (görünür modda)
+  - `type={showPassword ? 'text' : 'password'}` dinamik
+  - Göz ikonu: `w-5 h-5`, `text-gray-400 hover:text-gray-600 dark:hover:text-gray-300`, `cursor-pointer`
+  - Buton `type="button"` olmalı (form submit tetiklemesin)
+- [ ] **Frontend:** `src/pages/Login.jsx` — şifre `<input>` → `<PasswordInput>` bileşeniyle değiştir
+- [ ] **Frontend:** `src/pages/Register.jsx` — şifre `<input>` → `<PasswordInput>` bileşeniyle değiştir
+- [ ] **Frontend:** `src/pages/Profile.jsx` — 3 şifre alanının hepsini `<PasswordInput>` ile değiştir
+  - Mevcut Şifre alanı
+  - Yeni Şifre alanı
+  - Yeni Şifre (Tekrar) alanı
+- [ ] **Frontend:** Koyu/açık mod uyumlu (göz ikonu renkleri dark: variantlı)
+- [ ] **Frontend:** TR/EN i18n etkilenmez — bileşen metinsiz, sadece ikon içerir
+
 ---
 
 ## AKTIF OTURUM NOTU
