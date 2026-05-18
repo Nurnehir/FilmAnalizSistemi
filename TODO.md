@@ -221,27 +221,54 @@
 
 ## YAPILACAKLAR — Yeni Özellikler
 
-### 1. Şifremi Unuttum
-- [ ] Backend: `POST /auth/forgot-password` endpoint (e-posta gönderme simülasyonu veya token)
-- [ ] Frontend: `src/pages/ForgotPassword.jsx` — e-posta formu
+### 1. Navbar Avatar Dropdown
+- [ ] Avatar yuvarlağına tıklayınca dropdown menü açılsın
+- [ ] Dropdown: kullanıcı adı + email (üst başlık), "Profil" linki, "Ayarlar" linki, "Çıkış Yap" butonu
+- [ ] Dropdown dışına tıklayınca kapansın (useRef + click outside)
+- [ ] Koyu/açık mod + TR/EN uyumlu
+
+### 2. Profil Sayfası (`/profile`)
+- [ ] `src/pages/Profile.jsx` oluştur — PrivateRoute ile korunacak
+- [ ] App.jsx'e `/profile` route ekle
+- [ ] Backend: `PUT /auth/me` endpoint — kullanıcı adı güncelleme
+- [ ] Backend: `PUT /auth/password` endpoint — şifre güncelleme (eski şifre doğrulama zorunlu)
+- [ ] Backend: `POST /auth/avatar` endpoint — profil resmi yükleme (base64)
+- [ ] Frontend: profil resmi yükleme + önizleme (avatar placeholder)
+- [ ] Frontend: kullanıcı adı düzenleme formu
+- [ ] Frontend: şifre güncelleme formu (eski şifre + yeni şifre + tekrar)
+- [ ] Koyu/açık mod + TR/EN uyumlu
+
+### 3. Ayarlar Sayfası (`/settings`)
+- [ ] `src/pages/Settings.jsx` oluştur — PrivateRoute ile korunacak
+- [ ] App.jsx'e `/settings` route ekle
+- [ ] Koyu/Açık mod toggle (ThemeContext ile bağlı)
+- [ ] Dil seçimi TR/EN (LangContext ile bağlı)
+- [ ] Tercihler localStorage'a kaydedilsin
+- [ ] Koyu/açık mod + TR/EN uyumlu
+
+### 4. Şifremi Unuttum
+- [ ] Backend: `POST /auth/forgot-password` endpoint (token üret, konsola yaz — mail altyapısı gerekmez)
+- [ ] Backend: `POST /auth/reset-password` endpoint — token + yeni şifre ile sıfırlama
+- [ ] `src/pages/ForgotPassword.jsx` — e-posta giriş formu
 - [ ] Login sayfasına "Şifremi unuttum" linki ekle
 - [ ] App.jsx'e `/forgot-password` route ekle
+- [ ] Koyu/açık mod + TR/EN uyumlu
 
-### 2. Koyu / Açık Mod
-- [ ] `src/context/ThemeContext.jsx` — tema state'i (dark/light), localStorage'a kaydet
-- [ ] `index.html` veya `App.jsx` — `dark` class'ı `<html>` etiketine toggle et
+### 5. Koyu / Açık Mod
 - [ ] `tailwind.config.js` — `darkMode: 'class'` aktif et
-- [ ] Navbar'a tema toggle butonu ekle: koyu modda ☀ güneş, açık modda ☽ hilal ikonu
-- [ ] Tüm sayfalar açık mod renkleri ile güncellendi (bg-white, text-gray-900 vb.)
+- [ ] `src/context/ThemeContext.jsx` — dark/light state, localStorage'a kaydet
+- [ ] App.jsx'te `<html>` etiketine `dark` class'ı toggle et
+- [ ] Navbar'a ikon butonu ekle: koyu moddayken ☀ (açık moda geç), açık moddayken ☽ (koyu moda geç)
+- [ ] Login, Register, Navbar, Home, Recommend, MovieDetail, Watchlist, Profile, Settings açık mod renkleri ile güncelle
 
-### 3. TR / EN Dil Desteği
-- [ ] `src/context/LangContext.jsx` — dil state'i (tr/en), localStorage'a kaydet
-- [ ] `src/i18n/tr.js` — Türkçe metin objesi
-- [ ] `src/i18n/en.js` — İngilizce metin objesi
-- [ ] `src/hooks/useLang.js` — kolay metin erişimi için hook
-- [ ] Navbar'a dil seçici ekle (TR / EN bayrak veya yazı)
-- [ ] Login, Register, Home, Recommend, MovieDetail, Watchlist sayfaları dil destekli hale getir
-- [ ] Navbar linkleri dil destekli hale getir
+### 6. TR / EN Dil Desteği
+- [ ] `src/context/LangContext.jsx` — tr/en state, localStorage'a kaydet
+- [ ] `src/i18n/tr.js` — tüm Türkçe metinler
+- [ ] `src/i18n/en.js` — tüm İngilizce metinler
+- [ ] `src/hooks/useLang.js` — `t('key')` şeklinde kolay erişim hook'u
+- [ ] Navbar'a dil seçici ekle (TR / EN)
+- [ ] Login, Register, Home, Recommend, MovieDetail, Watchlist, Profile, Settings, ForgotPassword sayfaları dil destekli hale getir
+- [ ] Navbar linkleri ve dropdown dil destekli hale getir
 
 ---
 
