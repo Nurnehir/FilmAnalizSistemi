@@ -270,6 +270,69 @@
 - [x] Login, Register, Home, Recommend, MovieDetail, Watchlist, Profile, Settings sayfaları dil destekli hale getir
 - [x] Navbar linkleri ve dropdown dil destekli hale getir
 
+### 7. Arama Çubuğu (Navbar)
+- [ ] **Frontend:** `src/components/SearchBar.jsx` — genişleyen input + debounce (300ms)
+- [ ] **Frontend:** Navbar'a arama ikonu ve açılır arama kutusu ekle
+- [ ] **Frontend:** `src/pages/SearchResults.jsx` — film + dizi sonuçları grid halinde
+- [ ] **Frontend:** App.jsx'e `/search?q=` route ekle
+- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+- [ ] **Backend:** `GET /movies/search?q=&media_type=` endpoint zaten mevcut ✓
+
+### 8. Film / Dizi Toggle (Trend Sayfası)
+- [ ] **Frontend:** Home.jsx'e "Filmler" / "Diziler" sekme toggle ekle
+- [ ] **Frontend:** Seçilen türe göre `getTrending('movie')` veya `getTrending('tv')` çağır
+- [ ] **Frontend:** Aktif sekme vurgulu, geçiş animasyonlu
+- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+- [ ] **Backend:** `GET /movies/trending?media_type=tv` zaten destekleniyor ✓
+
+### 9. Tür Filtresi Sidebar
+- [ ] **Frontend:** `src/components/GenreSidebar.jsx` — tür listesi checkbox'lı sidebar
+- [ ] **Frontend:** Home.jsx'e sidebar entegrasyonu (responsive: mobilde drawer)
+- [ ] **Frontend:** Seçilen türlere göre `GET /movies/discover?genres=` çağrısı
+- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+- [ ] **Backend:** `GET /movies/discover` endpoint ekle (tmdb_service.discover_movies sarmalayıcı)
+- [ ] **Backend:** `app/routers/movies.py` — `GET /movies/discover?genres=&sort_by=` endpoint
+
+### 10. Kullanıcı Profil İstatistikleri
+- [ ] **DB:** `recommendation_history` ve `watchlist` tablolarından istatistik sorgular yazılacak
+- [ ] **Backend:** `GET /auth/stats` endpoint — toplam watchlist, izlenen film sayısı, favori tür
+- [ ] **Backend:** `app/routers/auth.py`'e stats endpoint ekle
+- [ ] **Backend:** Favori tür: watchlist'teki filmlerin genre_ids'inden en sık olanı hesapla
+- [ ] **Frontend:** Profile.jsx'e istatistik kartları bölümü ekle (toplam film, öneri sayısı, favori tür)
+- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+
+### 11. İzlendi İşareti (Watchlist Sekmeleri)
+- [ ] **DB:** `watchlist` tablosuna `watched BOOLEAN DEFAULT FALSE` kolonu ekle
+- [ ] **DB:** Alembic migration: `alembic revision --autogenerate -m "add_watched_column"`
+- [ ] **Backend:** `PATCH /watchlist/{id}/watched` endpoint — `watched` alanını güncelle
+- [ ] **Backend:** `app/schemas/watchlist.py` — `WatchedUpdate` şeması ekle
+- [ ] **Frontend:** Watchlist.jsx'e "Tümü" / "İzlenecek" / "İzlendi" sekmeleri ekle
+- [ ] **Frontend:** Film kartına "İzledim ✓" toggle butonu ekle
+- [ ] **Frontend:** `src/api/watchlist.js` — `markWatched(id, watched)` fonksiyonu ekle
+- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+
+### 12. Film Puanlama Sistemi (1–5 Yıldız)
+- [ ] **DB:** `watchlist` tablosuna `user_rating SMALLINT NULL` kolonu ekle (1–5)
+- [ ] **DB:** Alembic migration: `alembic revision --autogenerate -m "add_user_rating"`
+- [ ] **Backend:** `PATCH /watchlist/{id}/rating` endpoint — puan kaydet/güncelle
+- [ ] **Backend:** `app/schemas/watchlist.py` — `RatingUpdate` şeması ekle
+- [ ] **Frontend:** `src/components/StarRating.jsx` — 1–5 yıldız interaktif bileşen
+- [ ] **Frontend:** Watchlist kartlarına StarRating bileşeni ekle
+- [ ] **Frontend:** `src/api/watchlist.js` — `rateMovie(id, rating)` fonksiyonu ekle
+- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+
+### 13. Kişiselleştirilmiş Öneri (Zevk Profili)
+- [ ] **Backend:** `GET /auth/taste-profile` endpoint — puanlı filmlerden zevk profili JSON üret
+- [ ] **Backend:** `app/services/gemini_service.py` — `generate_taste_profile(rated_movies)` fonksiyonu
+  - Groq'a puanlı filmleri gönder → "Aksiyon sever, drama sevmez, 90'lar nostaljisi var" özeti üret
+- [ ] **Backend:** `POST /recommendations` isteğine `use_taste_profile: bool` parametresi ekle
+  - `True` ise taste_profile prompt'a eklenerek Groq'a gönderilir
+- [ ] **Frontend:** Recommend.jsx'e "Zevk profilime göre öner" toggle/checkbox ekle
+- [ ] **Frontend:** Profilin kısa özeti sayfada gösterilsin ("Sen aksiyon seviyorsun 🎬")
+- [ ] **Frontend:** En az 3 puanlı film olmadan toggle pasif (uyarı mesajıyla)
+- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+- [ ] **Ön koşul:** 11 (izlendi işareti) ve 12 (puanlama) tamamlanmış olmalı
+
 ---
 
 ## AKTIF OTURUM NOTU
