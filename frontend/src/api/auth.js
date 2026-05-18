@@ -16,3 +16,6 @@ export const updatePassword = (current_password, new_password) =>
 
 export const updateAvatar = (avatar_url) =>
   client.post('/auth/avatar', { avatar_url });
+
+export const deleteAvatar = () =>
+  client.delete('/auth/avatar');

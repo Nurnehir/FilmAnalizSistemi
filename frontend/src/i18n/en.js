@@ -125,6 +125,10 @@ const en = {
   profile_avatar_updated: 'Profile photo updated.',
   profile_avatar_too_large: 'File must be under 2MB.',
   profile_avatar_failed: 'Upload failed.',
+  profile_avatar_remove: 'Remove Photo',
+  profile_avatar_removing: 'Removing...',
+  profile_avatar_removed: 'Profile photo removed.',
+  profile_avatar_remove_failed: 'Failed to remove photo.',
 
   // Settings
   settings_title: 'Settings',

@@ -125,6 +125,10 @@ const tr = {
   profile_avatar_updated: 'Profil resmi güncellendi.',
   profile_avatar_too_large: 'Dosya 2MB\'dan küçük olmalı.',
   profile_avatar_failed: 'Yükleme başarısız.',
+  profile_avatar_remove: 'Resmi Kaldır',
+  profile_avatar_removing: 'Kaldırılıyor...',
+  profile_avatar_removed: 'Profil resmi kaldırıldı.',
+  profile_avatar_remove_failed: 'Kaldırma işlemi başarısız.',
 
   // Settings
   settings_title: 'Ayarlar',

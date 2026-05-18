@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { updateUsername, updatePassword, updateAvatar } from '../api/auth';
+import { updateUsername, updatePassword, updateAvatar, deleteAvatar } from '../api/auth';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
@@ -16,6 +16,7 @@ export default function Profile() {
   const [passwordMsg, setPasswordMsg] = useState(null);
 
   const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarRemoving, setAvatarRemoving] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
   const fileRef = useRef();
 
@@ -54,6 +55,20 @@ export default function Profile() {
       setPasswordMsg({ type: 'error', text: err.response?.data?.detail || t.profile_password_failed });
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    setAvatarRemoving(true);
+    setAvatarMsg(null);
+    try {
+      const res = await deleteAvatar();
+      updateUser(res.data);
+      setAvatarMsg({ type: 'success', text: t.profile_avatar_removed });
+    } catch {
+      setAvatarMsg({ type: 'error', text: t.profile_avatar_remove_failed });
+    } finally {
+      setAvatarRemoving(false);
     }
   };
 
@@ -122,13 +137,24 @@ export default function Profile() {
               )}
             </div>
             <div>
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={avatarLoading}
-                className={btnCls}
-              >
-                {t.profile_change_photo}
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={avatarLoading || avatarRemoving}
+                  className={btnCls}
+                >
+                  {avatarLoading ? t.loading : t.profile_change_photo}
+                </button>
+                {user?.avatar_url && (
+                  <button
+                    onClick={handleAvatarRemove}
+                    disabled={avatarLoading || avatarRemoving}
+                    className="text-sm px-4 py-2.5 rounded-xl border border-red-300 dark:border-red-800 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-50 transition font-medium"
+                  >
+                    {avatarRemoving ? t.profile_avatar_removing : t.profile_avatar_remove}
+                  </button>
+                )}
+              </div>
               <p className="text-gray-400 dark:text-gray-500 text-xs mt-1.5">{t.profile_photo_hint}</p>
               <Msg msg={avatarMsg} />
             </div>

@@ -96,3 +96,18 @@ async def update_avatar(
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail="Avatar guncellenirken hata olustu")
+
+
+@router.delete("/avatar", response_model=UserOut)
+async def delete_avatar(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        current_user.avatar_url = None
+        db.commit()
+        db.refresh(current_user)
+        return current_user
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Avatar silinirken hata olustu")
