@@ -221,11 +221,11 @@
 
 ## YAPILACAKLAR — Yeni Özellikler
 
-### 1. Navbar Avatar Dropdown
-- [ ] Avatar yuvarlağına tıklayınca dropdown menü açılsın
-- [ ] Dropdown: kullanıcı adı + email (üst başlık), "Profil" linki, "Ayarlar" linki, "Çıkış Yap" butonu
-- [ ] Dropdown dışına tıklayınca kapansın (useRef + click outside)
-- [ ] Koyu/açık mod + TR/EN uyumlu
+### 1. Navbar Avatar Dropdown ✅
+- [x] Avatar yuvarlağına tıklayınca dropdown menü açılsın
+- [x] Dropdown: kullanıcı adı + email (üst başlık), "Profil" linki, "Ayarlar" linki, "Çıkış Yap" butonu
+- [x] Dropdown dışına tıklayınca kapansın (useRef + click outside)
+- [ ] Koyu/açık mod + TR/EN uyumlu (5 ve 6. maddeler tamamlanınca)
 
 ### 2. Profil Sayfası (`/profile`)
 - [ ] `src/pages/Profile.jsx` oluştur — PrivateRoute ile korunacak
