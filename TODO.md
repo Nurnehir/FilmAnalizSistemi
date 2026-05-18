@@ -159,13 +159,13 @@
 - [x] `src/pages/Watchlist.jsx` — kullanicinin izleme listesi
 
 **Kontrol:**
-- [ ] Dashboard'da gercek filmler gorunuyor
-- [ ] Recommend sayfasinda prompt yaz → AI onerisi geliyor
-- [ ] Film posterler yukleniyor
-- [ ] MovieDetail sayfasi aciliyor
-- [ ] Watchlist ekle/cikar anlık calisir
-- [ ] Loading spinner gorunuyor
-- [ ] Hata mesajlari kullaniciya gosteriliyor
+- [x] Dashboard'da gercek filmler gorunuyor
+- [x] Recommend sayfasinda prompt yaz → AI onerisi geliyor
+- [x] Film posterler yukleniyor
+- [x] MovieDetail sayfasi aciliyor
+- [x] Watchlist ekle/cikar anlık calisir
+- [x] Loading spinner gorunuyor
+- [x] Hata mesajlari kullaniciya gosteriliyor
 
 ---
 
@@ -205,6 +205,46 @@
 
 ---
 
+## ARAYÜZ İYİLEŞTİRMELERİ (Tamamlanan)
+
+- [x] Gemini API → Groq/Llama 3.3 migrasyonu (`gemini_service.py`, `config.py`, `requirements.txt`)
+- [x] API anahtarları `docker-compose.yml`'den kaldırıldı, `.env` + `env_file` yapısına geçildi
+- [x] `.env.example` oluşturuldu, `.gitignore` güncellendi
+- [x] Login sayfası split panel tasarımına geçildi (sol: marka, sağ: form)
+- [x] Register sayfası aynı split panel tasarımına geçildi
+- [x] Navbar yenilendi — avatar harfi, aktif sekme highlight, backdrop-blur
+- [x] "AI Öneri" → "Öneri", "AI analiz ediyor" → "Analiz ediliyor" vb. Türkçeleştirmeler
+- [x] Recommend sayfası başlığı ve loading metinleri güncellendi
+- [x] Home hero butonu güncellendi
+
+---
+
+## YAPILACAKLAR — Yeni Özellikler
+
+### 1. Şifremi Unuttum
+- [ ] Backend: `POST /auth/forgot-password` endpoint (e-posta gönderme simülasyonu veya token)
+- [ ] Frontend: `src/pages/ForgotPassword.jsx` — e-posta formu
+- [ ] Login sayfasına "Şifremi unuttum" linki ekle
+- [ ] App.jsx'e `/forgot-password` route ekle
+
+### 2. Koyu / Açık Mod
+- [ ] `src/context/ThemeContext.jsx` — tema state'i (dark/light), localStorage'a kaydet
+- [ ] `index.html` veya `App.jsx` — `dark` class'ı `<html>` etiketine toggle et
+- [ ] `tailwind.config.js` — `darkMode: 'class'` aktif et
+- [ ] Navbar'a tema toggle butonu ekle: koyu modda ☀ güneş, açık modda ☽ hilal ikonu
+- [ ] Tüm sayfalar açık mod renkleri ile güncellendi (bg-white, text-gray-900 vb.)
+
+### 3. TR / EN Dil Desteği
+- [ ] `src/context/LangContext.jsx` — dil state'i (tr/en), localStorage'a kaydet
+- [ ] `src/i18n/tr.js` — Türkçe metin objesi
+- [ ] `src/i18n/en.js` — İngilizce metin objesi
+- [ ] `src/hooks/useLang.js` — kolay metin erişimi için hook
+- [ ] Navbar'a dil seçici ekle (TR / EN bayrak veya yazı)
+- [ ] Login, Register, Home, Recommend, MovieDetail, Watchlist sayfaları dil destekli hale getir
+- [ ] Navbar linkleri dil destekli hale getir
+
+---
+
 ## AKTIF OTURUM NOTU
 
 > Claude Code bu bolumu oku: Simdi hangi fazdasin?
@@ -212,7 +252,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** FAZ 1-10 tamamlandi. Gemini → Groq/Llama 3.3 migrasyonu tamamlandi. Siradaki: GitHub push → demo video → rapor.
+**Son guncelleme:** Arayüz yenilendi, Groq migrasyonu tamam. Sıradaki: Şifremi Unuttum → Koyu/Açık Mod → TR/EN dil desteği → GitHub push → demo → rapor.
 
 ---
 

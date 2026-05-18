@@ -32,21 +32,17 @@ export default function Recommend() {
     }
   };
 
-  const reasons = {};
-  result?.movies?.forEach((m) => {
-    reasons[m.tmdb_id] = m.reason;
-  });
-
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
         {/* Başlık */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3">
-            <span className="text-purple-400">✨</span> AI Film Önericisi
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight">
+            Kişisel Film Önerisi
           </h1>
-          <p className="text-gray-400">
-            Ruh halini, istediğin türü veya ne aradığını yaz — sana özel öneriler alayım.
+          <p className="text-gray-400 text-sm sm:text-base max-w-lg mx-auto">
+            Ruh halini, istediğin türü veya aradığın hissi yaz — sana özel öneriler hazırlayalım.
           </p>
         </div>
 
@@ -63,6 +59,7 @@ export default function Recommend() {
                 if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSubmit();
               }}
             />
+            <span className="absolute bottom-3 right-3 text-gray-600 text-xs">Ctrl+Enter</span>
           </div>
 
           {/* Örnek chipler */}
@@ -82,9 +79,9 @@ export default function Recommend() {
           <button
             type="submit"
             disabled={!prompt.trim() || isLoading}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-semibold py-3 rounded-xl transition-colors"
+            className="w-full bg-purple-600 hover:bg-purple-500 disabled:bg-gray-800 disabled:text-gray-600 text-white font-semibold py-3 rounded-xl transition-colors"
           >
-            {isLoading ? 'AI analiz ediyor...' : 'Öneri Al'}
+            {isLoading ? 'Analiz ediliyor...' : 'Öneri Al'}
           </button>
         </form>
 
@@ -93,15 +90,16 @@ export default function Recommend() {
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <LoadingSpinner size="lg" />
             <div className="text-center">
-              <p className="text-white font-medium">Gemini analiz ediyor...</p>
-              <p className="text-gray-500 text-sm mt-1">İsteğinizi anlıyor ve size özel filmler seçiyor</p>
+              <p className="text-white font-medium">Öneriler hazırlanıyor...</p>
+              <p className="text-gray-500 text-sm mt-1">İsteğiniz analiz ediliyor, size özel filmler seçiliyor</p>
             </div>
           </div>
         )}
 
         {/* Hata */}
         {error && !isLoading && (
-          <div className="mt-6 bg-red-950/50 border border-red-800 text-red-300 rounded-xl p-4 text-sm">
+          <div className="mt-6 bg-red-950/50 border border-red-800 text-red-300 rounded-xl p-4 text-sm flex items-start gap-2">
+            <span className="flex-shrink-0 mt-0.5">⚠</span>
             {error}
           </div>
         )}
@@ -109,10 +107,10 @@ export default function Recommend() {
         {/* Sonuçlar */}
         {result && !isLoading && (
           <div className="mt-8 space-y-6">
-            {/* AI Analiz */}
+            {/* Analiz */}
             {result.analysis && (
-              <div className="bg-gray-900 border border-purple-800/50 rounded-xl p-4">
-                <p className="text-xs text-purple-400 font-medium uppercase tracking-wider mb-2">AI Analiz</p>
+              <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
+                <p className="text-xs text-purple-400 font-semibold uppercase tracking-wider mb-2">Analiz</p>
                 <p className="text-gray-300 text-sm leading-relaxed">{result.analysis}</p>
               </div>
             )}

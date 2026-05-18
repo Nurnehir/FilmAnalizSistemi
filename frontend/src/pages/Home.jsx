@@ -44,14 +44,14 @@ export default function Home() {
               <span className="text-purple-400">film önerileri</span>
             </h1>
             <p className="text-gray-400 text-lg mb-8">
-              Yapay zeka destekli film öneri sistemi. Ne izlemek istediğini yaz, sana özel öneriler al.
+              Ne izlemek istediğini yaz, yapay zeka ruh haline göre sana özel öneriler hazırlasın.
             </p>
             {user ? (
               <Link
                 to="/recommend"
-                className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+                className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
               >
-                <span>✨</span> AI Öneri Al
+                <span>✦</span> Öneri Al
               </Link>
             ) : (
               <div className="flex items-center gap-4">
