@@ -227,16 +227,17 @@
 - [x] Dropdown dışına tıklayınca kapansın (useRef + click outside)
 - [ ] Koyu/açık mod + TR/EN uyumlu (5 ve 6. maddeler tamamlanınca)
 
-### 2. Profil Sayfası (`/profile`)
-- [ ] `src/pages/Profile.jsx` oluştur — PrivateRoute ile korunacak
-- [ ] App.jsx'e `/profile` route ekle
-- [ ] Backend: `PUT /auth/me` endpoint — kullanıcı adı güncelleme
-- [ ] Backend: `PUT /auth/password` endpoint — şifre güncelleme (eski şifre doğrulama zorunlu)
-- [ ] Backend: `POST /auth/avatar` endpoint — profil resmi yükleme (base64)
-- [ ] Frontend: profil resmi yükleme + önizleme (avatar placeholder)
-- [ ] Frontend: kullanıcı adı düzenleme formu
-- [ ] Frontend: şifre güncelleme formu (eski şifre + yeni şifre + tekrar)
-- [ ] Koyu/açık mod + TR/EN uyumlu
+### 2. Profil Sayfası (`/profile`) ✅
+- [x] `src/pages/Profile.jsx` oluştur — PrivateRoute ile korunacak
+- [x] App.jsx'e `/profile` route ekle
+- [x] Backend: `PUT /auth/me` endpoint — kullanıcı adı güncelleme
+- [x] Backend: `PUT /auth/password` endpoint — şifre güncelleme (eski şifre doğrulama zorunlu)
+- [x] Backend: `POST /auth/avatar` endpoint — profil resmi yükleme (base64)
+- [x] Alembic migration: `avatar_url` kolonu users tablosuna eklendi
+- [x] Frontend: profil resmi yükleme + önizleme (avatar placeholder)
+- [x] Frontend: kullanıcı adı düzenleme formu
+- [x] Frontend: şifre güncelleme formu (eski şifre + yeni şifre + tekrar)
+- [ ] Koyu/açık mod + TR/EN uyumlu (5 ve 6. maddeler tamamlanınca)
 
 ### 3. Ayarlar Sayfası (`/settings`)
 - [ ] `src/pages/Settings.jsx` oluştur — PrivateRoute ile korunacak

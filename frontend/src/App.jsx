@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import Recommend from './pages/Recommend';
 import MovieDetail from './pages/MovieDetail';
 import Watchlist from './pages/Watchlist';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
           <Route path="/recommend" element={<PrivateRoute><Recommend /></PrivateRoute>} />
           <Route path="/watchlist" element={<PrivateRoute><Watchlist /></PrivateRoute>} />
+          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/movie/:id" element={<MovieDetail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
