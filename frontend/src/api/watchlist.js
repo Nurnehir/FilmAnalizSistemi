@@ -8,3 +8,6 @@ export const addToWatchlist = (item) =>
 
 export const removeFromWatchlist = (id) =>
   client.delete(`/watchlist/${id}`).then((r) => r.data);
+
+export const markWatched = (id, watched) =>
+  client.patch(`/watchlist/${id}/watched`, { watched }).then((r) => r.data);

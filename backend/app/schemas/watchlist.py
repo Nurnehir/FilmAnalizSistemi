@@ -16,6 +16,7 @@ class WatchlistOut(BaseModel):
     media_type: str
     title: str
     poster_path: Optional[str] = None
+    watched: bool = False
     added_at: datetime
 
     class Config:
@@ -25,3 +26,7 @@ class WatchlistOut(BaseModel):
 class WatchlistResponse(BaseModel):
     items: List[WatchlistOut]
     total: int
+
+
+class WatchedUpdate(BaseModel):
+    watched: bool

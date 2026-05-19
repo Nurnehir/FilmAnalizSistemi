@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, UniqueConstraint, func
 from app.database import Base
 
 
@@ -11,6 +11,7 @@ class Watchlist(Base):
     media_type  = Column(String(10), nullable=False)
     title       = Column(String(255), nullable=False)
     poster_path = Column(String(255), nullable=True)
+    watched     = Column(Boolean, nullable=False, default=False, server_default="false")
     added_at    = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (

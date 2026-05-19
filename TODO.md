@@ -300,15 +300,15 @@
 - [x] **Frontend:** Profile.jsx'e 3 istatistik kartı eklendi (İzleme Listesi / Öneri İsteği / Önerilen Film)
 - [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu
 
-### 11. İzlendi İşareti (Watchlist Sekmeleri)
-- [ ] **DB:** `watchlist` tablosuna `watched BOOLEAN DEFAULT FALSE` kolonu ekle
-- [ ] **DB:** Alembic migration: `alembic revision --autogenerate -m "add_watched_column"`
-- [ ] **Backend:** `PATCH /watchlist/{id}/watched` endpoint — `watched` alanını güncelle
-- [ ] **Backend:** `app/schemas/watchlist.py` — `WatchedUpdate` şeması ekle
-- [ ] **Frontend:** Watchlist.jsx'e "Tümü" / "İzlenecek" / "İzlendi" sekmeleri ekle
-- [ ] **Frontend:** Film kartına "İzledim ✓" toggle butonu ekle
-- [ ] **Frontend:** `src/api/watchlist.js` — `markWatched(id, watched)` fonksiyonu ekle
-- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+### 11. İzlendi İşareti (Watchlist Sekmeleri) ✅
+- [x] **DB:** `watchlist` tablosuna `watched BOOLEAN DEFAULT FALSE` kolonu eklendi
+- [x] **DB:** Alembic migration: `c3d4e5f6a7b8_add_watched_column.py` oluşturuldu ve uygulandı
+- [x] **Backend:** `PATCH /watchlist/{id}/watched` endpoint eklendi
+- [x] **Backend:** `app/schemas/watchlist.py` — `WatchedUpdate` şeması eklendi, `WatchlistOut`'a `watched` alanı eklendi
+- [x] **Frontend:** Watchlist.jsx'e "Tümü" / "İzlenecek" / "İzlendi" sekmeleri eklendi (sayaçlı)
+- [x] **Frontend:** Film kartına "İzledim ✓" toggle butonu eklendi (izlendi kartı yeşil kenarlıklı)
+- [x] **Frontend:** `src/api/watchlist.js` — `markWatched(id, watched)` fonksiyonu eklendi
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu
 
 ### 12. Film Puanlama Sistemi (1–5 Yıldız)
 - [ ] **DB:** `watchlist` tablosuna `user_rating SMALLINT NULL` kolonu ekle (1–5)
@@ -390,7 +390,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 9-10 tamamlandı. 9: Tür Filtresi Sidebar. 10: Kullanıcı Profil İstatistikleri — GET /auth/stats endpoint, Profile.jsx'e 3 istatistik kartı. Sıradaki: 4. Şifremi Unuttum → GitHub push → demo → rapor.
+**Son guncelleme:** 9-10-11 tamamlandı. 11: İzlendi İşareti — watched kolonu + migration, PATCH /watchlist/{id}/watched endpoint, Watchlist.jsx sekmeleri (Tümü/İzlenecek/İzlendi) + toggle buton. Sıradaki: 12. Puanlama → 4. Şifremi Unuttum → GitHub push.
 
 ---
 

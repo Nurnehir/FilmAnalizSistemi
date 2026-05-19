@@ -92,6 +92,12 @@ const en = {
   wl_added: 'In List',
   wl_movies: 'films',
   wl_loading: 'Loading list...',
+  wl_tab_all: 'All',
+  wl_tab_unwatched: 'To Watch',
+  wl_tab_watched: 'Watched',
+  wl_mark_watched: 'Mark Watched',
+  wl_mark_unwatched: 'Undo',
+  wl_watched_badge: 'Watched ✓',
 
   // Movie Detail
   detail_trailer: 'Watch Trailer',

@@ -92,6 +92,12 @@ const tr = {
   wl_added: 'Listede',
   wl_movies: 'film',
   wl_loading: 'Liste yükleniyor...',
+  wl_tab_all: 'Tümü',
+  wl_tab_unwatched: 'İzlenecek',
+  wl_tab_watched: 'İzlendi',
+  wl_mark_watched: 'İzledim',
+  wl_mark_unwatched: 'Geri Al',
+  wl_watched_badge: 'İzlendi ✓',
 
   // Movie Detail
   detail_trailer: 'Fragman İzle',
