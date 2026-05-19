@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getWatchlist, removeFromWatchlist, markWatched } from '../api/watchlist';
+import { getWatchlist, removeFromWatchlist, markWatched, rateMovie } from '../api/watchlist';
 import { useLang } from '../context/LangContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import StarRating from '../components/StarRating';
 
 export default function Watchlist() {
   const { t } = useLang();
@@ -11,6 +12,7 @@ export default function Watchlist() {
   const [error, setError] = useState(null);
   const [removing, setRemoving] = useState(null);
   const [toggling, setToggling] = useState(null);
+  const [rating, setRating] = useState(null);
   const [tab, setTab] = useState('all');
 
   useEffect(() => {
@@ -37,6 +39,17 @@ export default function Watchlist() {
     } catch {
     } finally {
       setRemoving(null);
+    }
+  };
+
+  const handleRate = async (item, newRating) => {
+    setRating(item.id);
+    try {
+      const updated = await rateMovie(item.id, newRating);
+      setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, user_rating: updated.user_rating } : i)));
+    } catch {
+    } finally {
+      setRating(null);
     }
   };
 
@@ -193,6 +206,14 @@ export default function Watchlist() {
                     <p className="text-gray-400 dark:text-gray-600 text-xs">
                       {new Date(item.added_at).toLocaleDateString('tr-TR')}
                     </p>
+                    {/* Star rating */}
+                    <div className="flex items-center justify-center py-0.5">
+                      <StarRating
+                        value={item.user_rating}
+                        onChange={(val) => handleRate(item, val)}
+                        disabled={rating === item.id}
+                      />
+                    </div>
                     {/* Watched toggle */}
                     <button
                       onClick={() => handleToggleWatched(item)}

@@ -17,6 +17,7 @@ class WatchlistOut(BaseModel):
     title: str
     poster_path: Optional[str] = None
     watched: bool = False
+    user_rating: Optional[int] = None
     added_at: datetime
 
     class Config:
@@ -30,3 +31,7 @@ class WatchlistResponse(BaseModel):
 
 class WatchedUpdate(BaseModel):
     watched: bool
+
+
+class RatingUpdate(BaseModel):
+    rating: Optional[int] = None  # 1-5 veya null (puan kaldır)

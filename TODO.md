@@ -310,15 +310,15 @@
 - [x] **Frontend:** `src/api/watchlist.js` — `markWatched(id, watched)` fonksiyonu eklendi
 - [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu
 
-### 12. Film Puanlama Sistemi (1–5 Yıldız)
-- [ ] **DB:** `watchlist` tablosuna `user_rating SMALLINT NULL` kolonu ekle (1–5)
-- [ ] **DB:** Alembic migration: `alembic revision --autogenerate -m "add_user_rating"`
-- [ ] **Backend:** `PATCH /watchlist/{id}/rating` endpoint — puan kaydet/güncelle
-- [ ] **Backend:** `app/schemas/watchlist.py` — `RatingUpdate` şeması ekle
-- [ ] **Frontend:** `src/components/StarRating.jsx` — 1–5 yıldız interaktif bileşen
-- [ ] **Frontend:** Watchlist kartlarına StarRating bileşeni ekle
-- [ ] **Frontend:** `src/api/watchlist.js` — `rateMovie(id, rating)` fonksiyonu ekle
-- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+### 12. Film Puanlama Sistemi (1–5 Yıldız) ✅
+- [x] **DB:** `watchlist` tablosuna `user_rating SMALLINT NULL` kolonu eklendi
+- [x] **DB:** Alembic migration `d4e5f6a7b8c9` oluşturuldu ve uygulandı
+- [x] **Backend:** `PATCH /watchlist/{id}/rating` endpoint eklendi (1-5 validasyon + null)
+- [x] **Backend:** `app/schemas/watchlist.py` — `RatingUpdate` şeması + `WatchlistOut`'a `user_rating` eklendi
+- [x] **Frontend:** `src/components/StarRating.jsx` — hover efektli 1–5 yıldız bileşeni (aynı yıldıza tıklayınca sıfırlanır)
+- [x] **Frontend:** Watchlist kartlarına StarRating bileşeni eklendi (watched toggle üzerinde)
+- [x] **Frontend:** `src/api/watchlist.js` — `rateMovie(id, rating)` fonksiyonu eklendi
+- [x] **Frontend:** Koyu/açık mod uyumlu (yıldızlar dark: variantlı)
 
 ### 13. Kişiselleştirilmiş Öneri (Zevk Profili)
 - [ ] **Backend:** `GET /auth/taste-profile` endpoint — puanlı filmlerden zevk profili JSON üret
@@ -390,7 +390,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 9-10-11 tamamlandı. 11: İzlendi İşareti — watched kolonu + migration, PATCH /watchlist/{id}/watched endpoint, Watchlist.jsx sekmeleri (Tümü/İzlenecek/İzlendi) + toggle buton. Sıradaki: 12. Puanlama → 4. Şifremi Unuttum → GitHub push.
+**Son guncelleme:** 9-10-11-12 tamamlandı. 12: Film Puanlama — user_rating kolonu + migration, PATCH /watchlist/{id}/rating, StarRating.jsx hover efektli bileşen, Watchlist kartlarına entegre. Sıradaki: 4. Şifremi Unuttum → GitHub push.
 
 ---
 

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.models.user import User
 from app.models.watchlist import Watchlist
-from app.schemas.watchlist import WatchlistItem, WatchlistOut, WatchlistResponse, WatchedUpdate
+from app.schemas.watchlist import WatchlistItem, WatchlistOut, WatchlistResponse, WatchedUpdate, RatingUpdate
 
 router = APIRouter(prefix="/watchlist", tags=["watchlist"])
 
@@ -79,6 +79,32 @@ async def update_watched(
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail="Guncellenemedi")
+
+
+@router.patch("/{item_id}/rating", response_model=WatchlistOut)
+async def update_rating(
+    item_id: int,
+    data: RatingUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if data.rating is not None and not (1 <= data.rating <= 5):
+        raise HTTPException(status_code=400, detail="Puan 1-5 arasinda olmali")
+    item = (
+        db.query(Watchlist)
+        .filter(Watchlist.id == item_id, Watchlist.user_id == current_user.id)
+        .first()
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Liste ogesi bulunamadi")
+    try:
+        item.user_rating = data.rating
+        db.commit()
+        db.refresh(item)
+        return item
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Puan kaydedilemedi")
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_200_OK)
