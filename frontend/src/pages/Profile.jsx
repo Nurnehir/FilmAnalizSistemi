@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { updateUsername, updatePassword, updateAvatar, deleteAvatar } from '../api/auth';
+import PasswordInput from '../components/PasswordInput';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
@@ -195,19 +196,19 @@ export default function Profile() {
           <h2 className="text-base font-semibold mb-4">{t.profile_password_section}</h2>
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
             {[
-              { label: t.profile_current_password, key: 'current', placeholder: '••••••••' },
-              { label: t.profile_new_password, key: 'next', placeholder: 'En az 6 karakter' },
-              { label: t.profile_confirm_password, key: 'confirm', placeholder: '••••••••' },
-            ].map(({ label, key, placeholder }) => (
+              { label: t.profile_current_password, key: 'current', placeholder: '••••••••', autoComplete: 'current-password' },
+              { label: t.profile_new_password, key: 'next', placeholder: 'En az 6 karakter', autoComplete: 'new-password' },
+              { label: t.profile_confirm_password, key: 'confirm', placeholder: '••••••••', autoComplete: 'new-password' },
+            ].map(({ label, key, placeholder, autoComplete }) => (
               <div key={key}>
                 <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1.5">{label}</label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={passwords[key]}
                   onChange={(e) => setPasswords({ ...passwords, [key]: e.target.value })}
                   required
                   className={inputCls}
                   placeholder={placeholder}
+                  autoComplete={autoComplete}
                 />
               </div>
             ))}

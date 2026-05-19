@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
+import PasswordInput from '../components/PasswordInput';
 
 export default function Register() {
   const { register } = useAuth();
@@ -95,14 +96,14 @@ export default function Register() {
               </div>
               <div>
                 <label className="block text-gray-600 dark:text-gray-300 text-sm font-medium mb-1.5">{t.register_password}</label>
-                <input
-                  type="password"
+                <PasswordInput
                   name="password"
                   value={form.password}
                   onChange={handleChange}
                   required
                   className={inputCls}
                   placeholder="••••••••"
+                  autoComplete="new-password"
                 />
               </div>
               <button

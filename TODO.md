@@ -360,26 +360,26 @@
 - [ ] **Diğer:** `README.md` başlığı ve açıklaması güncelle
 - [ ] **Diğer:** `CLAUDE.md` / `AGENTS.md` içinde geçen referanslar güncelle (opsiyonel)
 
-### 16. Şifre Göster / Gizle (Göz İkonu — Password Toggle)
+### 16. Şifre Göster / Gizle (Göz İkonu — Password Toggle) ✅
 > Login, Register ve Profile sayfalarındaki şifre alanlarının sağında göz ikonu olacak.
 > Tıklayınca `type="password"` ↔ `type="text"` toggle olacak.
 > Backend değişikliği yok, tamamen frontend UI özelliği.
 
-- [ ] **Frontend:** `src/components/PasswordInput.jsx` reusable bileşen oluştur
-  - Props: `value`, `onChange`, `placeholder`, `required`, `className`
-  - İçinde `showPassword` boolean state tut
+- [x] **Frontend:** `src/components/PasswordInput.jsx` reusable bileşen oluştur
+  - Props: `value`, `onChange`, `placeholder`, `required`, `className`, `name`, `autoComplete`
+  - İçinde `show` boolean state tut
   - Sağda toggle butonu: göz açık SVG (gizli modda) ↔ göz kapalı SVG (görünür modda)
-  - `type={showPassword ? 'text' : 'password'}` dinamik
-  - Göz ikonu: `w-5 h-5`, `text-gray-400 hover:text-gray-600 dark:hover:text-gray-300`, `cursor-pointer`
-  - Buton `type="button"` olmalı (form submit tetiklemesin)
-- [ ] **Frontend:** `src/pages/Login.jsx` — şifre `<input>` → `<PasswordInput>` bileşeniyle değiştir
-- [ ] **Frontend:** `src/pages/Register.jsx` — şifre `<input>` → `<PasswordInput>` bileşeniyle değiştir
-- [ ] **Frontend:** `src/pages/Profile.jsx` — 3 şifre alanının hepsini `<PasswordInput>` ile değiştir
-  - Mevcut Şifre alanı
-  - Yeni Şifre alanı
-  - Yeni Şifre (Tekrar) alanı
-- [ ] **Frontend:** Koyu/açık mod uyumlu (göz ikonu renkleri dark: variantlı)
-- [ ] **Frontend:** TR/EN i18n etkilenmez — bileşen metinsiz, sadece ikon içerir
+  - `type={show ? 'text' : 'password'}` dinamik
+  - Göz ikonu: `w-5 h-5`, `text-gray-400 hover:text-gray-600 dark:hover:text-gray-300`
+  - Buton `type="button"` + `tabIndex={-1}` (form submit tetiklemesin, tab akışını bozmassın)
+- [x] **Frontend:** `src/pages/Login.jsx` — şifre `<input>` → `<PasswordInput autoComplete="current-password">` ile değiştirildi
+- [x] **Frontend:** `src/pages/Register.jsx` — şifre `<input>` → `<PasswordInput autoComplete="new-password">` ile değiştirildi
+- [x] **Frontend:** `src/pages/Profile.jsx` — 3 şifre alanının hepsi `<PasswordInput>` ile değiştirildi
+  - Mevcut Şifre alanı (`autoComplete="current-password"`)
+  - Yeni Şifre alanı (`autoComplete="new-password"`)
+  - Yeni Şifre (Tekrar) alanı (`autoComplete="new-password"`)
+- [x] **Frontend:** Koyu/açık mod uyumlu (göz ikonu renkleri dark: variantlı)
+- [x] **Frontend:** TR/EN i18n etkilenmez — bileşen metinsiz, sadece ikon içerir
 
 ---
 
@@ -390,7 +390,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 3-5-6 tamamlandı (ThemeContext, LangContext, i18n, Settings sayfası, tüm sayfalarda dark mode + TR/EN desteği). Sıradaki: 4. Şifremi Unuttum → GitHub push → demo → rapor.
+**Son guncelleme:** 7-8-14-16 tamamlandı. 7: Navbar arama çubuğu + SearchResults sayfası. 8: Home trend filmler/diziler toggle. 14: Recommend sayfası ChatGPT-style sidebar (öneri geçmişi detay görünümü). 16: PasswordInput bileşeni + Login/Register/Profile'da şifre göster/gizle. Sıradaki: 4. Şifremi Unuttum → GitHub push → demo → rapor.
 
 ---
 
