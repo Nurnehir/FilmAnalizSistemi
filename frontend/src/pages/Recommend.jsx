@@ -1,15 +1,23 @@
-import { useState } from 'react';
-import { getRecommendations } from '../api/recommendations';
+import { useState, useEffect } from 'react';
+import { getRecommendations, getHistory } from '../api/recommendations';
 import { useLang } from '../context/LangContext';
 import MovieCard from '../components/MovieCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Recommend() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    getHistory(5, 0)
+      .then((data) => setHistory(data.history || []))
+      .catch(() => {});
+  }, []);
 
   const examplePrompts = [
     t.rec_chip_1,
@@ -27,6 +35,7 @@ export default function Recommend() {
     try {
       const data = await getRecommendations(prompt);
       setResult(data);
+      getHistory(5, 0).then((d) => setHistory(d.history || [])).catch(() => {});
     } catch (err) {
       setError(err.response?.data?.detail || t.error_generic);
     } finally {
@@ -117,6 +126,33 @@ export default function Recommend() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {result.movies?.map((movie) => (
                   <MovieCard key={movie.tmdb_id} movie={movie} reason={movie.reason} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Öneri Geçmişi — sonuç yokken göster */}
+        {!result && !isLoading && history.length > 0 && (
+          <div className="mt-10">
+            <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
+              <h2 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-4">{t.home_recent_recs}</h2>
+              <div className="space-y-2">
+                {history.map((h) => (
+                  <div
+                    key={h.id}
+                    className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 cursor-pointer hover:border-purple-400 dark:hover:border-purple-700 transition-colors"
+                    onClick={() => setPrompt(h.user_prompt)}
+                    title={lang === 'tr' ? 'Promptu tekrar kullan' : 'Reuse this prompt'}
+                  >
+                    <p className="text-gray-700 dark:text-gray-300 text-sm font-medium truncate">"{h.user_prompt}"</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">
+                      {new Date(h.created_at).toLocaleDateString(lang === 'tr' ? 'tr-TR' : 'en-US', {
+                        day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+                      })}
+                      {h.tmdb_ids?.length > 0 && ` · ${h.tmdb_ids.length} ${t.home_films_suggested}`}
+                    </p>
+                  </div>
                 ))}
               </div>
             </div>
