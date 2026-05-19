@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel
 
 
@@ -13,7 +13,7 @@ class MovieRecommendation(BaseModel):
     poster_url: Optional[str] = None
     vote_average: Optional[float] = None
     release_date: Optional[str] = None
-    reason: str
+    reason: Optional[str] = None
     media_type: Optional[str] = None
 
 
@@ -37,3 +37,11 @@ class HistoryItem(BaseModel):
 class HistoryResponse(BaseModel):
     history: List[HistoryItem]
     total: int
+
+
+class RecommendDetail(BaseModel):
+    id: int
+    user_prompt: str
+    analysis: str
+    created_at: str
+    movies: List[MovieRecommendation]

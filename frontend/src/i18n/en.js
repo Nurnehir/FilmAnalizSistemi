@@ -147,6 +147,16 @@ const en = {
   detail_load_error: 'Failed to load film details.',
   rec_analyzing_sub: 'Analyzing your request and picking films just for you',
 
+  // Recommend sidebar
+  rec_new: 'New Recommendation',
+  rec_history_title: 'Past Recommendations',
+  rec_history_empty: 'No recommendation history yet.',
+  rec_detail_prompt_label: 'Prompt',
+  rec_detail_films: 'Recommended Films',
+  rec_detail_loading: 'Loading conversation...',
+  rec_detail_error: 'Failed to load.',
+  rec_sidebar_toggle: 'Open history',
+
   // Search
   search_placeholder: 'Search movies or series...',
   search_results_title: 'Search Results',

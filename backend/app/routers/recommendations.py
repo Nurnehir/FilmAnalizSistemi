@@ -1,9 +1,11 @@
+import json
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.models.user import User
 from app.models.recommendation_history import RecommendationHistory
-from app.schemas.recommendation import RecommendRequest, RecommendResponse, HistoryResponse, HistoryItem
+from app.schemas.recommendation import RecommendRequest, RecommendResponse, HistoryResponse, HistoryItem, RecommendDetail, MovieRecommendation
 from app.services import gemini_service, tmdb_service
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
@@ -52,12 +54,15 @@ async def recommend(
                 "media_type": movie.get("media_type", "movie"),
             })
 
-    # DB'ye kaydet
+    # DB'ye kaydet (analysis + movies with reasons JSON olarak)
     try:
         history = RecommendationHistory(
             user_id=current_user.id,
             user_prompt=data.prompt,
-            ai_response=rec_data.get("analysis", ""),
+            ai_response=json.dumps({
+                "analysis": rec_data.get("analysis", mood.get("mood_summary", "")),
+                "movies": result_movies,
+            }, ensure_ascii=False),
             tmdb_ids=[r["tmdb_id"] for r in result_movies],
         )
         db.add(history)
@@ -106,3 +111,48 @@ async def history(
     ]
 
     return HistoryResponse(history=history_items, total=total)
+
+
+@router.get("/{rec_id}", response_model=RecommendDetail)
+async def get_recommendation_detail(
+    rec_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    record = db.query(RecommendationHistory).filter(
+        RecommendationHistory.id == rec_id,
+        RecommendationHistory.user_id == current_user.id,
+    ).first()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Kayit bulunamadi")
+
+    # Yeni format: ai_response JSON içerir (analysis + movies)
+    analysis = record.ai_response
+    movies = []
+
+    try:
+        parsed = json.loads(record.ai_response)
+        analysis = parsed.get("analysis", record.ai_response)
+        movies = parsed.get("movies", [])
+    except (json.JSONDecodeError, TypeError):
+        pass  # Eski format: düz metin
+
+    # Eski kayıtlar için TMDB'den film detaylarını çek
+    if not movies and record.tmdb_ids:
+        async def fetch_one(tmdb_id):
+            try:
+                return await tmdb_service.get_movie_detail(tmdb_id, "movie")
+            except Exception:
+                return None
+
+        fetched = await asyncio.gather(*[fetch_one(tid) for tid in record.tmdb_ids])
+        movies = [m for m in fetched if m]
+
+    return RecommendDetail(
+        id=record.id,
+        user_prompt=record.user_prompt,
+        analysis=analysis,
+        created_at=record.created_at.isoformat(),
+        movies=[MovieRecommendation(**m) if isinstance(m, dict) else m for m in movies],
+    )

@@ -332,32 +332,21 @@
 - [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
 - [ ] **Ön koşul:** 11 (izlendi işareti) ve 12 (puanlama) tamamlanmış olmalı
 
-### 14. Öneri Geçmişi Detay Görünümü (Göz İkonu)
-> Home sayfasındaki "Son Önerilerim" listesindeki her satırın sağında göz ikonu olacak.
-> Tıklayınca o öneri oturumuna ait prompt + önerilen filmler görüntülenecek.
+### 14. Öneri Geçmişi Detay Görünümü — ChatGPT Sidebar ✅
+> Öneri sayfası sol panel + ana alan şeklinde yeniden tasarlandı.
 
-- [ ] **Backend:** `GET /recommendations/{id}` endpoint — tek öneri kaydını getir
-  - `recommendation_history` tablosundan ilgili kaydı çek (user_id kontrolü yapılacak)
-  - `ai_response` JSON'unu parse et → `analysis` + `[{tmdb_id, reason}]` çıkar
-  - Her `tmdb_id` için `tmdb_service.get_movie_detail()` çağır (paralel, `asyncio.gather`)
-  - Yanıt: `{ id, user_prompt, analysis, created_at, movies: [{tmdb_id, title, poster_url, vote_average, reason}] }`
-- [ ] **Backend:** `app/schemas/recommendation.py` — `RecommendDetailResponse` şeması ekle
-- [ ] **Backend:** `app/routers/recommendations.py` — yeni endpoint'i `GET /recommendations/{id}` olarak ekle
-- [ ] **Frontend:** `src/pages/RecommendationDetail.jsx` oluştur
-  - Sayfa mount'unda `GET /recommendations/{id}` çağır
-  - Üstte kullanıcının orijinal promptu kutu içinde göster
-  - Altında AI analiz metni
-  - Film kartları grid halinde — her kartta `reason` (neden önerildi) metni de görünsün
-  - Film kartına tıklayınca `/movie/:id` detay sayfasına git
-  - Watchlist butonu çalışır olacak
-- [ ] **Frontend:** `src/api/recommendations.js` — `getRecommendationById(id)` fonksiyonu ekle
-- [ ] **Frontend:** `App.jsx`'e `/recommendations/:id` route ekle (PrivateRoute ile korumalı)
-- [ ] **Frontend:** `src/pages/Home.jsx` — "Son Önerilerim" listesindeki her satırın sağına göz ikonu ekle
-  - İkon: `👁` veya SVG eye icon (Heroicons tarzı)
-  - `navigate('/recommendations/' + rec.id)` ile yönlendirme
-  - İkon koyu modda `text-gray-400 hover:text-purple-400`, açık modda `text-gray-400 hover:text-purple-600`
-- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
-  - i18n: `rec_detail_title`, `rec_detail_prompt_label`, `rec_detail_analysis_label`, `rec_detail_back`, `rec_detail_loading`, `rec_detail_not_found` anahtarları ekle
+- [x] **Backend:** `GET /recommendations/{id}` endpoint — tek öneri kaydını getir (user_id korumalı)
+- [x] **Backend:** `POST /recommendations` güncellendi — `ai_response` artık full JSON saklar `{analysis, movies}`
+- [x] **Backend:** Eski kayıtlar için fallback: `tmdb_ids` ile TMDB'den paralel fetch (`asyncio.gather`)
+- [x] **Backend:** `app/schemas/recommendation.py` — `RecommendDetail` şeması eklendi
+- [x] **Frontend:** `src/api/recommendations.js` — `getRecommendationById(id)` fonksiyonu eklendi
+- [x] **Frontend:** `Recommend.jsx` ChatGPT-style sidebar düzenine geçirildi
+  - Sol sidebar: son 10 öneri, truncated prompt, hover'da göz ikonu
+  - Aktif öneri mor ile vurgulu
+  - "Yeni Öneri" butonu sidebar'ın en üstünde
+  - Göz ikonuna basınca: orijinal prompt kutusu + AI analiz + film grid
+  - Mobilde hamburger ile açılır sidebar (overlay + backdrop)
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu (rec_new, rec_history_* anahtarları eklendi)
 
 ### 15. Uygulama Adı Değişikliği
 > "FilmAI" ismi değiştirilecek. Yeni isim belirlendikten sonra tüm görünen yerlerde güncellenecek.

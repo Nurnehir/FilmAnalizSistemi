@@ -147,6 +147,16 @@ const tr = {
   detail_load_error: 'Film bilgileri yüklenemedi.',
   rec_analyzing_sub: 'İsteğiniz analiz ediliyor, size özel filmler seçiliyor',
 
+  // Recommend sidebar
+  rec_new: 'Yeni Öneri',
+  rec_history_title: 'Geçmiş Öneriler',
+  rec_history_empty: 'Henüz öneri geçmişin yok.',
+  rec_detail_prompt_label: 'İstek',
+  rec_detail_films: 'Önerilen Filmler',
+  rec_detail_loading: 'Sohbet yükleniyor...',
+  rec_detail_error: 'Yüklenemedi.',
+  rec_sidebar_toggle: 'Geçmişi aç',
+
   // Search
   search_placeholder: 'Film veya dizi ara...',
   search_results_title: 'Arama Sonuçları',
