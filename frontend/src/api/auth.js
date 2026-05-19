@@ -25,3 +25,9 @@ export const getStats = () =>
 
 export const getTasteProfile = () =>
   client.get('/auth/taste-profile').then((r) => r.data);
+
+export const forgotPassword = (email) =>
+  client.post('/auth/forgot-password', { email }).then((r) => r.data);
+
+export const resetPassword = (token, new_password) =>
+  client.post('/auth/reset-password', { token, new_password }).then((r) => r.data);

@@ -111,6 +111,11 @@ export default function Login() {
                 {t.login_register_link}
               </Link>
             </p>
+            <p className="text-center mt-3">
+              <Link to="/forgot-password" className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 text-xs transition-colors">
+                {t.login_forgot}
+              </Link>
+            </p>
           </div>
         </div>
       </div>

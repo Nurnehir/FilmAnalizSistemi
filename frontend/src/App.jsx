@@ -14,6 +14,8 @@ import Watchlist from './pages/Watchlist';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import SearchResults from './pages/SearchResults';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
                 <Route path="/recommend" element={<PrivateRoute><Recommend /></PrivateRoute>} />
                 <Route path="/watchlist" element={<PrivateRoute><Watchlist /></PrivateRoute>} />

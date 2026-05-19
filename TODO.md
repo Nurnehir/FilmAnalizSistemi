@@ -247,13 +247,14 @@
 - [x] Tercihler localStorage'a kaydedilsin
 - [x] Koyu/açık mod + TR/EN uyumlu
 
-### 4. Şifremi Unuttum
-- [ ] Backend: `POST /auth/forgot-password` endpoint (token üret, konsola yaz — mail altyapısı gerekmez)
-- [ ] Backend: `POST /auth/reset-password` endpoint — token + yeni şifre ile sıfırlama
-- [ ] `src/pages/ForgotPassword.jsx` — e-posta giriş formu
-- [ ] Login sayfasına "Şifremi unuttum" linki ekle
-- [ ] App.jsx'e `/forgot-password` route ekle
-- [ ] Koyu/açık mod + TR/EN uyumlu
+### 4. Şifremi Unuttum ✅
+- [x] Backend: `POST /auth/forgot-password` endpoint (Resend ile gerçek e-posta gönderimi)
+- [x] Backend: `POST /auth/reset-password` endpoint — token + yeni şifre ile sıfırlama
+- [x] `src/pages/ForgotPassword.jsx` — e-posta giriş formu + başarı ekranı
+- [x] `src/pages/ResetPassword.jsx` — yeni şifre formu, token URL'den okunur, 2.5sn sonra login'e yönlendirir
+- [x] Login sayfasına "Şifremi unuttum" linki ekle
+- [x] App.jsx'e `/forgot-password` ve `/reset-password` route eklendi
+- [x] Koyu/açık mod + TR/EN uyumlu
 
 ### 5. Koyu / Açık Mod
 - [x] `tailwind.config.js` — `darkMode: 'class'` aktif et
@@ -388,7 +389,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 9-10-11-12-13 tamamlandı. 13: Zevk Profili — generate_taste_profile (Groq), GET /auth/taste-profile, use_taste_profile param, Recommend.jsx toggle + özet. Sıradaki: 4. Şifremi Unuttum → GitHub push.
+**Son guncelleme:** 4-9-10-11-12-13-14-16 tamamlandı. 4: Şifremi Unuttum — Resend entegrasyonu, ForgotPassword + ResetPassword sayfaları, Login'e link. Sıradaki: GitHub push → demo → rapor.
 
 ---
 
