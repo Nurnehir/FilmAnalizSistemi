@@ -164,6 +164,11 @@ const en = {
   register_failed: 'Unable to create account',
   detail_load_error: 'Failed to load film details.',
   rec_analyzing_sub: 'Analyzing your request and picking films just for you',
+  rec_taste_toggle: 'Recommend based on my taste profile',
+  rec_taste_label: 'Your Taste Profile',
+  rec_taste_loading: 'Loading profile...',
+  rec_taste_need_more: 'Rate at least 3 films',
+  rec_taste_need_more_sub: 'Rate at least 3 films in your Watchlist to enable your taste profile.',
 
   // Recommend sidebar
   rec_new: 'New Recommendation',

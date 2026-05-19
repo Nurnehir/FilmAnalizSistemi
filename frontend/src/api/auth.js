@@ -22,3 +22,6 @@ export const deleteAvatar = () =>
 
 export const getStats = () =>
   client.get('/auth/stats').then((r) => r.data);
+
+export const getTasteProfile = () =>
+  client.get('/auth/taste-profile').then((r) => r.data);

@@ -164,6 +164,11 @@ const tr = {
   register_failed: 'Kayıt olunamadı',
   detail_load_error: 'Film bilgileri yüklenemedi.',
   rec_analyzing_sub: 'İsteğiniz analiz ediliyor, size özel filmler seçiliyor',
+  rec_taste_toggle: 'Zevk profilime göre öner',
+  rec_taste_label: 'Zevk Profilin',
+  rec_taste_loading: 'Profil yükleniyor...',
+  rec_taste_need_more: 'En az 3 film puan ver',
+  rec_taste_need_more_sub: 'Zevk profilini aktifleştirmek için İzleme Listesi\'ndeki en az 3 filme puan ver.',
 
   // Recommend sidebar
   rec_new: 'Yeni Öneri',

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getRecommendations, getHistory, getRecommendationById } from '../api/recommendations';
+import { getTasteProfile } from '../api/auth';
 import { useLang } from '../context/LangContext';
 import MovieCard from '../components/MovieCard';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -35,6 +36,18 @@ export default function Recommend() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+
+  // Taste profile state
+  const [useTasteProfile, setUseTasteProfile] = useState(false);
+  const [tasteProfile, setTasteProfile] = useState(null);
+  const [tasteLoading, setTasteLoading] = useState(true);
+
+  useEffect(() => {
+    getTasteProfile()
+      .then(setTasteProfile)
+      .catch(() => setTasteProfile({ rated_count: 0, summary: null, can_use: false }))
+      .finally(() => setTasteLoading(false));
+  }, []);
 
   // Sidebar / history state
   const [history, setHistory] = useState([]);
@@ -83,7 +96,7 @@ export default function Recommend() {
     setError(null);
     setResult(null);
     try {
-      const data = await getRecommendations(prompt);
+      const data = await getRecommendations(prompt, useTasteProfile);
       setResult(data);
       loadHistory();
     } catch (err) {
@@ -231,6 +244,56 @@ export default function Recommend() {
                   </button>
                 ))}
               </div>
+
+              {/* Taste Profile Toggle */}
+              {!tasteLoading && (
+                <div className={`rounded-xl border p-3.5 transition-colors ${
+                  tasteProfile?.can_use
+                    ? 'border-purple-200 dark:border-purple-800/60 bg-purple-50/50 dark:bg-purple-950/20'
+                    : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50'
+                }`}>
+                  {tasteProfile?.can_use ? (
+                    <>
+                      <label className="flex items-center gap-3 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={useTasteProfile}
+                          onChange={(e) => setUseTasteProfile(e.target.checked)}
+                          className="w-4 h-4 accent-purple-600 rounded"
+                        />
+                        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                          {t.rec_taste_toggle}
+                        </span>
+                      </label>
+                      {useTasteProfile && tasteProfile.summary && (
+                        <div className="mt-2.5 pl-7">
+                          <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">
+                            {t.rec_taste_label}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                            {tasteProfile.summary}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-gray-400 dark:text-gray-600 mt-0.5 text-sm">🎬</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          {t.rec_taste_toggle}
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                          {t.rec_taste_need_more_sub}{' '}
+                          <span className="text-purple-600 dark:text-purple-400 font-medium">
+                            ({tasteProfile?.rated_count ?? 0}/3)
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
                 type="submit"

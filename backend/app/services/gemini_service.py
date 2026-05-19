@@ -82,6 +82,36 @@ KEYWORD_MAP = {
 }
 
 
+TASTE_PROFILE_PROMPT = """
+Kullanicinin asagidaki film puanlama gecmisine gore kisa bir zevk profili olustur.
+
+Puanlanan filmler (baslik — kullanici puani/5):
+{films_list}
+
+Yalnizca bu JSON formatini ver, baska hicbir sey yazma:
+{{
+  "summary": "Kullanicinin film zevkini 1-2 cumlede ozetle. 'Sen' diye baslat."
+}}
+"""
+
+
+async def generate_taste_profile(rated_movies: list) -> str:
+    films_list = "\n".join([f"- {m['title']} — {m['rating']}/5" for m in rated_movies])
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": TASTE_PROFILE_PROMPT.format(films_list=films_list)}],
+            temperature=0.3,
+            max_tokens=256,
+        )
+        text = response.choices[0].message.content
+        result = json.loads(_extract_json(text))
+        return result.get("summary", "")
+    except Exception as e:
+        print(f"=== GROQ TASTE HATA: {type(e).__name__}: {str(e)[:200]} ===", flush=True)
+        return ""
+
+
 def _fallback_mood(prompt: str) -> dict:
     prompt_lower = prompt.lower()
     genres, excludes = [], []

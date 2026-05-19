@@ -320,17 +320,15 @@
 - [x] **Frontend:** `src/api/watchlist.js` — `rateMovie(id, rating)` fonksiyonu eklendi
 - [x] **Frontend:** Koyu/açık mod uyumlu (yıldızlar dark: variantlı)
 
-### 13. Kişiselleştirilmiş Öneri (Zevk Profili)
-- [ ] **Backend:** `GET /auth/taste-profile` endpoint — puanlı filmlerden zevk profili JSON üret
-- [ ] **Backend:** `app/services/gemini_service.py` — `generate_taste_profile(rated_movies)` fonksiyonu
-  - Groq'a puanlı filmleri gönder → "Aksiyon sever, drama sevmez, 90'lar nostaljisi var" özeti üret
-- [ ] **Backend:** `POST /recommendations` isteğine `use_taste_profile: bool` parametresi ekle
-  - `True` ise taste_profile prompt'a eklenerek Groq'a gönderilir
-- [ ] **Frontend:** Recommend.jsx'e "Zevk profilime göre öner" toggle/checkbox ekle
-- [ ] **Frontend:** Profilin kısa özeti sayfada gösterilsin ("Sen aksiyon seviyorsun 🎬")
-- [ ] **Frontend:** En az 3 puanlı film olmadan toggle pasif (uyarı mesajıyla)
-- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
-- [ ] **Ön koşul:** 11 (izlendi işareti) ve 12 (puanlama) tamamlanmış olmalı
+### 13. Kişiselleştirilmiş Öneri (Zevk Profili) ✅
+- [x] **Backend:** `GET /auth/taste-profile` endpoint — rated_count, summary, can_use (≥3 şart)
+- [x] **Backend:** `generate_taste_profile(rated_movies)` — Groq'a puanlı film listesi gönder → özet üret
+- [x] **Backend:** `POST /recommendations` — `use_taste_profile: bool` parametresi, True ise taste_summary prompt'a ekleniyor
+- [x] **Frontend:** Recommend.jsx'e checkbox toggle eklendi (aktif/pasif duruma göre farklı stil)
+- [x] **Frontend:** Toggle açıkken Groq'tan gelen profil özeti gösteriliyor
+- [x] **Frontend:** 3'ten az puanlı film varsa toggle gösterilmiyor, kaç puanlandığı (0/3) gösteriliyor
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+- [x] **Ön koşul:** 11 ve 12 tamamlandı ✓
 
 ### 14. Öneri Geçmişi Detay Görünümü — ChatGPT Sidebar ✅
 > Öneri sayfası sol panel + ana alan şeklinde yeniden tasarlandı.
@@ -390,7 +388,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 9-10-11-12 tamamlandı. 12: Film Puanlama — user_rating kolonu + migration, PATCH /watchlist/{id}/rating, StarRating.jsx hover efektli bileşen, Watchlist kartlarına entegre. Sıradaki: 4. Şifremi Unuttum → GitHub push.
+**Son guncelleme:** 9-10-11-12-13 tamamlandı. 13: Zevk Profili — generate_taste_profile (Groq), GET /auth/taste-profile, use_taste_profile param, Recommend.jsx toggle + özet. Sıradaki: 4. Şifremi Unuttum → GitHub push.
 
 ---
 

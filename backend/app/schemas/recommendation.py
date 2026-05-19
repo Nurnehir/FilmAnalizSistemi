@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 class RecommendRequest(BaseModel):
     prompt: str
+    use_taste_profile: bool = False
 
 
 class MovieRecommendation(BaseModel):

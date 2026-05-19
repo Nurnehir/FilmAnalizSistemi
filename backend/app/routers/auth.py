@@ -101,6 +101,24 @@ async def update_avatar(
         raise HTTPException(status_code=500, detail="Avatar guncellenirken hata olustu")
 
 
+@router.get("/taste-profile")
+async def get_taste_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from app.services import gemini_service
+    rated_items = db.query(Watchlist).filter(
+        Watchlist.user_id == current_user.id,
+        Watchlist.user_rating.isnot(None),
+    ).all()
+    rated_count = len(rated_items)
+    if rated_count < 3:
+        return {"rated_count": rated_count, "summary": None, "can_use": False}
+    movies = [{"title": item.title, "rating": item.user_rating} for item in rated_items]
+    summary = await gemini_service.generate_taste_profile(movies)
+    return {"rated_count": rated_count, "summary": summary, "can_use": True}
+
+
 @router.get("/stats")
 async def get_stats(
     current_user: User = Depends(get_current_user),

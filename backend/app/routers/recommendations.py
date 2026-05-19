@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.models.user import User
+from app.models.watchlist import Watchlist
 from app.models.recommendation_history import RecommendationHistory
 from app.schemas.recommendation import RecommendRequest, RecommendResponse, HistoryResponse, HistoryItem, RecommendDetail, MovieRecommendation
 from app.services import gemini_service, tmdb_service
@@ -17,8 +18,23 @@ async def recommend(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Zevk profili kullanılacaksa prompt'a ekle
+    effective_prompt = data.prompt
+    if data.use_taste_profile:
+        rated_items = db.query(Watchlist).filter(
+            Watchlist.user_id == current_user.id,
+            Watchlist.user_rating.isnot(None),
+        ).all()
+        if len(rated_items) >= 3:
+            taste_movies = [{"title": i.title, "rating": i.user_rating} for i in rated_items]
+            taste_summary = await gemini_service.generate_taste_profile(taste_movies)
+            if taste_summary:
+                effective_prompt = (
+                    f"[Kullanici zevk profili: {taste_summary}]\n\nKullanici istegi: {data.prompt}"
+                )
+
     # Asama 1: Ruh hali analizi
-    mood = await gemini_service.analyze_mood(data.prompt)
+    mood = await gemini_service.analyze_mood(effective_prompt)
 
     # Asama 2: TMDB'den film listesi cek
     try:
@@ -35,7 +51,7 @@ async def recommend(
         raise HTTPException(status_code=404, detail="Uygun film bulunamadi")
 
     # Asama 3: Gemini ile kisisel oneri uret
-    rec_data = await gemini_service.generate_recommendations(data.prompt, movies)
+    rec_data = await gemini_service.generate_recommendations(effective_prompt, movies)
 
     # Oneri edilen filmleri TMDB verisinden eslestirir
     movies_by_id = {str(m.get("id") or m.get("tmdb_id")): m for m in movies}
