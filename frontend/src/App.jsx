@@ -13,6 +13,7 @@ import MovieDetail from './pages/MovieDetail';
 import Watchlist from './pages/Watchlist';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import SearchResults from './pages/SearchResults';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
                 <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
                 <Route path="/movie/:id" element={<MovieDetail />} />
+                <Route path="/search" element={<SearchResults />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </WatchlistProvider>

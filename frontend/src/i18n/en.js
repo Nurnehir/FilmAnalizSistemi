@@ -147,6 +147,16 @@ const en = {
   detail_load_error: 'Failed to load film details.',
   rec_analyzing_sub: 'Analyzing your request and picking films just for you',
 
+  // Search
+  search_placeholder: 'Search movies or series...',
+  search_results_title: 'Search Results',
+  search_no_results: 'No results found.',
+  search_loading: 'Searching...',
+  search_error: 'Search failed.',
+  search_empty_query: 'Type something to search.',
+  search_type_movie: 'Movies',
+  search_type_tv: 'Series',
+
   // Common
   loading: 'Loading...',
   error_generic: 'Something went wrong.',

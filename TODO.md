@@ -270,13 +270,12 @@
 - [x] Login, Register, Home, Recommend, MovieDetail, Watchlist, Profile, Settings sayfaları dil destekli hale getir
 - [x] Navbar linkleri ve dropdown dil destekli hale getir
 
-### 7. Arama Çubuğu (Navbar)
-- [ ] **Frontend:** `src/components/SearchBar.jsx` — genişleyen input + debounce (300ms)
-- [ ] **Frontend:** Navbar'a arama ikonu ve açılır arama kutusu ekle
-- [ ] **Frontend:** `src/pages/SearchResults.jsx` — film + dizi sonuçları grid halinde
-- [ ] **Frontend:** App.jsx'e `/search?q=` route ekle
-- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
-- [ ] **Backend:** `GET /movies/search?q=&media_type=` endpoint zaten mevcut ✓
+### 7. Arama Çubuğu (Navbar) ✅
+- [x] **Frontend:** Navbar'a arama ikonu ve tam genişlik arama input modu ekle (searchOpen state, debounce 800ms)
+- [x] **Frontend:** `src/pages/SearchResults.jsx` — film + dizi sonuçları grid halinde, Movie/TV sekme toggle, debounce 400ms
+- [x] **Frontend:** App.jsx'e `/search` route ekle
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu (search_* i18n anahtarları eklendi)
+- [x] **Backend:** `GET /movies/search?q=&media_type=` endpoint zaten mevcut ✓
 
 ### 8. Film / Dizi Toggle (Trend Sayfası)
 - [ ] **Frontend:** Home.jsx'e "Filmler" / "Diziler" sekme toggle ekle

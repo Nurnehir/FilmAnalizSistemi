@@ -147,6 +147,16 @@ const tr = {
   detail_load_error: 'Film bilgileri yüklenemedi.',
   rec_analyzing_sub: 'İsteğiniz analiz ediliyor, size özel filmler seçiliyor',
 
+  // Search
+  search_placeholder: 'Film veya dizi ara...',
+  search_results_title: 'Arama Sonuçları',
+  search_no_results: 'Sonuç bulunamadı.',
+  search_loading: 'Aranıyor...',
+  search_error: 'Arama başarısız.',
+  search_empty_query: 'Aramak için bir şeyler yaz.',
+  search_type_movie: 'Filmler',
+  search_type_tv: 'Diziler',
+
   // Common
   loading: 'Yükleniyor...',
   error_generic: 'Bir hata oluştu.',
