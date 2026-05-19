@@ -10,30 +10,29 @@ import LoadingSpinner from '../components/LoadingSpinner';
 export default function Home() {
   const { user } = useAuth();
   const { t, lang } = useLang();
+
+  const [mediaType, setMediaType] = useState('movie');
   const [movies, setMovies] = useState([]);
+  const [trendLoading, setTrendLoading] = useState(true);
+  const [trendError, setTrendError] = useState(null);
+
   const [history, setHistory] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [trendData, histData] = await Promise.all([
-          getTrending('movie', 1),
-          user ? getHistory(3, 0) : Promise.resolve({ history: [] }),
-        ]);
-        setMovies(trendData.results || []);
-        setHistory(histData.history || []);
-      } catch {
-        setError(t.home_error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
+    if (!user) return;
+    getHistory(3, 0)
+      .then((data) => setHistory(data.history || []))
+      .catch(() => {});
   }, [user]);
+
+  useEffect(() => {
+    setTrendLoading(true);
+    setTrendError(null);
+    getTrending(mediaType, 1)
+      .then((data) => setMovies(data.results || []))
+      .catch(() => setTrendError(t.home_error))
+      .finally(() => setTrendLoading(false));
+  }, [mediaType]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
@@ -101,21 +100,41 @@ export default function Home() {
           </section>
         )}
 
-        {/* Trend Filmler */}
+        {/* Trend İçerikler */}
         <section>
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xl font-bold">{t.home_trending}</h2>
+          <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-bold">{t.home_trending}</h2>
+              <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+                {[
+                  { key: 'movie', label: t.home_movies },
+                  { key: 'tv', label: t.home_series },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setMediaType(key)}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                      mediaType === key
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <span className="text-gray-400 dark:text-gray-500 text-xs">{t.home_tmdb_live}</span>
           </div>
 
-          {isLoading ? (
+          {trendLoading ? (
             <div className="flex justify-center py-16">
               <LoadingSpinner text={t.home_loading} />
             </div>
-          ) : error ? (
-            <div className="text-center py-12 text-red-500 dark:text-red-400">{error}</div>
+          ) : trendError ? (
+            <div className="text-center py-12 text-red-500 dark:text-red-400">{trendError}</div>
           ) : (
-            <MovieGrid movies={movies} />
+            <MovieGrid movies={movies.map((m) => ({ ...m, media_type: mediaType }))} />
           )}
         </section>
       </div>

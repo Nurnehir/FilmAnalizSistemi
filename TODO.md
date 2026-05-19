@@ -277,12 +277,12 @@
 - [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu (search_* i18n anahtarları eklendi)
 - [x] **Backend:** `GET /movies/search?q=&media_type=` endpoint zaten mevcut ✓
 
-### 8. Film / Dizi Toggle (Trend Sayfası)
-- [ ] **Frontend:** Home.jsx'e "Filmler" / "Diziler" sekme toggle ekle
-- [ ] **Frontend:** Seçilen türe göre `getTrending('movie')` veya `getTrending('tv')` çağır
-- [ ] **Frontend:** Aktif sekme vurgulu, geçiş animasyonlu
-- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
-- [ ] **Backend:** `GET /movies/trending?media_type=tv` zaten destekleniyor ✓
+### 8. Film / Dizi Toggle (Trend Sayfası) ✅
+- [x] **Frontend:** Home.jsx'e "Filmler" / "Diziler" sekme toggle eklendi (pill-style seçici)
+- [x] **Frontend:** Sekme değişince sadece trend verisi yeniden çekiliyor, geçmiş etkilenmiyor
+- [x] **Frontend:** Aktif sekme beyaz/koyu arka plan + shadow ile vurgulu, 150ms geçiş animasyonlu
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu (home_movies / home_series anahtarları kullanıldı)
+- [x] **Backend:** `GET /movies/trending?media_type=tv` zaten destekleniyor ✓
 
 ### 9. Tür Filtresi Sidebar
 - [ ] **Frontend:** `src/components/GenreSidebar.jsx` — tür listesi checkbox'lı sidebar
