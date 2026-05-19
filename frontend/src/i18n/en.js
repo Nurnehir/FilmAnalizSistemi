@@ -61,6 +61,13 @@ const en = {
   home_movies: 'Movies',
   home_series: 'Series',
 
+  // Genre filter
+  genre_filter_title: 'Filter by Genre',
+  genre_filter_clear: 'Clear',
+  genre_filter_btn: 'Genre Filter',
+  genre_filter_results: 'Genre Filter Results',
+  genre_filter_active: 'selected',
+
   // Recommend
   rec_title: 'Personal Film Picks',
   rec_subtitle: 'Describe your mood or what you want to watch, and AI will curate films just for you.',

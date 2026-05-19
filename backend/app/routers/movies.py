@@ -15,6 +15,19 @@ async def trending(
         raise HTTPException(status_code=503, detail="TMDB servisine ulasilamiyor")
 
 
+@router.get("/discover")
+async def discover(
+    genres: str = Query("", description="Comma-separated TMDB genre IDs"),
+    sort_by: str = Query("popularity.desc"),
+    media_type: str = Query("movie", pattern="^(movie|tv)$"),
+):
+    genre_ids = [int(g) for g in genres.split(",") if g.strip().isdigit()] if genres else []
+    try:
+        return await tmdb_service.discover_movies(genre_ids, sort_by, media_type)
+    except Exception:
+        raise HTTPException(status_code=503, detail="TMDB servisine ulasilamiyor")
+
+
 @router.get("/search")
 async def search(
     q: str = Query(..., min_length=1),

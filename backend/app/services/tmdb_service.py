@@ -71,6 +71,7 @@ async def get_movie_detail(tmdb_id: int, media_type: str = "movie") -> dict:
 async def discover_movies(
     genre_ids: list,
     sort_by: str = "popularity.desc",
+    media_type: str = "movie",
     exclude_genre_ids: list = None,
 ) -> dict:
     extra = {
@@ -85,7 +86,7 @@ async def discover_movies(
         extra["without_genres"] = "|".join(map(str, exclude_genre_ids))
     async with httpx.AsyncClient() as client:
         r = await client.get(
-            f"{BASE_URL}/discover/movie",
+            f"{BASE_URL}/discover/{media_type}",
             headers=HEADERS,
             params=extra,
         )
@@ -93,7 +94,8 @@ async def discover_movies(
     data = r.json()
     for item in data.get("results", []):
         item["poster_url"] = build_poster_url(item.get("poster_path"))
-        item.setdefault("media_type", "movie")
+        item["tmdb_id"] = item.pop("id", item.get("tmdb_id"))
+        item["media_type"] = media_type
     return data
 
 

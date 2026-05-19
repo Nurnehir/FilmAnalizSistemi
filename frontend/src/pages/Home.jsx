@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { getTrending } from '../api/movies';
+import { getTrending, discoverMovies } from '../api/movies';
 import MovieGrid from '../components/MovieGrid';
 import LoadingSpinner from '../components/LoadingSpinner';
+import GenreSidebar from '../components/GenreSidebar';
 
 export default function Home() {
   const { user } = useAuth();
@@ -14,15 +15,26 @@ export default function Home() {
   const [movies, setMovies] = useState([]);
   const [trendLoading, setTrendLoading] = useState(true);
   const [trendError, setTrendError] = useState(null);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    setSelectedGenres([]);
+  }, [mediaType]);
 
   useEffect(() => {
     setTrendLoading(true);
     setTrendError(null);
-    getTrending(mediaType, 1)
+    const fetch = selectedGenres.length > 0
+      ? discoverMovies(selectedGenres, 'popularity.desc', mediaType)
+      : getTrending(mediaType, 1);
+    fetch
       .then((data) => setMovies(data.results || []))
       .catch(() => setTrendError(t.home_error))
       .finally(() => setTrendLoading(false));
-  }, [mediaType]);
+  }, [mediaType, selectedGenres]);
+
+  const sectionTitle = selectedGenres.length > 0 ? t.genre_filter_results : t.home_trending;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
@@ -61,12 +73,17 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-        {/* Trend İçerikler */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <section>
+          {/* Header row */}
           <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl font-bold">{t.home_trending}</h2>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="text-xl font-bold">{sectionTitle}</h2>
+              {selectedGenres.length > 0 && (
+                <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full">
+                  {selectedGenres.length} {t.genre_filter_active}
+                </span>
+              )}
               <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
                 {[
                   { key: 'movie', label: t.home_movies },
@@ -86,20 +103,89 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <span className="text-gray-400 dark:text-gray-500 text-xs">{t.home_tmdb_live}</span>
+
+            <div className="flex items-center gap-3">
+              {/* Mobile drawer toggle */}
+              <button
+                className="lg:hidden flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors"
+                onClick={() => setDrawerOpen(true)}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M3 8h14M3 12h10" />
+                </svg>
+                {t.genre_filter_btn}
+                {selectedGenres.length > 0 && (
+                  <span className="bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+                    {selectedGenres.length}
+                  </span>
+                )}
+              </button>
+              <span className="text-gray-400 dark:text-gray-500 text-xs">{t.home_tmdb_live}</span>
+            </div>
           </div>
 
-          {trendLoading ? (
-            <div className="flex justify-center py-16">
-              <LoadingSpinner text={t.home_loading} />
+          {/* Two-column layout: sidebar + grid */}
+          <div className="flex gap-6">
+            {/* Desktop sidebar */}
+            <aside className="hidden lg:block w-48 shrink-0">
+              <div className="sticky top-20 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+                <GenreSidebar
+                  mediaType={mediaType}
+                  selected={selectedGenres}
+                  onChange={setSelectedGenres}
+                  t={t}
+                  lang={lang}
+                />
+              </div>
+            </aside>
+
+            {/* Main content */}
+            <div className="flex-1 min-w-0">
+              {trendLoading ? (
+                <div className="flex justify-center py-16">
+                  <LoadingSpinner text={t.home_loading} />
+                </div>
+              ) : trendError ? (
+                <div className="text-center py-12 text-red-500 dark:text-red-400">{trendError}</div>
+              ) : (
+                <MovieGrid movies={movies.map((m) => ({ ...m, media_type: mediaType }))} />
+              )}
             </div>
-          ) : trendError ? (
-            <div className="text-center py-12 text-red-500 dark:text-red-400">{trendError}</div>
-          ) : (
-            <MovieGrid movies={movies.map((m) => ({ ...m, media_type: mediaType }))} />
-          )}
+          </div>
         </section>
       </div>
+
+      {/* Mobile drawer */}
+      {drawerOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setDrawerOpen(false)}
+          />
+          <aside className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50 overflow-y-auto lg:hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+              <span className="font-semibold text-gray-900 dark:text-white">{t.genre_filter_title}</span>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4">
+              <GenreSidebar
+                mediaType={mediaType}
+                selected={selectedGenres}
+                onChange={(ids) => { setSelectedGenres(ids); setDrawerOpen(false); }}
+                t={t}
+                lang={lang}
+              />
+            </div>
+          </aside>
+        </>
+      )}
     </div>
   );
 }

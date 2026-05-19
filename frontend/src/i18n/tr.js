@@ -61,6 +61,13 @@ const tr = {
   home_movies: 'Filmler',
   home_series: 'Diziler',
 
+  // Genre filter
+  genre_filter_title: 'Türe Göre Filtrele',
+  genre_filter_clear: 'Temizle',
+  genre_filter_btn: 'Tür Filtresi',
+  genre_filter_results: 'Tür Filtresi Sonuçları',
+  genre_filter_active: 'tür seçili',
+
   // Recommend
   rec_title: 'Kişisel Film Önerisi',
   rec_subtitle: 'Ruh halini veya ne izlemek istediğini yaz, yapay zeka sana özel filmler seçsin.',

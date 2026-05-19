@@ -284,13 +284,13 @@
 - [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu (home_movies / home_series anahtarları kullanıldı)
 - [x] **Backend:** `GET /movies/trending?media_type=tv` zaten destekleniyor ✓
 
-### 9. Tür Filtresi Sidebar
-- [ ] **Frontend:** `src/components/GenreSidebar.jsx` — tür listesi checkbox'lı sidebar
-- [ ] **Frontend:** Home.jsx'e sidebar entegrasyonu (responsive: mobilde drawer)
-- [ ] **Frontend:** Seçilen türlere göre `GET /movies/discover?genres=` çağrısı
-- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
-- [ ] **Backend:** `GET /movies/discover` endpoint ekle (tmdb_service.discover_movies sarmalayıcı)
-- [ ] **Backend:** `app/routers/movies.py` — `GET /movies/discover?genres=&sort_by=` endpoint
+### 9. Tür Filtresi Sidebar ✅
+- [x] **Frontend:** `src/components/GenreSidebar.jsx` — tür listesi checkbox'lı sidebar
+- [x] **Frontend:** Home.jsx'e sidebar entegrasyonu (responsive: mobilde drawer)
+- [x] **Frontend:** Seçilen türlere göre `GET /movies/discover?genres=` çağrısı
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+- [x] **Backend:** `GET /movies/discover` endpoint ekle (tmdb_service.discover_movies sarmalayıcı)
+- [x] **Backend:** `app/routers/movies.py` — `GET /movies/discover?genres=&sort_by=` endpoint
 
 ### 10. Kullanıcı Profil İstatistikleri
 - [ ] **DB:** `recommendation_history` ve `watchlist` tablolarından istatistik sorgular yazılacak
@@ -390,7 +390,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 7-8-14-16 tamamlandı. 7: Navbar arama çubuğu + SearchResults sayfası. 8: Home trend filmler/diziler toggle. 14: Recommend sayfası ChatGPT-style sidebar (öneri geçmişi detay görünümü). 16: PasswordInput bileşeni + Login/Register/Profile'da şifre göster/gizle. Sıradaki: 4. Şifremi Unuttum → GitHub push → demo → rapor.
+**Son guncelleme:** 9 tamamlandı. 9: Tür Filtresi Sidebar — GenreSidebar.jsx bileşeni, Home.jsx sidebar entegrasyonu (desktop sabit + mobilde drawer), GET /movies/discover backend endpoint, tmdb_service.discover_movies media_type desteği eklendi. Sıradaki: 4. Şifremi Unuttum → GitHub push → demo → rapor.
 
 ---
 
