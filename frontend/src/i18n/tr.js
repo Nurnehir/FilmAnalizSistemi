@@ -137,6 +137,11 @@ const tr = {
   profile_avatar_removed: 'Profil resmi kaldırıldı.',
   profile_avatar_remove_failed: 'Kaldırma işlemi başarısız.',
 
+  // Profile stats
+  profile_stats_watchlist: 'İzleme Listesi',
+  profile_stats_recs: 'Öneri İsteği',
+  profile_stats_movies: 'Önerilen Film',
+
   // Settings
   settings_title: 'Ayarlar',
   settings_subtitle: 'Uygulama tercihlerini buradan yönet.',

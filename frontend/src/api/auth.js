@@ -19,3 +19,6 @@ export const updateAvatar = (avatar_url) =>
 
 export const deleteAvatar = () =>
   client.delete('/auth/avatar');
+
+export const getStats = () =>
+  client.get('/auth/stats').then((r) => r.data);

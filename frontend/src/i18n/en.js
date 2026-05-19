@@ -137,6 +137,11 @@ const en = {
   profile_avatar_removed: 'Profile photo removed.',
   profile_avatar_remove_failed: 'Failed to remove photo.',
 
+  // Profile stats
+  profile_stats_watchlist: 'Watchlist',
+  profile_stats_recs: 'Recommendations',
+  profile_stats_movies: 'Films Suggested',
+
   // Settings
   settings_title: 'Settings',
   settings_subtitle: 'Manage your app preferences.',

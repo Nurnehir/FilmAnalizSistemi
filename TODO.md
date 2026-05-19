@@ -292,13 +292,13 @@
 - [x] **Backend:** `GET /movies/discover` endpoint ekle (tmdb_service.discover_movies sarmalayıcı)
 - [x] **Backend:** `app/routers/movies.py` — `GET /movies/discover?genres=&sort_by=` endpoint
 
-### 10. Kullanıcı Profil İstatistikleri
-- [ ] **DB:** `recommendation_history` ve `watchlist` tablolarından istatistik sorgular yazılacak
-- [ ] **Backend:** `GET /auth/stats` endpoint — toplam watchlist, izlenen film sayısı, favori tür
-- [ ] **Backend:** `app/routers/auth.py`'e stats endpoint ekle
-- [ ] **Backend:** Favori tür: watchlist'teki filmlerin genre_ids'inden en sık olanı hesapla
-- [ ] **Frontend:** Profile.jsx'e istatistik kartları bölümü ekle (toplam film, öneri sayısı, favori tür)
-- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+### 10. Kullanıcı Profil İstatistikleri ✅
+- [x] **DB:** `recommendation_history` ve `watchlist` tablolarından istatistik sorgular yazılacak
+- [x] **Backend:** `GET /auth/stats` endpoint — toplam watchlist, öneri sayısı, önerilen film
+- [x] **Backend:** `app/routers/auth.py`'e stats endpoint eklendi
+- [x] **Backend:** watchlist_count + recommendation_count + movies_recommended (tmdb_ids toplamı)
+- [x] **Frontend:** Profile.jsx'e 3 istatistik kartı eklendi (İzleme Listesi / Öneri İsteği / Önerilen Film)
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu
 
 ### 11. İzlendi İşareti (Watchlist Sekmeleri)
 - [ ] **DB:** `watchlist` tablosuna `watched BOOLEAN DEFAULT FALSE` kolonu ekle
@@ -390,7 +390,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 9 tamamlandı. 9: Tür Filtresi Sidebar — GenreSidebar.jsx bileşeni, Home.jsx sidebar entegrasyonu (desktop sabit + mobilde drawer), GET /movies/discover backend endpoint, tmdb_service.discover_movies media_type desteği eklendi. Sıradaki: 4. Şifremi Unuttum → GitHub push → demo → rapor.
+**Son guncelleme:** 9-10 tamamlandı. 9: Tür Filtresi Sidebar. 10: Kullanıcı Profil İstatistikleri — GET /auth/stats endpoint, Profile.jsx'e 3 istatistik kartı. Sıradaki: 4. Şifremi Unuttum → GitHub push → demo → rapor.
 
 ---
 

@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { updateUsername, updatePassword, updateAvatar, deleteAvatar } from '../api/auth';
+import { updateUsername, updatePassword, updateAvatar, deleteAvatar, getStats } from '../api/auth';
 import PasswordInput from '../components/PasswordInput';
 
 export default function Profile() {
@@ -20,6 +20,11 @@ export default function Profile() {
   const [avatarRemoving, setAvatarRemoving] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
   const fileRef = useRef();
+
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    getStats().then(setStats).catch(() => {});
+  }, []);
 
   const handleUsernameSubmit = async (e) => {
     e.preventDefault();
@@ -117,6 +122,21 @@ export default function Profile() {
         <div>
           <h1 className="text-2xl font-bold">{t.profile_title}</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{t.profile_subtitle}</p>
+        </div>
+
+        {/* İstatistikler */}
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: t.profile_stats_watchlist, value: stats?.watchlist_count ?? '—', icon: '🎬' },
+            { label: t.profile_stats_recs,       value: stats?.recommendation_count ?? '—', icon: '✦' },
+            { label: t.profile_stats_movies,     value: stats?.movies_recommended ?? '—', icon: '🍿' },
+          ].map(({ label, value, icon }) => (
+            <div key={label} className={`${cardCls} text-center`}>
+              <div className="text-2xl mb-1">{icon}</div>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{value}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</div>
+            </div>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

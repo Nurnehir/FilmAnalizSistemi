@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func as sqlfunc
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.models.user import User
+from app.models.watchlist import Watchlist
+from app.models.recommendation_history import RecommendationHistory
 from app.schemas.user import UserCreate, UserOut, LoginRequest, Token, UpdateUsernameRequest, UpdatePasswordRequest, AvatarUpdateRequest
 from app.services.auth_service import hash_password, verify_password, create_token
 
@@ -96,6 +99,31 @@ async def update_avatar(
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail="Avatar guncellenirken hata olustu")
+
+
+@router.get("/stats")
+async def get_stats(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    watchlist_count = db.query(sqlfunc.count(Watchlist.id)).filter(
+        Watchlist.user_id == current_user.id
+    ).scalar() or 0
+
+    recommendation_count = db.query(sqlfunc.count(RecommendationHistory.id)).filter(
+        RecommendationHistory.user_id == current_user.id
+    ).scalar() or 0
+
+    recs = db.query(RecommendationHistory.tmdb_ids).filter(
+        RecommendationHistory.user_id == current_user.id
+    ).all()
+    movies_recommended = sum(len(r.tmdb_ids or []) for r in recs)
+
+    return {
+        "watchlist_count": watchlist_count,
+        "recommendation_count": recommendation_count,
+        "movies_recommended": movies_recommended,
+    }
 
 
 @router.delete("/avatar", response_model=UserOut)
