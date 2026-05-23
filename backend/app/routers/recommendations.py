@@ -74,14 +74,14 @@ async def recommend(
         ).all()
         if len(rated_items) >= 3:
             taste_movies = [{"title": i.title, "rating": i.user_rating} for i in rated_items]
-            taste_summary = await gemini_service.generate_taste_profile(taste_movies)
+            taste_summary = await gemini_service.generate_taste_profile(taste_movies, username=current_user.username)
             if taste_summary:
                 effective_prompt = (
                     f"[Kullanici zevk profili: {taste_summary}]\n\nKullanici istegi: {data.prompt}"
                 )
 
     # Asama 1: Ruh hali analizi
-    mood = await gemini_service.analyze_mood(effective_prompt, behavior_summary=behavior_summary)
+    mood = await gemini_service.analyze_mood(effective_prompt, behavior_summary=behavior_summary, username=current_user.username)
 
     # Asama 2: TMDB'den film listesi cek
     try:
@@ -98,7 +98,7 @@ async def recommend(
         raise HTTPException(status_code=404, detail="Uygun film bulunamadi")
 
     # Asama 3: Gemini ile kisisel oneri uret
-    rec_data = await gemini_service.generate_recommendations(effective_prompt, movies, behavior_summary=behavior_summary)
+    rec_data = await gemini_service.generate_recommendations(effective_prompt, movies, behavior_summary=behavior_summary, username=current_user.username)
 
     # Oneri edilen filmleri TMDB verisinden eslestirir
     movies_by_id = {str(m.get("id") or m.get("tmdb_id")): m for m in movies}

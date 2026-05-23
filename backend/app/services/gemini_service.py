@@ -8,11 +8,12 @@ MODEL = "llama-3.3-70b-versatile"
 MOOD_PROMPT = """
 Kullanicinin asagidaki mesajini analiz et ve hangi tur filmler onereceğini belirle.
 
+Kullanicinin adi: {username}
 Kullanici mesaji: "{prompt}"{behavior_block}
 
 Yanitini SADECE su JSON formatinda ver, baska hicbir sey yazma:
 {{
-  "mood_summary": "kullanicinin ruh halinin kisa ozeti (Turkce, 1 cumle)",
+  "mood_summary": "Kullaniciya '{username}' diye hitap et, 'sen' kipini kullan, samimi ve sicak bir dille ruh halini 1 cumlede ozetle. Ornek: '{username}, bugun hafif ve güldürücü bir şeyler aradığın belli oluyor.'",
   "genre_ids": [TMDB tur ID leri, en fazla 2 tane],
   "exclude_genre_ids": [kesinlikle istemeyeceği türler, max 3],
   "sort_by": "popularity.desc veya vote_average.desc"
@@ -31,21 +32,23 @@ TMDB Tur ID Referansi:
 """
 
 RECOMMENDATION_PROMPT = """
-Kullanici sunu soyluyor: "{prompt}"{behavior_block}
+Kullanicinin adi: {username}
+{username} sunu soyluyor: "{prompt}"{behavior_block}
 
-Asagidaki film listesinden bu kullaniciya en uygun 5 tanesini sec.
-Her biri icin neden onerdgini Turkce, 2-3 cumleyle acikla.
+Asagidaki film listesinden {username} icin en uygun 5 tanesini sec.
+Her film icin neden onerdğini Turkce, 2-3 cumleyle acikla.
+Onerileri dogrudan {username}'e hitap ederek, "sen" kipinde, sanki en yakin arkadasina film oneriyormus gibi yaz.
 
 Film Listesi:
 {movies_json}
 
 Yanitini SADECE su JSON formatinda ver:
 {{
-  "analysis": "kullanicinin isteginin kisa analizi (1-2 cumle, Turkce)",
+  "analysis": "Kisa, samimi, 'sen' kipinde {username}'e hitap eden 1-2 cumlelik analiz. Ornek: '{username}, bugun akladigin ruh haline gore sana harika secenekler buldum!'",
   "recommendations": [
     {{
       "tmdb_id": 12345,
-      "reason": "Bu filmi onermem sebebi: ..."
+      "reason": "Sana bu filmi onermek istiyorum cunku... (2-3 cumle, sen kipinde, samimi)"
     }}
   ]
 }}
@@ -83,24 +86,25 @@ KEYWORD_MAP = {
 
 
 TASTE_PROFILE_PROMPT = """
-Kullanicinin asagidaki film puanlama gecmisine gore kisa bir zevk profili olustur.
+Kullanicinin adi: {username}
+Asagidaki film puanlama gecmisine gore {username} icin kisa bir zevk profili olustur.
 
 Puanlanan filmler (baslik — kullanici puani/5):
 {films_list}
 
 Yalnizca bu JSON formatini ver, baska hicbir sey yazma:
 {{
-  "summary": "Kullanicinin film zevkini 1-2 cumlede ozetle. 'Sen' diye baslat."
+  "summary": "{username}'in film zevkini 1-2 cumlede ozetle. '{username}, sen...' diye baslat, 'sen' kipini kullan."
 }}
 """
 
 
-async def generate_taste_profile(rated_movies: list) -> str:
+async def generate_taste_profile(rated_movies: list, username: str = "Kullanici") -> str:
     films_list = "\n".join([f"- {m['title']} — {m['rating']}/5" for m in rated_movies])
     try:
         response = client.chat.completions.create(
             model=MODEL,
-            messages=[{"role": "user", "content": TASTE_PROFILE_PROMPT.format(films_list=films_list)}],
+            messages=[{"role": "user", "content": TASTE_PROFILE_PROMPT.format(films_list=films_list, username=username)}],
             temperature=0.3,
             max_tokens=256,
         )
@@ -147,15 +151,15 @@ def _extract_json(text: str) -> str:
     return text
 
 
-async def analyze_mood(prompt: str, behavior_summary: str = "") -> dict:
+async def analyze_mood(prompt: str, behavior_summary: str = "", username: str = "Kullanici") -> dict:
     behavior_block = (
-        f"\n\nKullanicinin son aktiviteleri (ilgi alanı ipucu olarak kullan):\n{behavior_summary}"
+        f"\n\nKullanicinin son aktiviteleri (ilgi alani ipucu olarak kullan):\n{behavior_summary}"
         if behavior_summary else ""
     )
     try:
         response = client.chat.completions.create(
             model=MODEL,
-            messages=[{"role": "user", "content": MOOD_PROMPT.format(prompt=prompt, behavior_block=behavior_block)}],
+            messages=[{"role": "user", "content": MOOD_PROMPT.format(prompt=prompt, behavior_block=behavior_block, username=username)}],
             temperature=0.3,
             max_tokens=256,
         )
@@ -170,9 +174,9 @@ async def analyze_mood(prompt: str, behavior_summary: str = "") -> dict:
         return _fallback_mood(prompt)
 
 
-async def generate_recommendations(prompt: str, movies: list, behavior_summary: str = "") -> dict:
+async def generate_recommendations(prompt: str, movies: list, behavior_summary: str = "", username: str = "Kullanici") -> dict:
     behavior_block = (
-        f"\n\nKullanicinin son aktiviteleri (öneri kararını etkileyen ipucu):\n{behavior_summary}"
+        f"\n\nKullanicinin son aktiviteleri (oneri kararini etkileyen ipucu):\n{behavior_summary}"
         if behavior_summary else ""
     )
     movies_simple = [
@@ -190,6 +194,7 @@ async def generate_recommendations(prompt: str, movies: list, behavior_summary: 
             prompt=prompt,
             behavior_block=behavior_block,
             movies_json=json.dumps(movies_simple, ensure_ascii=False),
+            username=username,
         )
         response = client.chat.completions.create(
             model=MODEL,

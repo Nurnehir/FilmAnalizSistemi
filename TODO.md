@@ -453,22 +453,13 @@
 > "Kullanıcı yorgun görünüyor" yerine "Nurnehir, bugün biraz yorgun hissediyorsun anlaşılan 😊"
 > Sadece prompt değişikliği — DB ve API şeması değişmez.
 
-- [ ] **Backend:** `app/services/gemini_service.py` — `MOOD_ANALYSIS_PROMPT` güncelle
-  - Prompt'a `username` parametresi ekle: `MOOD_ANALYSIS_PROMPT.format(prompt=prompt, username=username)`
-  - `mood_summary` alanı için talimat: "Türkçe, kullanıcıya '{username}' diye hitap et, 'sen' kipini kullan, samimi ve sıcak ol"
-  - Örnek istenen çıktı: "Nurnehir, bugün hafif ve güldürücü bir şeyler aradığın belli oluyor 😊"
-- [ ] **Backend:** `app/services/gemini_service.py` — `RECOMMENDATION_PROMPT` güncelle
-  - Prompt'a `username` parametresi ekle
-  - `reason` alanı için talimat: "Öneriyi doğrudan '{username}' e hitap ederek, 'sen' kipinde, sanki arkadaşına film öneriyormuş gibi yaz"
-  - Örnek istenen çıktı: "Sana bu filmi öneriyorum çünkü bugün aradığın hafifliği kesinlikle bulacaksın..."
-  - `analysis` alanı için talimat: "Kısa, samimi, 'sen' kipinde yaz"
-- [ ] **Backend:** `app/services/gemini_service.py` — `analyze_mood(prompt, username)` ve `generate_recommendations(prompt, movies, username)` fonksiyon imzalarına `username: str = "Kullanıcı"` parametresi ekle
-- [ ] **Backend:** `app/routers/recommendations.py` — `POST /recommendations` handler'ında `current_user.username`'i servis çağrılarına ilet
-  - `await analyze_mood(body.prompt, username=current_user.username)`
-  - `await generate_recommendations(body.prompt, movies, username=current_user.username)`
-- [ ] **Backend:** `app/services/gemini_service.py` — `generate_taste_profile(rated_movies, username)` fonksiyonuna da `username` ekle, profil özeti de kişisel ton kullansın
-- [ ] **Frontend:** Değişiklik gerekmez — AI yanıtları zaten `analysis` ve `reason` field'larından okunuyor; kullanıcı adı backend'de prompt'a gömülüyor
-- [ ] **Test:** Swagger UI'dan `POST /recommendations` çağrısında `analysis` ve ilk filmin `reason` alanının "sen" kipinde ve kullanıcı adıyla geldiğini doğrula
+- [x] **Backend:** `MOOD_PROMPT` güncellendi — `username` parametresi, `mood_summary` talimatı "sen" kipi + isimle hitap
+- [x] **Backend:** `RECOMMENDATION_PROMPT` güncellendi — hem `analysis` hem `reason` alanları "sen" kipi, isimle hitap, arkadaşça ton
+- [x] **Backend:** `analyze_mood(prompt, behavior_summary, username)` imzası güncellendi
+- [x] **Backend:** `generate_recommendations(prompt, movies, behavior_summary, username)` imzası güncellendi
+- [x] **Backend:** `generate_taste_profile(rated_movies, username)` imzası güncellendi, profil özeti de kişisel ton
+- [x] **Backend:** `recommendations.py` — tüm servis çağrılarına `username=current_user.username` iletiliyor
+- [x] **Frontend:** Değişiklik gerekmez
 
 ---
 
@@ -639,7 +630,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 17-18-19 tamamlandı. Sıradaki: 20 (AI kişisel konuşma tonu).
+**Son guncelleme:** 17-18-19-20 tamamlandı. Sıradaki: 21 (AI platform farkındalığı).
 
 ---
 
