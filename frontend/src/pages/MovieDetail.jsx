@@ -381,9 +381,9 @@ export default function MovieDetail() {
         {similar.length > 0 && (
           <section className="mt-10">
             <h2 className="text-lg font-bold mb-4">{t.detail_similar}</h2>
-            <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
+            <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide items-stretch">
               {similar.map((m) => (
-                <div key={m.tmdb_id || m.id} className="flex-shrink-0 w-36">
+                <div key={m.tmdb_id || m.id} className="flex-shrink-0 w-40 flex flex-col">
                   <MovieCard movie={{ ...m, media_type: mediaType }} />
                 </div>
               ))}

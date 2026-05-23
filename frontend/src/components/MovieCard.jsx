@@ -9,7 +9,7 @@ export default function MovieCard({ movie, reason, badge, platforms }) {
   const poster = movie.poster_url || (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null);
 
   return (
-    <div className="group bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-700 transition-all duration-200 flex flex-col">
+    <div className="group bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-700 transition-all duration-200 flex flex-col h-full">
       <Link
         to={`/movie/${movie.tmdb_id || movie.id}?type=${movie.media_type || 'movie'}`}
         className="block relative"
