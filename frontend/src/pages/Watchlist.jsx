@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   getWatchlist, removeFromWatchlist, markWatched, rateMovie, moveToCollection,
@@ -25,13 +25,16 @@ export default function Watchlist() {
   const [activeColId, setActiveColId] = useState(null); // null = show all
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Collection editing state
-  const [editingColId, setEditingColId] = useState(null);
-  const [editName, setEditName] = useState('');
+  // Collection modals
+  const [showNewListModal, setShowNewListModal] = useState(false);
   const [newListName, setNewListName] = useState('');
-  const [showNewList, setShowNewList] = useState(false);
   const [creatingList, setCreatingList] = useState(false);
-  const editInputRef = useRef(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTarget, setEditTarget] = useState(null); // {id, name}
+  const [editName, setEditName] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // {id, name}
 
   useEffect(() => {
     const load = async () => {
@@ -49,12 +52,6 @@ export default function Watchlist() {
     };
     load();
   }, []);
-
-  useEffect(() => {
-    if (editingColId !== null && editInputRef.current) {
-      editInputRef.current.focus();
-    }
-  }, [editingColId]);
 
   // ── Item actions ────────────────────────────────────────────────────────────
 
@@ -105,32 +102,41 @@ export default function Watchlist() {
       const col = await createCollection(name);
       setCollections((prev) => [...prev, col]);
       setNewListName('');
-      setShowNewList(false);
+      setShowNewListModal(false);
       refreshContext();
     } catch {} finally { setCreatingList(false); }
   };
 
-  const handleRenameStart = (col) => {
-    setEditingColId(col.id);
+  const handleEditOpen = (col) => {
+    setEditTarget(col);
     setEditName(col.name);
+    setShowEditModal(true);
   };
 
-  const handleRenameConfirm = async (colId) => {
+  const handleEditSave = async () => {
     const name = editName.trim();
-    if (!name) { setEditingColId(null); return; }
+    if (!name || !editTarget) return;
+    setSavingEdit(true);
     try {
-      const updated = await updateCollection(colId, name);
-      setCollections((prev) => prev.map((c) => (c.id === colId ? { ...c, name: updated.name } : c)));
-    } catch {} finally { setEditingColId(null); }
+      const updated = await updateCollection(editTarget.id, name);
+      setCollections((prev) => prev.map((c) => (c.id === editTarget.id ? { ...c, name: updated.name } : c)));
+      setShowEditModal(false);
+    } catch {} finally { setSavingEdit(false); }
   };
 
-  const handleDeleteList = async (colId) => {
+  const handleDeleteOpen = (col) => {
+    setDeleteTarget(col);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteCollection(colId);
-      setCollections((prev) => prev.filter((c) => c.id !== colId));
-      // Items in this collection become unassigned
-      setItems((prev) => prev.map((i) => (i.collection_id === colId ? { ...i, collection_id: null } : i)));
-      if (activeColId === colId) setActiveColId(null);
+      await deleteCollection(deleteTarget.id);
+      setCollections((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+      setItems((prev) => prev.map((i) => (i.collection_id === deleteTarget.id ? { ...i, collection_id: null } : i)));
+      if (activeColId === deleteTarget.id) setActiveColId(null);
+      setShowDeleteModal(false);
       refreshContext();
     } catch {}
   };
@@ -188,91 +194,67 @@ export default function Watchlist() {
 
         {/* Collections */}
         {collections.map((col) => (
-          <div key={col.id} className="group relative">
-            {editingColId === col.id ? (
-              <div className="flex items-center gap-1 px-3 py-2">
-                <input
-                  ref={editInputRef}
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleRenameConfirm(col.id);
-                    if (e.key === 'Escape') setEditingColId(null);
-                  }}
-                  onBlur={() => handleRenameConfirm(col.id)}
-                  className="flex-1 text-sm bg-white dark:bg-gray-700 border border-purple-400 rounded px-2 py-0.5 outline-none text-gray-900 dark:text-white"
-                />
-              </div>
-            ) : (
-              <button
-                onClick={() => { setActiveColId(col.id); setSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
-                  activeColId === col.id
-                    ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 font-medium'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
-              >
-                <span className="truncate">🎬 {col.name}</span>
-                <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full shrink-0">
-                  {col.item_count}
-                </span>
-              </button>
-            )}
-            {/* Edit / Delete icons */}
-            {editingColId !== col.id && (
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleRenameStart(col); }}
-                  className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                  title={t.wl_rename}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDeleteList(col.id); }}
-                  className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                  title={t.wl_delete_list}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            )}
+          <div
+            key={col.id}
+            className={`flex items-center gap-1 px-2 py-1 mx-1 my-0.5 rounded-lg transition-colors ${
+              activeColId === col.id
+                ? 'bg-purple-50 dark:bg-purple-900/20'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+            }`}
+          >
+            {/* Name button */}
+            <button
+              onClick={() => { setActiveColId(col.id); setSidebarOpen(false); }}
+              className={`flex-1 flex items-center gap-2 text-sm text-left min-w-0 py-1.5 px-1 ${
+                activeColId === col.id
+                  ? 'text-purple-700 dark:text-purple-300 font-medium'
+                  : 'text-gray-600 dark:text-gray-400'
+              }`}
+            >
+              <span className="text-base shrink-0">🎬</span>
+              <span className="truncate">{col.name}</span>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full shrink-0 ml-auto ${
+                activeColId === col.id
+                  ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+              }`}>
+                {col.item_count}
+              </span>
+            </button>
+
+            {/* Edit icon */}
+            <button
+              onClick={(e) => { e.stopPropagation(); handleEditOpen(col); }}
+              title={t.wl_rename}
+              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-blue-400 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+
+            {/* Delete icon */}
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDeleteOpen(col); }}
+              title={t.wl_delete_list}
+              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-red-400 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
         ))}
       </div>
 
       {/* New list */}
       <div className="p-3 border-t border-gray-200 dark:border-gray-800">
-        {showNewList ? (
-          <div className="flex gap-1">
-            <input
-              value={newListName}
-              onChange={(e) => setNewListName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList(); if (e.key === 'Escape') setShowNewList(false); }}
-              placeholder={t.wl_new_list_placeholder}
-              className="flex-1 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 outline-none focus:border-purple-400 text-gray-900 dark:text-white"
-              autoFocus
-            />
-            <button
-              onClick={handleCreateList}
-              disabled={creatingList || !newListName.trim()}
-              className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg transition-colors disabled:opacity-50"
-            >
-              {creatingList ? '...' : t.save}
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowNewList(true)}
-            className="w-full text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium py-1.5 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
-          >
-            + {t.wl_new_list}
-          </button>
-        )}
+        <button
+          onClick={() => { setNewListName(''); setShowNewListModal(true); }}
+          className="w-full text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors flex items-center justify-center gap-1.5"
+        >
+          <span className="text-lg leading-none">+</span> {t.wl_new_list}
+        </button>
       </div>
     </div>
   );
@@ -314,7 +296,7 @@ export default function Watchlist() {
           <div className="flex gap-6">
 
             {/* ── Desktop Sidebar ── */}
-            <aside className="hidden lg:flex flex-col w-56 shrink-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden self-start sticky top-4">
+            <aside className="hidden lg:flex flex-col w-72 shrink-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden self-start sticky top-4">
               <Sidebar />
             </aside>
 
@@ -490,6 +472,110 @@ export default function Watchlist() {
           </div>
         )}
       </div>
+
+      {/* ── Edit List Modal ── */}
+      {showEditModal && editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowEditModal(false)} />
+          <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{t.wl_rename}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t.wl_rename_subtitle}</p>
+            <input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleEditSave(); if (e.key === 'Escape') setShowEditModal(false); }}
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-purple-500 dark:focus:border-purple-500 transition-colors"
+              autoFocus
+              maxLength={100}
+            />
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={savingEdit || !editName.trim()}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-50"
+              >
+                {savingEdit ? '...' : t.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirmation Modal ── */}
+      {showDeleteModal && deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowDeleteModal(false)} />
+          <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t.wl_delete_list}</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              {t.wl_delete_confirm.replace('{name}', deleteTarget.name)}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-5">{t.wl_delete_confirm_sub}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition-colors"
+              >
+                {t.wl_delete_list}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── New List Modal ── */}
+      {showNewListModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNewListModal(false)} />
+          <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{t.wl_new_list}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t.wl_new_list_subtitle}</p>
+            <input
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList(); if (e.key === 'Escape') setShowNewListModal(false); }}
+              placeholder={t.wl_new_list_placeholder}
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-purple-500 dark:focus:border-purple-500 transition-colors"
+              autoFocus
+              maxLength={100}
+            />
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setShowNewListModal(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleCreateList}
+                disabled={creatingList || !newListName.trim()}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-50"
+              >
+                {creatingList ? '...' : t.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
