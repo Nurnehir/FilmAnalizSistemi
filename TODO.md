@@ -380,6 +380,298 @@
 - [x] **Frontend:** Koyu/açık mod uyumlu (göz ikonu renkleri dark: variantlı)
 - [x] **Frontend:** TR/EN i18n etkilenmez — bileşen metinsiz, sadece ikon içerir
 
+### 17. Platform / Yayın Servisi Bilgisi (Film Detay Sayfası)
+> TMDB Watch Providers API ile filmin hangi platformda yayınlandığını çek.
+> Film detay sayfasında "Fragmanı İzle" butonunun sağ tarafında platform ikonlarını göster.
+> Ön koşul: yok — bağımsız bir TMDB API çağrısıdır.
+
+- [ ] **Backend:** `app/services/tmdb_service.py` — `get_watch_providers(tmdb_id, media_type)` fonksiyonu ekle
+  - TMDB endpoint: `GET /movie/{id}/watch/providers` (veya `/tv/{id}/watch/providers`)
+  - `params={"language": "tr-TR"}` — ülke önceliği: `TR`, yoksa `US`
+  - Yanıt: `{flatrate: [{provider_name, logo_path}], rent: [...], buy: [...]}` — `flatrate` (abonelik) öncelikli
+  - `logo_path` için tam URL: `https://image.tmdb.org/t/p/w45{logo_path}`
+  - Sağlanamıyorsa boş liste dön, hata fırlatma
+- [ ] **Backend:** `app/routers/movies.py` — `GET /movies/{tmdb_id}/providers?media_type=movie` endpoint ekle
+  - Response şeması: `{providers: [{name: str, logo_url: str, type: str}]}` — type: "flatrate" | "rent" | "buy"
+  - Auth gerekmez (public endpoint)
+- [ ] **Frontend:** `src/api/movies.js` — `getWatchProviders(tmdb_id, media_type)` fonksiyonu ekle
+- [ ] **Frontend:** `src/components/WatchProviders.jsx` — platform ikonları bileşeni oluştur
+  - Platform logolarını 32x32 yuvarlak ikonlar olarak göster (max 5 ikon yan yana)
+  - Her ikonun üzerine gelinince tooltip: platform adı
+  - Flatrate (Netflix, Disney+ vb.) ikonları önce; yoksa rent/buy ikonları
+  - Provider yoksa bileşen hiçbir şey render etmez
+- [ ] **Frontend:** `src/pages/MovieDetail.jsx` — "Fragmanı İzle" buton satırının sağına `<WatchProviders>` ekle
+  - Layout: `flex items-center justify-between` — sol: fragman butonu, sağ: platform ikonları
+  - Platform çekimi MovieDetail'in mount'unda paralel çalışır (`Promise.all` ile `getMovieDetail` + `getWatchProviders` + `getSimilar`)
+- [ ] **Frontend:** Koyu/açık mod uyumlu (ikon çevresi `bg-gray-100 dark:bg-gray-800`)
+- [ ] **Frontend:** TR/EN i18n — `providers_watch_on: "İzle:"` / `"Watch on:"` anahtarı ekle
+
+---
+
+### 18. Davranış Tabanlı AI Kişiselleştirme (Arama + Tıklama Geçmişi)
+> Kullanıcının watchlist'ine eklediği filmlerin yanı sıra; aradığı kelimeler, tıkladığı filmler ve
+> ziyaret ettiği detay sayfaları da AI öneri profiline dahil edilsin.
+> Bu veriler `user_behavior` tablosunda tutulur; `GET /auth/taste-profile` bunu hesaba katar.
+
+- [ ] **DB:** Yeni tablo `user_behavior` oluştur
+  ```sql
+  CREATE TABLE user_behavior (
+      id          SERIAL PRIMARY KEY,
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      event_type  VARCHAR(30) NOT NULL,  -- 'view', 'search', 'click', 'recommend_request'
+      tmdb_id     INTEGER,               -- tıklanan/görüntülenen film (opsiyonel)
+      media_type  VARCHAR(10),           -- 'movie' | 'tv'
+      title       VARCHAR(255),          -- film adı (opsiyonel, denormalized)
+      genre_ids   INTEGER[],             -- filmin türleri (denormalized, hızlı okuma için)
+      search_query VARCHAR(255),         -- arama event'i için kullanıcının yazdığı metin
+      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  );
+  CREATE INDEX idx_user_behavior_user_id ON user_behavior(user_id);
+  CREATE INDEX idx_user_behavior_created_at ON user_behavior(created_at DESC);
+  ```
+- [ ] **DB:** Alembic migration `e5f6a7b8c9d0_add_user_behavior_table.py` oluştur ve uygula (`alembic revision --autogenerate` + `alembic upgrade head`)
+- [ ] **Backend:** `app/models/user_behavior.py` — SQLAlchemy ORM modeli oluştur
+- [ ] **Backend:** `app/schemas/behavior.py` — `BehaviorEvent` Pydantic şeması oluştur
+  - `event_type: Literal['view', 'search', 'click', 'recommend_request']`
+  - `tmdb_id: int | None`, `media_type: str | None`, `title: str | None`, `genre_ids: list[int] | None`, `search_query: str | None`
+- [ ] **Backend:** `app/routers/behavior.py` — `POST /behavior/event` endpoint ekle
+  - Auth zorunlu (`Depends(get_current_user)`)
+  - Body: `BehaviorEvent`
+  - DB'ye kayıt yaz, `201` dön
+  - Fire-and-forget mantığı: hata olsa bile sessizce yut (kullanıcıya hata döndürme)
+- [ ] **Backend:** `app/main.py`'e behavior router'ı ekle
+- [ ] **Backend:** `app/services/gemini_service.py` — `analyze_mood` ve `generate_recommendations` fonksiyonları güncelle
+  - Yeni parametre: `behavior_summary: str | None = None`
+  - `MOOD_ANALYSIS_PROMPT` ve `RECOMMENDATION_PROMPT`'a opsiyonel bir blok ekle:
+    ```
+    Kullanıcının Son Davranışları (varsa):
+    {behavior_summary}
+    ```
+  - Bu blok, hem arama geçmişindeki anahtar kelimeleri hem de sık tıklanan türleri içerir
+- [ ] **Backend:** `app/routers/recommendations.py` — `POST /recommendations` güncelle
+  - Son 30 davranış olayını çek (`user_behavior` tablosundan, son 7 gün)
+  - `build_behavior_summary(events)` yardımcı fonksiyonu: sık aranan kelimeler + sık görüntülenen türler → kısa metin özeti üret
+  - Bu özeti `gemini_service.generate_recommendations(..., behavior_summary=...)` çağrısına ilet
+- [ ] **Frontend:** `src/api/behavior.js` — `trackEvent(event_type, data)` fonksiyonu oluştur
+  - Auth tokenı varsa POST /behavior/event çağır
+  - Auth yoksa (misafir kullanıcı) sessizce atla
+  - Hata durumunda console.warn yaz, UI'ı etkileme
+- [ ] **Frontend:** `src/pages/MovieDetail.jsx` — sayfa açılınca `trackEvent('view', {tmdb_id, media_type, title, genre_ids})` çağır (`useEffect` mount'ta, bir kez)
+- [ ] **Frontend:** `src/pages/SearchResults.jsx` — her arama sorgusunda `trackEvent('search', {search_query})` çağır (debounce sonrasında)
+- [ ] **Frontend:** `src/components/MovieCard.jsx` — karta tıklanınca `trackEvent('click', {tmdb_id, media_type, title, genre_ids})` çağır
+- [ ] **Frontend:** `src/pages/Recommend.jsx` — öneri submit anında `trackEvent('recommend_request', {search_query: prompt})` çağır
+- [ ] **Frontend:** Koyu/açık mod + TR/EN: bu özellik arka planda çalışır, kullanıcıya görünür UI değişikliği yok
+
+---
+
+### 19. Vizyondaki Filmler Filtresi (Anasayfa)
+> Anasayfada "Trend" içeriklerin yanına "Vizyonda" sekmesi eklenecek.
+> TMDB'nin `now_playing` endpoint'i kullanılacak (sadece `movie` için geçerlidir, dizilerin vizyonu olmaz).
+> "Vizyonda" sekmesi seçiliyken tür sidebar'ı devre dışı bırakılır (vizyondaki filmler zaten filtrelenmiştir).
+
+- [ ] **Backend:** `app/services/tmdb_service.py` — `get_now_playing(page: int = 1)` fonksiyonu ekle
+  - TMDB endpoint: `GET /movie/now_playing`
+  - `params={"language": "tr-TR", "page": page, "region": "TR"}` — TR bölgesi öncelikli
+  - Yanıt: trend filmlerdekiyle aynı formatta normalize et (`poster_url`, `tmdb_id`, `media_type="movie"`)
+- [ ] **Backend:** `app/routers/movies.py` — `GET /movies/now-playing?page=1` endpoint ekle
+  - Auth gerekmez
+  - Response şeması: `MovieListResponse` (mevcut `trending` ile aynı şema kullanılabilir)
+- [ ] **Frontend:** `src/api/movies.js` — `getNowPlaying(page)` fonksiyonu ekle
+- [ ] **Frontend:** `src/pages/Home.jsx` — mevcut "Filmler / Diziler" toggle'a üçüncü sekme olarak "Vizyonda 🎬" eklenmez; bunun yerine ayrı bir filtre chip'i olur
+  - Trend bölümünün başlığının yanına küçük chip: `[Trend] [Vizyonda]` (pill-style)
+  - "Vizyonda" seçilince `getNowPlaying()` çağrılır, filmler/dizi toggle gizlenir
+  - "Trend" seçilince normale döner
+  - Aktif chip vurgulu (mor arka plan), geçiş `transition-all 150ms`
+- [ ] **Frontend:** `src/pages/Home.jsx` — "Vizyonda" aktifken `GenreSidebar` disabled/gizli olur (vizyondaki filmler genre filtresi desteklemez)
+- [ ] **Frontend:** "Vizyonda" modunda her film kartının üzerinde küçük `🎬 Vizyonda` rozeti göster (MovieCard'a opsiyonel `badge` prop ekle)
+- [ ] **Frontend:** Koyu/açık mod uyumlu
+- [ ] **Frontend:** TR/EN i18n — `home_now_playing: "Vizyonda"` / `"Now Playing"`, `home_now_playing_badge: "Vizyonda"` / `"In Theaters"` anahtarları ekle
+
+---
+
+### 20. AI Kişisel Konuşma Tonu (Sen Dili + Kullanıcı Adı)
+> Yapay zeka öneri ve analiz metinlerinde resmi/soğuk değil; samimi, "sen" diline dayalı,
+> kullanıcının adını kullanan bir ton benimsesin.
+> "Kullanıcı yorgun görünüyor" yerine "Nurnehir, bugün biraz yorgun hissediyorsun anlaşılan 😊"
+> Sadece prompt değişikliği — DB ve API şeması değişmez.
+
+- [ ] **Backend:** `app/services/gemini_service.py` — `MOOD_ANALYSIS_PROMPT` güncelle
+  - Prompt'a `username` parametresi ekle: `MOOD_ANALYSIS_PROMPT.format(prompt=prompt, username=username)`
+  - `mood_summary` alanı için talimat: "Türkçe, kullanıcıya '{username}' diye hitap et, 'sen' kipini kullan, samimi ve sıcak ol"
+  - Örnek istenen çıktı: "Nurnehir, bugün hafif ve güldürücü bir şeyler aradığın belli oluyor 😊"
+- [ ] **Backend:** `app/services/gemini_service.py` — `RECOMMENDATION_PROMPT` güncelle
+  - Prompt'a `username` parametresi ekle
+  - `reason` alanı için talimat: "Öneriyi doğrudan '{username}' e hitap ederek, 'sen' kipinde, sanki arkadaşına film öneriyormuş gibi yaz"
+  - Örnek istenen çıktı: "Sana bu filmi öneriyorum çünkü bugün aradığın hafifliği kesinlikle bulacaksın..."
+  - `analysis` alanı için talimat: "Kısa, samimi, 'sen' kipinde yaz"
+- [ ] **Backend:** `app/services/gemini_service.py` — `analyze_mood(prompt, username)` ve `generate_recommendations(prompt, movies, username)` fonksiyon imzalarına `username: str = "Kullanıcı"` parametresi ekle
+- [ ] **Backend:** `app/routers/recommendations.py` — `POST /recommendations` handler'ında `current_user.username`'i servis çağrılarına ilet
+  - `await analyze_mood(body.prompt, username=current_user.username)`
+  - `await generate_recommendations(body.prompt, movies, username=current_user.username)`
+- [ ] **Backend:** `app/services/gemini_service.py` — `generate_taste_profile(rated_movies, username)` fonksiyonuna da `username` ekle, profil özeti de kişisel ton kullansın
+- [ ] **Frontend:** Değişiklik gerekmez — AI yanıtları zaten `analysis` ve `reason` field'larından okunuyor; kullanıcı adı backend'de prompt'a gömülüyor
+- [ ] **Test:** Swagger UI'dan `POST /recommendations` çağrısında `analysis` ve ilk filmin `reason` alanının "sen" kipinde ve kullanıcı adıyla geldiğini doğrula
+
+---
+
+### 21. AI Platform Farkındalığı (Önerilerde Yayın Platformu Bilgisi)
+> Yapay zeka film önerisi yaparken, filmin Türkiye'deki yayın platformunu da söylesin.
+> Önce TMDB Watch Providers API'den platform verisi çekilir (17. madde altyapısını kullanır),
+> sonra bu veri AI prompt'una eklenerek öneri gerekçesiyle birleştirilir.
+> Ön koşul: 17. madde tamamlanmış olmalı (get_watch_providers servisi hazır).
+
+- [ ] **Backend:** `app/routers/recommendations.py` — `POST /recommendations` handler'ında TMDB'den seçilen filmler için platform verisi çek
+  - `asyncio.gather` ile tüm önerilen filmler için paralel `get_watch_providers(tmdb_id, 'movie')` çağrısı yap (max 5 film, TMDB rate limit'e dikkat)
+  - Her film için `{tmdb_id: 12345, platforms: ["Netflix", "Disney+"]}` şeklinde bir harita oluştur
+- [ ] **Backend:** `app/services/gemini_service.py` — `generate_recommendations` fonksiyonunu güncelle
+  - `movies` listesindeki her öğeye `available_on: list[str]` alanı ekle (platform adları)
+  - `RECOMMENDATION_PROMPT`'a şu talimatı ekle: "Eğer filmin yayınlandığı platform varsa (available_on), öneri gerekçesinin sonuna 'Bu film şu an [Platform Adı]'da izlenebilir.' cümlesini ekle."
+  - Platform yoksa bu cümleyi ekleme
+- [ ] **Backend:** `app/schemas/recommendation.py` — `MovieRecommendation` şemasına `platforms: list[str] = []` alanı ekle
+  - Bu alan frontend'e dönen JSON'da da taşınır
+- [ ] **Frontend:** `src/pages/Recommend.jsx` — öneri kartlarında platform ikonları göster
+  - Her film kartının altında `<WatchProviders>` bileşenini (17. maddeden) kullan
+  - Platform listesi öneri response'undan gelir (`movie.platforms`), ek API çağrısı yapmaz
+  - Platform isimleri icon mapping'e çevrilir: "Netflix" → Netflix logosu, "Disney Plus" → Disney+ logosu vb.
+- [ ] **Frontend:** `src/components/MovieCard.jsx` — opsiyonel `platforms` prop'u ekle; varsa alt kısımda küçük platform ikonları göster (max 3 ikon, `w-5 h-5`)
+- [ ] **Frontend:** TR/EN i18n — `rec_available_on: "İzleyebileceğin yer:"` / `"Where to watch:"` anahtarı ekle
+- [ ] **Frontend:** Koyu/açık mod uyumlu
+
+---
+
+### 22. Çoklu İsimlendirilmiş Watchlist
+> Kullanıcı tek bir varsayılan "İzleme Listesi" yerine birden fazla, isimlendirilmiş liste oluşturabilsin.
+> Örnek: "Haftasonu Listesi", "Ailecek İzleyeceklerimiz", "Favorilerim"
+> Mevcut `watchlist` tablosuna `list_id` foreign key eklenerek mevcut sistem genişletilir.
+> Mevcut kayıtlar "Varsayılan Liste" adlı otomatik oluşturulan bir listeye taşınır.
+
+- [ ] **DB:** Yeni tablo `watchlist_collections` oluştur
+  ```sql
+  CREATE TABLE watchlist_collections (
+      id          SERIAL PRIMARY KEY,
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name        VARCHAR(100) NOT NULL,
+      is_default  BOOLEAN DEFAULT FALSE,
+      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  );
+  CREATE INDEX idx_collections_user_id ON watchlist_collections(user_id);
+  ```
+- [ ] **DB:** `watchlist` tablosuna `collection_id INTEGER REFERENCES watchlist_collections(id) ON DELETE SET NULL` kolonu ekle (nullable — eski kayıtlar NULL kalır geçiş sırasında)
+- [ ] **DB:** Alembic migration `f6a7b8c9d0e1_add_watchlist_collections.py` oluştur ve uygula
+  - Migration içinde: her kullanıcı için "Varsayılan Liste" (`is_default=TRUE`) collection kaydı otomatik oluştur
+  - Mevcut watchlist kayıtlarının `collection_id`'sini bu varsayılan listeye bağla (`UPDATE watchlist SET collection_id = ...`)
+- [ ] **Backend:** `app/models/watchlist_collection.py` — SQLAlchemy ORM modeli oluştur
+- [ ] **Backend:** `app/schemas/watchlist.py` — yeni şemalar ekle
+  - `CollectionCreate`: `name: str` (1-100 karakter, boş olamaz)
+  - `CollectionUpdate`: `name: str`
+  - `CollectionOut`: `id`, `name`, `is_default`, `item_count: int`, `created_at`
+- [ ] **Backend:** `app/routers/watchlist.py` — koleksiyon yönetimi endpointleri ekle
+  - `GET /watchlist/collections` — kullanıcının tüm listelerini döner (her birinde `item_count`)
+  - `POST /watchlist/collections` — yeni liste oluştur (body: `CollectionCreate`), `201` dön
+  - `PUT /watchlist/collections/{collection_id}` — liste adını güncelle
+  - `DELETE /watchlist/collections/{collection_id}` — listeyi sil (içindeki filmler `collection_id=NULL` olur veya varsayılan listeye taşınır; varsayılan liste silinemez → `400`)
+  - `GET /watchlist?collection_id=` — belirli listedeki filmleri getir (collection_id verilmezse tümünü getirir)
+  - `POST /watchlist` — body'ye `collection_id: int | None = None` ekle (None → varsayılan listeye ekle)
+  - `PATCH /watchlist/{id}/move` — filmi başka bir listeye taşı, body: `{collection_id: int}`
+- [ ] **Frontend:** `src/api/watchlist.js` — yeni fonksiyonlar ekle
+  - `getCollections()`, `createCollection(name)`, `updateCollection(id, name)`, `deleteCollection(id)`, `moveToCollection(item_id, collection_id)`
+- [ ] **Frontend:** `src/pages/Watchlist.jsx` — tamamen yeniden tasarla
+  - Sol panel: liste adları (collection'lar), "+" butonu ile yeni liste oluştur
+  - Her liste adının yanında: düzenle (kalem ikonu) + sil (çöp ikonu) — varsayılan listede sil ikonu gösterilmez
+  - Liste adına çift tıklayınca inline düzenleme (input field, Enter ile kaydet, Escape ile iptal)
+  - Sağ/ana alan: seçili listedeki filmler
+  - Film kartında "Listeye Taşı" butonu → dropdown'dan hedef liste seç
+  - Boş listede "Bu liste boş. Film eklemek için 🔖 ikonuna tıkla." mesajı
+- [ ] **Frontend:** `src/components/MovieCard.jsx` ve `WatchlistButton.jsx` — film ekleme akışını güncelle
+  - Film eklenirken birden fazla liste varsa hangi listeye ekleneceğini soran küçük bir dropdown/modal göster
+  - Sadece bir liste varsa (varsayılan) doğrudan ekle
+- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+  - i18n anahtarları: `watchlist_new_list`, `watchlist_rename`, `watchlist_delete_list`, `watchlist_move_to`, `watchlist_default_name: "İzleme Listem"` / `"My Watchlist"`, `watchlist_empty_collection`
+
+---
+
+### 23. Topluluk Yorumları ve Puanlama Sistemi
+> Kullanıcılar film detay sayfasında herkese açık yorum yazabilsin ve 1-5 yıldız verebilsin.
+> Yorumda spoiler uyarısı ve anonim/isimli görünme seçeneği olsun.
+> Yorumlar herkes tarafından görülebilir (giriş yapmadan da okunabilir, yazmak için giriş gerekli).
+
+- [ ] **DB:** Yeni tablo `reviews` oluştur
+  ```sql
+  CREATE TABLE reviews (
+      id            SERIAL PRIMARY KEY,
+      user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      tmdb_id       INTEGER NOT NULL,
+      media_type    VARCHAR(10) NOT NULL DEFAULT 'movie',
+      rating        SMALLINT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      body          TEXT NOT NULL CHECK (char_length(body) >= 10 AND char_length(body) <= 2000),
+      has_spoiler   BOOLEAN NOT NULL DEFAULT FALSE,
+      is_anonymous  BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      CONSTRAINT unique_user_review UNIQUE (user_id, tmdb_id, media_type)
+  );
+  CREATE INDEX idx_reviews_tmdb ON reviews(tmdb_id, media_type);
+  CREATE INDEX idx_reviews_user ON reviews(user_id);
+  CREATE INDEX idx_reviews_created ON reviews(created_at DESC);
+  ```
+  - `UNIQUE(user_id, tmdb_id, media_type)` — bir kullanıcı aynı film için tek yorum yazabilir (düzenleyebilir)
+- [ ] **DB:** Alembic migration `a7b8c9d0e1f2_add_reviews_table.py` oluştur ve uygula
+- [ ] **Backend:** `app/models/review.py` — SQLAlchemy ORM modeli oluştur
+- [ ] **Backend:** `app/schemas/review.py` — Pydantic şemaları oluştur
+  - `ReviewCreate`: `tmdb_id: int`, `media_type: str`, `rating: int` (1-5), `body: str` (10-2000 karakter), `has_spoiler: bool`, `is_anonymous: bool`
+  - `ReviewUpdate`: `rating: int | None`, `body: str | None`, `has_spoiler: bool | None`, `is_anonymous: bool | None`
+  - `ReviewOut`: `id`, `rating`, `body`, `has_spoiler`, `is_anonymous`, `created_at`, `updated_at`
+    - `display_name: str` — `is_anonymous=True` ise `"Anonim"`, False ise `user.username`
+    - `is_own: bool` — isteği yapan kullanıcıya ait mi (frontend'de düzenle/sil butonları için)
+  - `ReviewListResponse`: `reviews: list[ReviewOut]`, `total: int`, `avg_rating: float | None`
+- [ ] **Backend:** `app/routers/reviews.py` — yeni router oluştur
+  - `GET /movies/{tmdb_id}/reviews?media_type=movie&page=1&limit=10` — film yorumlarını getir
+    - Auth opsiyonel: giriş yapmadan da okunabilir, ama `is_own` hesaplanamaz (False döner)
+    - `avg_rating`: tablodaki tüm rating'lerin ortalaması (round 1 decimal)
+    - Sıralama: en yeni önce
+  - `POST /movies/{tmdb_id}/reviews` — yorum yaz (Auth zorunlu)
+    - Aynı kullanıcı aynı film için zaten yorum yazdıysa `409 Conflict: "Bu film için zaten yorum yazdınız. Mevcut yorumunuzu düzenleyebilirsiniz."`
+  - `PUT /reviews/{review_id}` — yorumu düzenle (Auth zorunlu, sadece kendi yorumu)
+    - Başkasının yorumuna erişince `403 Forbidden`
+  - `DELETE /reviews/{review_id}` — yorumu sil (Auth zorunlu, sadece kendi yorumu)
+- [ ] **Backend:** `app/main.py`'e reviews router'ı ekle: `app.include_router(reviews_router, prefix="/movies", tags=["reviews"])`
+- [ ] **Frontend:** `src/api/reviews.js` — fonksiyonlar oluştur
+  - `getReviews(tmdb_id, media_type, page)` → `{reviews, total, avg_rating}`
+  - `createReview(tmdb_id, media_type, data)` → yeni yorum
+  - `updateReview(review_id, data)` → yorumu güncelle
+  - `deleteReview(review_id)` → yorumu sil
+- [ ] **Frontend:** `src/components/ReviewCard.jsx` — tek yorum kartı bileşeni oluştur
+  - Üstte: `display_name` (kullanıcı adı veya "Anonim") + tarih (sağ hizalı)
+  - Yıldız puanı (dolu/boş yıldızlar, 5 üzerinden)
+  - Spoiler içeriyorsa: `⚠️ Spoiler İçeriyor` uyarısı + üstü kapalı metin; "Spoiler'ı Göster" butonuna basınca açılır
+  - Yorum metni (max 5 satır göster, fazlası "Devamını oku" ile açılır)
+  - Sağ alt: `is_own=true` ise "Düzenle" + "Sil" ikonları
+- [ ] **Frontend:** `src/components/ReviewForm.jsx` — yorum yazma/düzenleme formu bileşeni
+  - 1-5 yıldız seçici (hover efektli, `StarRating` bileşenini kullanır)
+  - Textarea: min 10, max 2000 karakter, anlık karakter sayacı (sağ alt köşede `"123 / 2000"`)
+  - Checkbox: `☐ Spoiler içeriyor` — işaretlenince yorum blur'lu gösterilir
+  - Radio/Toggle: `● İsmimle yorum yap  ○ Anonim yorum yap`
+  - "Yorum Gönder" butonu (loading state'li) + iptal butonu
+  - Form altında küçük not: "Yorumlar herkese açık olarak yayınlanır."
+  - Giriş yapmadan form gösterilmez; yerine "Yorum yazmak için giriş yap" linki gösterilir
+- [ ] **Frontend:** `src/pages/MovieDetail.jsx` — yorum bölümünü entegre et
+  - Sayfanın alt bölümüne "Yorumlar" başlığı ekle
+  - Ortalama puan + yorum sayısı özet satırı (örn: "⭐ 4.2 — 12 yorum")
+  - Giriş yapmış kullanıcı için `ReviewForm` göster (kendi yorumu varsa formu düzenleme modunda göster)
+  - Altında `ReviewCard` listesi (sayfalama: "Daha fazla yorum yükle" butonu — limit 10, offset bazlı)
+  - Yorumlar bölümü `Benzer Filmler`'den önce gelir
+- [ ] **Frontend:** Koyu/açık mod uyumlu (ReviewCard, ReviewForm tüm dark: variantları eklenmiş)
+- [ ] **Frontend:** TR/EN i18n anahtarları ekle:
+  - `review_title: "Yorumlar"` / `"Reviews"`, `review_write: "Yorum Yaz"` / `"Write a Review"`
+  - `review_avg: "Ortalama Puan"` / `"Average Rating"`, `review_count: "{n} yorum"` / `"{n} reviews"`
+  - `review_spoiler_warning: "Spoiler İçeriyor"` / `"Contains Spoiler"`, `review_show_spoiler: "Spoiler'ı Göster"` / `"Show Spoiler"`
+  - `review_anonymous: "Anonim"` / `"Anonymous"`, `review_with_name: "İsmimle"` / `"With my name"`
+  - `review_login_prompt: "Yorum yazmak için giriş yap"` / `"Log in to write a review"`
+  - `review_submit: "Gönder"` / `"Submit"`, `review_edit: "Düzenle"` / `"Edit"`, `review_delete: "Sil"` / `"Delete"`
+  - `review_already_exists: "Yorumunuzu güncellediniz."` / `"Your review has been updated."`
+  - `review_chars_remaining: "{n} / 2000"` (formatlanmış)
+
 ---
 
 ## AKTIF OTURUM NOTU
@@ -389,7 +681,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 4-9-10-11-12-13-14-16 tamamlandı. 4: Şifremi Unuttum — Resend entegrasyonu, ForgotPassword + ResetPassword sayfaları, Login'e link. Sıradaki: GitHub push → demo → rapor.
+**Son guncelleme:** 17-23 arası yeni görevler eklendi. 16 tamamlandı. Sıradaki yapılacak: 17 (Platform bilgisi — film detay sayfası).
 
 ---
 
