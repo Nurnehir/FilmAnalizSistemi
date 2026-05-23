@@ -76,6 +76,7 @@ async def get_reviews(
     media_type: str = Query("movie"),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
+    sort: str = Query("newest"),  # "newest" | "oldest"
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user),
 ):
@@ -91,10 +92,11 @@ async def get_reviews(
     ).scalar()
     avg_rating = round(float(avg_result), 1) if avg_result is not None else None
 
+    order = Review.created_at.asc() if sort == "oldest" else Review.created_at.desc()
     reviews_db = (
         db.query(Review)
         .filter(Review.tmdb_id == tmdb_id, Review.media_type == media_type)
-        .order_by(Review.created_at.desc())
+        .order_by(order)
         .offset(offset)
         .limit(limit)
         .all()
@@ -111,14 +113,6 @@ async def create_review(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_required_user),
 ):
-    existing = db.query(Review).filter(
-        Review.user_id == current_user.id,
-        Review.tmdb_id == tmdb_id,
-        Review.media_type == data.media_type,
-    ).first()
-    if existing:
-        raise HTTPException(status_code=409, detail="Bu film için zaten yorum yazdınız. Mevcut yorumunuzu düzenleyebilirsiniz.")
-
     review = Review(
         user_id=current_user.id,
         tmdb_id=tmdb_id,

@@ -255,6 +255,8 @@ const tr = {
   review_delete_confirm_sub: 'Bu işlem geri alınamaz.',
   review_empty: 'Henüz yorum yapılmamış. İlk yorumu sen yaz!',
   review_load_more: 'Daha fazla yorum yükle',
+  review_sort_newest: 'En Yeni',
+  review_sort_oldest: 'En Eski',
 
   // Guest mode
   guest_skip: 'Giriş yapmadan devam et →',

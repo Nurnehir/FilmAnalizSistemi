@@ -17,7 +17,7 @@ export default function MovieDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { t } = useLang();
-  const { user } = useAuth();
+  const { user, openLoginModal } = useAuth();
   const mediaType = searchParams.get('type') || 'movie';
 
   const [movie, setMovie] = useState(null);
@@ -33,6 +33,7 @@ export default function MovieDetail() {
   const [reviewsTotal, setReviewsTotal] = useState(0);
   const [avgRating, setAvgRating] = useState(null);
   const [reviewPage, setReviewPage] = useState(1);
+  const [reviewSort, setReviewSort] = useState('newest');
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
@@ -41,13 +42,14 @@ export default function MovieDetail() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const myReview = reviews.find((r) => r.is_own);
+  const REVIEWS_PER_PAGE = 10;
+  const totalReviewPages = Math.ceil(reviewsTotal / REVIEWS_PER_PAGE);
 
-  const loadReviews = useCallback(async (page = 1, append = false) => {
+  const loadReviews = useCallback(async (page = 1, sort = 'newest') => {
     setReviewsLoading(true);
     try {
-      const data = await getReviews(id, mediaType, page);
-      setReviews((prev) => append ? [...prev, ...data.reviews] : data.reviews);
+      const data = await getReviews(id, mediaType, page, sort);
+      setReviews(data.reviews);
       setReviewsTotal(data.total);
       setAvgRating(data.avg_rating);
     } catch {
@@ -85,7 +87,7 @@ export default function MovieDetail() {
       }
     };
     load();
-    loadReviews(1, false);
+    loadReviews(1, 'newest');
   }, [id, mediaType]);
 
   const handleReviewSubmit = async (formData) => {
@@ -100,7 +102,7 @@ export default function MovieDetail() {
       setShowReviewForm(false);
       setEditingReview(null);
       setReviewPage(1);
-      await loadReviews(1, false);
+      await loadReviews(1, reviewSort);
     } catch (err) {
       setReviewError(err.response?.data?.detail || 'Bir hata oluştu');
     } finally {
@@ -120,7 +122,7 @@ export default function MovieDetail() {
       await deleteReview(deleteTarget.id);
       setDeleteTarget(null);
       setReviewPage(1);
-      await loadReviews(1, false);
+      await loadReviews(1, reviewSort);
     } catch {
       // silent
     } finally {
@@ -128,10 +130,16 @@ export default function MovieDetail() {
     }
   };
 
-  const handleLoadMore = async () => {
-    const nextPage = reviewPage + 1;
-    setReviewPage(nextPage);
-    await loadReviews(nextPage, true);
+  const handleReviewPageChange = async (newPage) => {
+    setReviewPage(newPage);
+    await loadReviews(newPage, reviewSort);
+    document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleSortChange = async (newSort) => {
+    setReviewSort(newSort);
+    setReviewPage(1);
+    await loadReviews(1, newSort);
   };
 
   if (isLoading) {
@@ -273,14 +281,12 @@ export default function MovieDetail() {
         )}
 
         {/* Reviews */}
-        <section className="mt-10">
-          <div className="flex items-center justify-between mb-4">
+        <section className="mt-10" id="reviews-section">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
               <h2 className="text-lg font-bold">{t.review_title}</h2>
               {avgRating !== null && (
-                <span className="text-yellow-500 font-semibold text-sm">
-                  ★ {avgRating}
-                </span>
+                <span className="text-yellow-500 font-semibold text-sm">★ {avgRating}</span>
               )}
               {reviewsTotal > 0 && (
                 <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -288,14 +294,27 @@ export default function MovieDetail() {
                 </span>
               )}
             </div>
-            {user && !myReview && !showReviewForm && (
-              <button
-                onClick={() => { setEditingReview(null); setShowReviewForm(true); setReviewError(''); }}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                {t.review_write}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Sort selector */}
+              {reviewsTotal > 1 && (
+                <select
+                  value={reviewSort}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="text-xs bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                >
+                  <option value="newest">{t.review_sort_newest}</option>
+                  <option value="oldest">{t.review_sort_oldest}</option>
+                </select>
+              )}
+              {user && !showReviewForm && (
+                <button
+                  onClick={() => { setEditingReview(null); setShowReviewForm(true); setReviewError(''); }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  {t.review_write}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Delete confirm modal */}
@@ -342,7 +361,7 @@ export default function MovieDetail() {
 
           {!user && (
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              <Link to="/login" className="text-purple-500 hover:underline">{t.review_login_prompt}</Link>
+              <button onClick={openLoginModal} className="text-purple-500 hover:underline">{t.review_login_prompt}</button>
             </p>
           )}
 
@@ -364,14 +383,25 @@ export default function MovieDetail() {
             ))}
           </div>
 
-          {reviews.length < reviewsTotal && (
-            <div className="mt-4 text-center">
+          {/* Pagination */}
+          {totalReviewPages > 1 && (
+            <div className="mt-6 flex items-center justify-center gap-2">
               <button
-                onClick={handleLoadMore}
-                disabled={reviewsLoading}
-                className="px-5 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg transition-colors disabled:opacity-50"
+                onClick={() => handleReviewPageChange(reviewPage - 1)}
+                disabled={reviewPage <= 1 || reviewsLoading}
+                className="px-3 py-1.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                {reviewsLoading ? t.loading : t.review_load_more}
+                ←
+              </button>
+              <span className="text-sm text-gray-500 dark:text-gray-400 min-w-[80px] text-center">
+                {reviewPage} / {totalReviewPages}
+              </span>
+              <button
+                onClick={() => handleReviewPageChange(reviewPage + 1)}
+                disabled={reviewPage >= totalReviewPages || reviewsLoading}
+                className="px-3 py-1.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                →
               </button>
             </div>
           )}

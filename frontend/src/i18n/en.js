@@ -255,6 +255,8 @@ const en = {
   review_delete_confirm_sub: 'This action cannot be undone.',
   review_empty: 'No reviews yet. Be the first to write one!',
   review_load_more: 'Load more reviews',
+  review_sort_newest: 'Newest',
+  review_sort_oldest: 'Oldest',
 
   // Guest mode
   guest_skip: 'Continue without signing in →',
