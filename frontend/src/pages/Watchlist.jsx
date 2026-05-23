@@ -6,6 +6,7 @@ import {
 } from '../api/watchlist';
 import { useLang } from '../context/LangContext';
 import { useWatchlistContext } from '../context/WatchlistContext';
+import { getMovieDetail } from '../api/movies';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StarRating from '../components/StarRating';
 
@@ -46,8 +47,32 @@ export default function Watchlist() {
       setError(null);
       try {
         const [listData, colData] = await Promise.all([getWatchlist(), getCollections()]);
-        setItems(listData.items || []);
+        let loadedItems = listData.items || [];
         setCollections(colData || []);
+
+        // Enrich items that are missing genre_ids (added before the genre_ids migration)
+        const missing = loadedItems.filter((i) => !i.genre_ids?.length);
+        if (missing.length > 0) {
+          const enriched = await Promise.allSettled(
+            missing.map((i) =>
+              getMovieDetail(i.tmdb_id, i.media_type || 'movie')
+                .then((d) => ({ id: i.id, genre_ids: (d.genres || []).map((g) => g.id) }))
+                .catch(() => null)
+            )
+          );
+          const updateMap = Object.fromEntries(
+            enriched
+              .filter((r) => r.status === 'fulfilled' && r.value)
+              .map((r) => [r.value.id, r.value.genre_ids])
+          );
+          if (Object.keys(updateMap).length > 0) {
+            loadedItems = loadedItems.map((i) =>
+              updateMap[i.id] ? { ...i, genre_ids: updateMap[i.id] } : i
+            );
+          }
+        }
+
+        setItems(loadedItems);
       } catch {
         setError(t.wl_load_error);
       } finally {
