@@ -6,6 +6,7 @@ import {
 } from '../api/watchlist';
 import { useLang } from '../context/LangContext';
 import { useWatchlistContext } from '../context/WatchlistContext';
+import { useAuth } from '../context/AuthContext';
 import { getMovieDetail } from '../api/movies';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StarRating from '../components/StarRating';
@@ -13,6 +14,7 @@ import StarRating from '../components/StarRating';
 export default function Watchlist() {
   const { t, lang } = useLang();
   const { refresh: refreshContext } = useWatchlistContext();
+  const { user, openLoginModal } = useAuth();
 
   const [items, setItems] = useState([]);
   const [collections, setCollections] = useState([]);
@@ -42,6 +44,7 @@ export default function Watchlist() {
   const [deleteTarget, setDeleteTarget] = useState(null); // {id, name}
 
   useEffect(() => {
+    if (!user) return;
     const load = async () => {
       setIsLoading(true);
       setError(null);
@@ -323,6 +326,29 @@ export default function Watchlist() {
       </div>
     </div>
   );
+
+  // Guest guard — shown after all hooks
+  if (!user) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
+        <div className="text-center max-w-sm">
+          <div className="text-6xl mb-6">🔒</div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            {t.guest_wl_empty}
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            {t.wl_empty_sub}
+          </p>
+          <button
+            onClick={openLoginModal}
+            className="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors text-sm"
+          >
+            {t.guest_wl_signin_btn}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">

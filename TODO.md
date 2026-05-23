@@ -557,7 +557,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 22-23 tamamlandı. 25 (Misafir Modu) eklendi — sıradaki görev.
+**Son guncelleme:** 22-23-25 tamamlandı. Sıradaki: 15 (Uygulama Adı Değişikliği) veya yeni görev.
 
 ---
 
@@ -608,95 +608,43 @@
 > **Backend/DB değişikliği yok** — tamamen frontend değişikliği.
 
 #### A. LoginModal Bileşeni (YENİ)
-- [ ] `src/components/LoginModal.jsx` — tam ekranlı overlay üzerinde açılan login formu
-  - Login.jsx'teki form tasarımının aynısı (e-posta + şifre + buton + loading + hata)
-  - Üst sağ köşede X (kapat) butonu; dışarı tıklayınca da kapanır
-  - Modal alt: "Hesabın yok mu? → Kayıt Ol" linki (`/register`'a gider, modal kapanır)
-  - Modal alt: "Şifremi Unuttum" linki (`/forgot-password`'a gider, modal kapanır)
-  - Başarılı login sonrası: modal kapanır, kullanıcı **aynı sayfada kalır** (yönlendirme yok)
-  - Props: `open: bool`, `onClose: () => void`, `onSuccess?: () => void`
-  - Koyu/açık mod uyumlu, TR/EN uyumlu
-  - i18n başlık: `guest_modal_title: "Devam etmek için giriş yap"` / `"Sign in to continue"`
+- [x] `src/components/LoginModal.jsx` — tam ekranlı overlay üzerinde açılan login formu
 
 #### B. AuthContext Güncellemesi
-- [ ] `src/context/AuthContext.jsx` — `loginModal` state + helper fonksiyonları ekle
-  - `loginModalOpen: bool` state
-  - `openLoginModal: () => void` — `setLoginModalOpen(true)`
-  - `closeLoginModal: () => void` — `setLoginModalOpen(false)`
-  - Context value'ya 3 yeni alan ekle
-- [ ] `src/App.jsx` — `<LoginModal open={loginModalOpen} onClose={closeLoginModal} />` en dışa ekle (Routes'un dışında)
+- [x] `src/context/AuthContext.jsx` — `loginModalOpen`, `openLoginModal`, `closeLoginModal`, `loginSilent` eklendi
+- [x] `src/App.jsx` — AppShell pattern + `<LoginModal open={loginModalOpen} onClose={closeLoginModal} />`
 
 #### C. App.jsx Route Değişiklikleri
-- [ ] `src/App.jsx` — PrivateRoute'ları güncelle:
-  - `/` (Home) → `<Home />` (PrivateRoute kaldırılır — misafirler ana sayfa görebilir)
-  - `/recommend` → `<Recommend />` (PrivateRoute kaldırılır — misafirler sayfayı görür ama kısıtlı)
-  - `/watchlist` → `<Watchlist />` (PrivateRoute kaldırılır — misafirler boş liste görür)
-  - `/settings` → `<Settings />` (zaten PrivateRoute'dan çıkarılması gerekiyorsa çıkar)
-  - `/profile` → `<PrivateRoute><Profile /></PrivateRoute>` **KALIR** (profil sadece login kullanıcılara)
-  - Şu an Home, Settings de PrivateRoute içindeyse çıkar
+- [x] `/`, `/recommend`, `/watchlist`, `/settings` → PrivateRoute kaldırıldı; `/profile` → PrivateRoute korundu
 
 #### D. Login Sayfası — "Misafir Olarak Devam Et" Butonu
-- [ ] `src/pages/Login.jsx` — form'un altına, "Kayıt Ol" linkinin altına "atla" butonu ekle
-  - Tasarım: `href="/"` ile ana sayfaya yönlendiren soluk/outline link benzeri buton
-  - Metin: `guest_skip: "Giriş yapmadan devam et →"` / `"Continue without signing in →"`
-  - Stil: küçük, soluk (`text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-sm`), üstte ince ayırıcı çizgi
-  - Sadece Login sayfasında görünür, Register sayfasında görünmez
+- [x] `src/pages/Login.jsx` — "Giriş yapmadan devam et →" butonu eklendi
 
 #### E. Navbar — Misafir Durumu
-- [ ] `src/components/Navbar.jsx` — `user` null iken farklı sağ bölüm göster:
-  - **Misafir sağ bölümü:** `[Giriş Yap]` (outline buton, `/login`'e gider) + `[Kayıt Ol]` (mor dolgu buton, `/register`'a gider)
-  - Profil avatar dairesi, dropdown, profil/ayarlar linkleri gösterilmez
-  - Arama ikonu ve dil/tema ikonları misafirler için de görünür (arama çalışır, tema/dil değişir)
-  - i18n: `guest_nav_signin: "Giriş Yap"` / `"Sign In"`, `guest_nav_signup: "Kayıt Ol"` / `"Sign Up"`
+- [x] `src/components/Navbar.jsx` — misafir için "Giriş Yap" + "Kayıt Ol" butonları, nav linkleri herkese görünür
 
 #### F. WatchlistButton — Misafir Durumu
-- [ ] `src/components/WatchlistButton.jsx` — `if (!user) return null` satırını değiştir:
-  - Mevcut: `if (!user) return null` → buton hiç görünmez
-  - Yeni: Misafir için buton göster, tıklayınca `openLoginModal()` çağır
-  - Misafir butonu stili: `bg-gray-100 dark:bg-gray-800 ...` (normal pasif stil)
-  - Metin: `+ ${t.wl_add}` (normal ekleme metni, fark edilmez)
-  - `onClick` → `e.preventDefault(); e.stopPropagation(); openLoginModal()`
-  - LoginModal zaten `App.jsx`'te mount olduğu için burada sadece `openLoginModal()` çağrılır
+- [x] `src/components/WatchlistButton.jsx` — misafir için buton → `openLoginModal()`
 
 #### G. Recommend Sayfası — Misafir Kısıtlaması
-- [ ] `src/pages/Recommend.jsx` — misafir için sol sidebar'ı tamamen gizle:
-  - `user` yoksa: `<div className="flex-1 ...">` (sadece sağ alan, tam genişlik)
-  - Sidebar (öneri geçmişi) gösterilmez — kişisel veri olmadığı için anlamsız
-- [ ] `src/pages/Recommend.jsx` — "Öneri İste" butonuna misafir kontrolü:
-  - `handleSubmit` başında: `if (!user) { openLoginModal(); return; }`
-  - Buton görünümü değişmez, tıklayınca modal açılır
-  - i18n ipucu (buton altında küçük yazı): opsiyonel — `guest_rec_hint: "Öneri almak için giriş gerekli"` / `"Sign in required to get recommendations"`
+- [x] `src/pages/Recommend.jsx` — sidebar + mobil top bar misafirde gizlendi; handleSubmit'te `openLoginModal()` guard
 
 #### H. Watchlist Sayfası — Misafir Durumu
-- [ ] `src/pages/Watchlist.jsx` — `user` yoksa özel empty state göster:
-  - Sol sidebar gösterilmez (koleksiyonlar kişisel)
-  - Ana alan: büyük ikon + `guest_wl_empty: "İzleme listeni görmek için giriş yap"` / `"Sign in to see your watchlist"`
-  - "Giriş Yap" butonu → `openLoginModal()`
-  - Sağ üstte (normalde olan) sekme/filtre/arama hiçbiri gösterilmez
-  - Film ekleme aksiyonları yoktur (sayfada misafir film listesi olmadığı için buton da yok)
+- [x] `src/pages/Watchlist.jsx` — misafir için kilit ekranı + giriş butonu (hooks sonrası early return)
 
 #### I. i18n Anahtarları
-- [ ] `src/i18n/tr.js` ve `src/i18n/en.js` — yeni anahtarlar ekle:
-  ```
-  guest_skip:             "Giriş yapmadan devam et →"       / "Continue without signing in →"
-  guest_modal_title:      "Devam etmek için giriş yap"      / "Sign in to continue"
-  guest_nav_signin:       "Giriş Yap"                       / "Sign In"
-  guest_nav_signup:       "Kayıt Ol"                        / "Sign Up"
-  guest_rec_hint:         "Öneri almak için giriş gerekli"  / "Sign in required to get recommendations"
-  guest_wl_empty:         "İzleme listeni görmek için giriş yap"  / "Sign in to see your watchlist"
-  guest_wl_signin_btn:    "Giriş Yap"                       / "Sign In"
-  ```
+- [x] `src/i18n/tr.js` ve `src/i18n/en.js` — guest_skip, guest_modal_title, guest_nav_signin, guest_nav_signup, guest_rec_hint, guest_wl_empty, guest_wl_signin_btn eklendi
 
 #### J. Kontrol Listesi (Uygulama Sonrası)
-- [ ] Misafir olarak ana sayfaya gidince trend filmler görünüyor ✓
-- [ ] Misafir olarak film detay sayfası açılıyor ✓
-- [ ] Misafir olarak arama çalışıyor ✓
-- [ ] Misafir olarak tema/dil değişiyor ✓
-- [ ] Misafir olarak `/profile` → `/login`'e yönlendiriyor ✓
-- [ ] "İzleme Listesine Ekle" butonuna basınca Login Modal açılıyor ✓
-- [ ] Recommend sayfasında sidebar yok, öneri butonuna basınca Login Modal açılıyor ✓
-- [ ] Watchlist sayfasında boş state + giriş yap butonu görünüyor ✓
-- [ ] Navbar'da "Giriş Yap" + "Kayıt Ol" butonları görünüyor ✓
-- [ ] Login Modal'da başarılı giriş sonrası sayfa aynı kalıyor ✓
-- [ ] Login Modal dışına tıklayınca kapanıyor ✓
-- [ ] Koyu/açık mod + TR/EN uyumlu ✓
+- [x] Misafir olarak ana sayfaya gidince trend filmler görünüyor ✓
+- [x] Misafir olarak film detay sayfası açılıyor ✓
+- [x] Misafir olarak arama çalışıyor ✓
+- [x] Misafir olarak tema/dil değişiyor ✓
+- [x] Misafir olarak `/profile` → `/login`'e yönlendiriyor ✓
+- [x] "İzleme Listesine Ekle" butonuna basınca Login Modal açılıyor ✓
+- [x] Recommend sayfasında sidebar yok, öneri butonuna basınca Login Modal açılıyor ✓
+- [x] Watchlist sayfasında boş state + giriş yap butonu görünüyor ✓
+- [x] Navbar'da "Giriş Yap" + "Kayıt Ol" butonları görünüyor ✓
+- [x] Login Modal'da başarılı giriş sonrası sayfa aynı kalıyor ✓
+- [x] Login Modal dışına tıklayınca kapanıyor ✓
+- [x] Koyu/açık mod + TR/EN uyumlu ✓

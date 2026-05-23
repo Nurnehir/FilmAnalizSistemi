@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import PasswordInput from '../components/PasswordInput';
@@ -7,6 +7,7 @@ import PasswordInput from '../components/PasswordInput';
 export default function Login() {
   const { login } = useAuth();
   const { t } = useLang();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -116,6 +117,17 @@ export default function Login() {
                 {t.login_forgot}
               </Link>
             </p>
+
+            {/* Guest skip */}
+            <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-800 text-center">
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                {t.guest_skip}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -256,6 +256,15 @@ const en = {
   review_empty: 'No reviews yet. Be the first to write one!',
   review_load_more: 'Load more reviews',
 
+  // Guest mode
+  guest_skip: 'Continue without signing in →',
+  guest_modal_title: 'Sign in to continue',
+  guest_nav_signin: 'Sign In',
+  guest_nav_signup: 'Sign Up',
+  guest_rec_hint: 'Sign in to get personalized recommendations.',
+  guest_wl_empty: 'Sign in to see your watchlist',
+  guest_wl_signin_btn: 'Sign In',
+
   // Common
   loading: 'Loading...',
   error_generic: 'Something went wrong.',

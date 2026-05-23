@@ -4,13 +4,23 @@ import { useWatchlistContext } from '../context/WatchlistContext';
 import { useLang } from '../context/LangContext';
 
 export default function WatchlistButton({ movie, className = '' }) {
-  const { user } = useAuth();
+  const { user, openLoginModal } = useAuth();
   const { isInList, getItem, add, remove, collections } = useWatchlistContext();
   const { t } = useLang();
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  if (!user) return null;
+  // Guest: show button but open login modal on click
+  if (!user) {
+    return (
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); openLoginModal(); }}
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg font-medium transition-colors bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 ${className}`}
+      >
+        + {t.wl_add}
+      </button>
+    );
+  }
 
   const mediaType = movie.media_type || 'movie';
   const tmdbId = movie.tmdb_id || movie.id;

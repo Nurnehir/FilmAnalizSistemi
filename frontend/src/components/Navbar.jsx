@@ -111,23 +111,21 @@ export default function Navbar() {
                   <span className="text-2xl">🎬</span>
                   <span className="text-gray-900 dark:text-white font-bold text-lg tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">FilmAI</span>
                 </Link>
-                {user && (
-                  <div className="hidden md:flex items-center gap-1">
-                    {navLinks.map(({ to, label }) => (
-                      <Link
-                        key={to}
-                        to={to}
-                        className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
-                          isActive(to)
-                            ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/60'
-                        }`}
-                      >
-                        {label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                <div className="hidden md:flex items-center gap-1">
+                  {navLinks.map(({ to, label }) => (
+                    <Link
+                      key={to}
+                      to={to}
+                      className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
+                        isActive(to)
+                          ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/60'
+                      }`}
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                </div>
               </div>
 
               {/* Right: search + theme + lang + avatar */}
@@ -228,23 +226,15 @@ export default function Navbar() {
                   <div className="flex items-center gap-2 ml-1">
                     <Link
                       to="/login"
-                      className={`text-sm px-4 py-1.5 rounded-lg font-medium transition-colors border ${
-                        isActive('/login')
-                          ? 'bg-purple-600 border-purple-600 text-white'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400'
-                      }`}
+                      className="text-sm px-4 py-1.5 rounded-lg font-medium transition-colors border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400"
                     >
-                      {t.login_btn}
+                      {t.guest_nav_signin}
                     </Link>
                     <Link
                       to="/register"
-                      className={`text-sm px-4 py-1.5 rounded-lg font-medium transition-colors border ${
-                        isActive('/register')
-                          ? 'bg-purple-600 border-purple-600 text-white'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400'
-                      }`}
+                      className="text-sm px-4 py-1.5 rounded-lg font-medium transition-colors bg-purple-600 hover:bg-purple-500 text-white border border-transparent"
                     >
-                      {t.register_btn}
+                      {t.guest_nav_signup}
                     </Link>
                   </div>
                 )}

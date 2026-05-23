@@ -3,6 +3,7 @@ import { getRecommendations, getHistory, getRecommendationById } from '../api/re
 import { getTasteProfile } from '../api/auth';
 import { trackEvent } from '../api/behavior';
 import { useLang } from '../context/LangContext';
+import { useAuth } from '../context/AuthContext';
 import MovieCard from '../components/MovieCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -31,6 +32,7 @@ function formatDate(iso, lang) {
 
 export default function Recommend() {
   const { t, lang } = useLang();
+  const { user, openLoginModal } = useAuth();
 
   // Form state
   const [prompt, setPrompt] = useState('');
@@ -92,6 +94,7 @@ export default function Recommend() {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
+    if (!user) { openLoginModal(); return; }
     if (!prompt.trim() || isLoading) return;
     setIsLoading(true);
     setError(null);
@@ -167,47 +170,51 @@ export default function Recommend() {
   return (
     <div className="flex" style={{ minHeight: 'calc(100vh - 4rem)' }}>
 
-      {/* Mobile backdrop */}
-      {sidebarOpen && (
+      {/* Mobile backdrop — only for logged-in users */}
+      {user && sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-20 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed md:sticky top-16 z-30 md:z-auto
-          h-[calc(100vh-4rem)] w-64 lg:w-72
-          flex flex-col flex-shrink-0
-          bg-white dark:bg-gray-900
-          border-r border-gray-200 dark:border-gray-800
-          transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        `}
-      >
-        {sidebarContent}
-      </aside>
+      {/* Sidebar — only for logged-in users */}
+      {user && (
+        <aside
+          className={`
+            fixed md:sticky top-16 z-30 md:z-auto
+            h-[calc(100vh-4rem)] w-64 lg:w-72
+            flex flex-col flex-shrink-0
+            bg-white dark:bg-gray-900
+            border-r border-gray-200 dark:border-gray-800
+            transition-transform duration-300 ease-in-out
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          `}
+        >
+          {sidebarContent}
+        </aside>
+      )}
 
       {/* Main area */}
       <main className="flex-1 min-w-0 overflow-y-auto">
 
-        {/* Mobile top bar */}
-        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            title={t.rec_sidebar_toggle}
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {activeId === null ? t.rec_new : t.rec_history_title}
-          </span>
-        </div>
+        {/* Mobile top bar — only for logged-in users */}
+        {user && (
+          <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title={t.rec_sidebar_toggle}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {activeId === null ? t.rec_new : t.rec_history_title}
+            </span>
+          </div>
+        )}
 
         {activeId === null ? (
           /* ── FORM VIEW ── */

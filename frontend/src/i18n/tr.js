@@ -256,6 +256,15 @@ const tr = {
   review_empty: 'Henüz yorum yapılmamış. İlk yorumu sen yaz!',
   review_load_more: 'Daha fazla yorum yükle',
 
+  // Guest mode
+  guest_skip: 'Giriş yapmadan devam et →',
+  guest_modal_title: 'Devam etmek için giriş yap',
+  guest_nav_signin: 'Giriş Yap',
+  guest_nav_signup: 'Kayıt Ol',
+  guest_rec_hint: 'Öneri almak için giriş yapman gerekiyor.',
+  guest_wl_empty: 'İzleme listeni görmek için giriş yap',
+  guest_wl_signin_btn: 'Giriş Yap',
+
   // Common
   loading: 'Yükleniyor...',
   error_generic: 'Bir hata oluştu.',
