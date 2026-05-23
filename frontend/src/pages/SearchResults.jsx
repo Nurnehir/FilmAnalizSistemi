@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { searchMovies } from '../api/movies';
+import { trackEvent } from '../api/behavior';
 import { useLang } from '../context/LangContext';
 import MovieGrid from '../components/MovieGrid';
 
@@ -29,6 +30,7 @@ export default function SearchResults() {
     }
     setLoading(true);
     setError(null);
+    trackEvent('search', { search_query: q });
     searchMovies(q, mediaType)
       .then((data) => setResults(data.results || []))
       .catch(() => setError(t.search_error))

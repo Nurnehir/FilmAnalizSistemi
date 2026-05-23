@@ -413,54 +413,20 @@
 > ziyaret ettiği detay sayfaları da AI öneri profiline dahil edilsin.
 > Bu veriler `user_behavior` tablosunda tutulur; `GET /auth/taste-profile` bunu hesaba katar.
 
-- [ ] **DB:** Yeni tablo `user_behavior` oluştur
-  ```sql
-  CREATE TABLE user_behavior (
-      id          SERIAL PRIMARY KEY,
-      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      event_type  VARCHAR(30) NOT NULL,  -- 'view', 'search', 'click', 'recommend_request'
-      tmdb_id     INTEGER,               -- tıklanan/görüntülenen film (opsiyonel)
-      media_type  VARCHAR(10),           -- 'movie' | 'tv'
-      title       VARCHAR(255),          -- film adı (opsiyonel, denormalized)
-      genre_ids   INTEGER[],             -- filmin türleri (denormalized, hızlı okuma için)
-      search_query VARCHAR(255),         -- arama event'i için kullanıcının yazdığı metin
-      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-  );
-  CREATE INDEX idx_user_behavior_user_id ON user_behavior(user_id);
-  CREATE INDEX idx_user_behavior_created_at ON user_behavior(created_at DESC);
-  ```
-- [ ] **DB:** Alembic migration `e5f6a7b8c9d0_add_user_behavior_table.py` oluştur ve uygula (`alembic revision --autogenerate` + `alembic upgrade head`)
-- [ ] **Backend:** `app/models/user_behavior.py` — SQLAlchemy ORM modeli oluştur
-- [ ] **Backend:** `app/schemas/behavior.py` — `BehaviorEvent` Pydantic şeması oluştur
-  - `event_type: Literal['view', 'search', 'click', 'recommend_request']`
-  - `tmdb_id: int | None`, `media_type: str | None`, `title: str | None`, `genre_ids: list[int] | None`, `search_query: str | None`
-- [ ] **Backend:** `app/routers/behavior.py` — `POST /behavior/event` endpoint ekle
-  - Auth zorunlu (`Depends(get_current_user)`)
-  - Body: `BehaviorEvent`
-  - DB'ye kayıt yaz, `201` dön
-  - Fire-and-forget mantığı: hata olsa bile sessizce yut (kullanıcıya hata döndürme)
-- [ ] **Backend:** `app/main.py`'e behavior router'ı ekle
-- [ ] **Backend:** `app/services/gemini_service.py` — `analyze_mood` ve `generate_recommendations` fonksiyonları güncelle
-  - Yeni parametre: `behavior_summary: str | None = None`
-  - `MOOD_ANALYSIS_PROMPT` ve `RECOMMENDATION_PROMPT`'a opsiyonel bir blok ekle:
-    ```
-    Kullanıcının Son Davranışları (varsa):
-    {behavior_summary}
-    ```
-  - Bu blok, hem arama geçmişindeki anahtar kelimeleri hem de sık tıklanan türleri içerir
-- [ ] **Backend:** `app/routers/recommendations.py` — `POST /recommendations` güncelle
-  - Son 30 davranış olayını çek (`user_behavior` tablosundan, son 7 gün)
-  - `build_behavior_summary(events)` yardımcı fonksiyonu: sık aranan kelimeler + sık görüntülenen türler → kısa metin özeti üret
-  - Bu özeti `gemini_service.generate_recommendations(..., behavior_summary=...)` çağrısına ilet
-- [ ] **Frontend:** `src/api/behavior.js` — `trackEvent(event_type, data)` fonksiyonu oluştur
-  - Auth tokenı varsa POST /behavior/event çağır
-  - Auth yoksa (misafir kullanıcı) sessizce atla
-  - Hata durumunda console.warn yaz, UI'ı etkileme
-- [ ] **Frontend:** `src/pages/MovieDetail.jsx` — sayfa açılınca `trackEvent('view', {tmdb_id, media_type, title, genre_ids})` çağır (`useEffect` mount'ta, bir kez)
-- [ ] **Frontend:** `src/pages/SearchResults.jsx` — her arama sorgusunda `trackEvent('search', {search_query})` çağır (debounce sonrasında)
-- [ ] **Frontend:** `src/components/MovieCard.jsx` — karta tıklanınca `trackEvent('click', {tmdb_id, media_type, title, genre_ids})` çağır
-- [ ] **Frontend:** `src/pages/Recommend.jsx` — öneri submit anında `trackEvent('recommend_request', {search_query: prompt})` çağır
-- [ ] **Frontend:** Koyu/açık mod + TR/EN: bu özellik arka planda çalışır, kullanıcıya görünür UI değişikliği yok
+- [x] **DB:** Yeni tablo `user_behavior` oluştur
+- [x] **DB:** Alembic migration `624cce1fa1af_add_user_behavior_table.py` oluşturuldu ve uygulandı
+- [x] **Backend:** `app/models/user_behavior.py` — SQLAlchemy ORM modeli oluşturuldu
+- [x] **Backend:** `app/schemas/behavior.py` — `BehaviorEvent` Pydantic şeması oluşturuldu
+- [x] **Backend:** `app/routers/behavior.py` — `POST /behavior/event` endpoint eklendi (fire-and-forget, hata sessizce yutulur)
+- [x] **Backend:** `app/main.py`'e behavior router'ı eklendi
+- [x] **Backend:** `app/services/gemini_service.py` — `analyze_mood` ve `generate_recommendations` fonksiyonlarına `behavior_summary` parametresi eklendi
+- [x] **Backend:** `app/routers/recommendations.py` — `build_behavior_summary()` fonksiyonu eklendi; son 7 gün / 30 event okunarak özet üretiliyor ve servis çağrılarına iletiliyor
+- [x] **Frontend:** `src/api/behavior.js` — `trackEvent(event_type, data)` oluşturuldu (token yoksa veya hata olursa sessizce atlar)
+- [x] **Frontend:** `src/pages/MovieDetail.jsx` — mount'ta `trackEvent('view', ...)` çağrısı eklendi
+- [x] **Frontend:** `src/pages/SearchResults.jsx` — arama sorgusunda `trackEvent('search', ...)` çağrısı eklendi
+- [x] **Frontend:** `src/components/MovieCard.jsx` — kart tıklamasında `trackEvent('click', ...)` çağrısı eklendi
+- [x] **Frontend:** `src/pages/Recommend.jsx` — submit anında `trackEvent('recommend_request', ...)` çağrısı eklendi
+- [x] **Frontend:** Arka planda çalışır, kullanıcıya görünür UI değişikliği yok
 
 ---
 
@@ -681,7 +647,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 17 tamamlandı. Platform/yayın servisi ikonları film detay sayfasına eklendi. Sıradaki: 18 (Davranış tabanlı AI kişiselleştirme).
+**Son guncelleme:** 17-18 tamamlandı. Sıradaki: 19 (Vizyondaki filmler filtresi).
 
 ---
 

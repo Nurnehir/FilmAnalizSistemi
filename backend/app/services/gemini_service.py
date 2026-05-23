@@ -8,7 +8,7 @@ MODEL = "llama-3.3-70b-versatile"
 MOOD_PROMPT = """
 Kullanicinin asagidaki mesajini analiz et ve hangi tur filmler onereceğini belirle.
 
-Kullanici mesaji: "{prompt}"
+Kullanici mesaji: "{prompt}"{behavior_block}
 
 Yanitini SADECE su JSON formatinda ver, baska hicbir sey yazma:
 {{
@@ -31,7 +31,7 @@ TMDB Tur ID Referansi:
 """
 
 RECOMMENDATION_PROMPT = """
-Kullanici sunu soyluyor: "{prompt}"
+Kullanici sunu soyluyor: "{prompt}"{behavior_block}
 
 Asagidaki film listesinden bu kullaniciya en uygun 5 tanesini sec.
 Her biri icin neden onerdgini Turkce, 2-3 cumleyle acikla.
@@ -147,11 +147,15 @@ def _extract_json(text: str) -> str:
     return text
 
 
-async def analyze_mood(prompt: str) -> dict:
+async def analyze_mood(prompt: str, behavior_summary: str = "") -> dict:
+    behavior_block = (
+        f"\n\nKullanicinin son aktiviteleri (ilgi alanı ipucu olarak kullan):\n{behavior_summary}"
+        if behavior_summary else ""
+    )
     try:
         response = client.chat.completions.create(
             model=MODEL,
-            messages=[{"role": "user", "content": MOOD_PROMPT.format(prompt=prompt)}],
+            messages=[{"role": "user", "content": MOOD_PROMPT.format(prompt=prompt, behavior_block=behavior_block)}],
             temperature=0.3,
             max_tokens=256,
         )
@@ -166,7 +170,11 @@ async def analyze_mood(prompt: str) -> dict:
         return _fallback_mood(prompt)
 
 
-async def generate_recommendations(prompt: str, movies: list) -> dict:
+async def generate_recommendations(prompt: str, movies: list, behavior_summary: str = "") -> dict:
+    behavior_block = (
+        f"\n\nKullanicinin son aktiviteleri (öneri kararını etkileyen ipucu):\n{behavior_summary}"
+        if behavior_summary else ""
+    )
     movies_simple = [
         {
             "tmdb_id": m.get("id") or m.get("tmdb_id"),
@@ -180,6 +188,7 @@ async def generate_recommendations(prompt: str, movies: list) -> dict:
     try:
         formatted = RECOMMENDATION_PROMPT.format(
             prompt=prompt,
+            behavior_block=behavior_block,
             movies_json=json.dumps(movies_simple, ensure_ascii=False),
         )
         response = client.chat.completions.create(

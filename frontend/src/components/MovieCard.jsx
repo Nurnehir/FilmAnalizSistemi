@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import WatchlistButton from './WatchlistButton';
+import { trackEvent } from '../api/behavior';
 
 export default function MovieCard({ movie, reason }) {
   const title = movie.title || movie.name || 'Bilinmiyor';
@@ -8,7 +9,16 @@ export default function MovieCard({ movie, reason }) {
 
   return (
     <div className="group bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-700 transition-all duration-200 flex flex-col">
-      <Link to={`/movie/${movie.tmdb_id || movie.id}?type=${movie.media_type || 'movie'}`} className="block relative">
+      <Link
+        to={`/movie/${movie.tmdb_id || movie.id}?type=${movie.media_type || 'movie'}`}
+        className="block relative"
+        onClick={() => trackEvent('click', {
+          tmdb_id: movie.tmdb_id || movie.id,
+          media_type: movie.media_type || 'movie',
+          title: movie.title || movie.name,
+          genre_ids: movie.genre_ids || [],
+        })}
+      >
         <div className="aspect-[2/3] bg-gray-100 dark:bg-gray-800 overflow-hidden">
           {poster ? (
             <img

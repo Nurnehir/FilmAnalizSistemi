@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, movies, recommendations, watchlist
+from app.routers import auth, movies, recommendations, watchlist, behavior
 
 app = FastAPI(title="Film Öneri Sistemi API", version="1.0.0")
 
@@ -16,6 +16,7 @@ app.include_router(auth.router)
 app.include_router(movies.router)
 app.include_router(recommendations.router)
 app.include_router(watchlist.router)
+app.include_router(behavior.router)
 
 
 @app.get("/health")

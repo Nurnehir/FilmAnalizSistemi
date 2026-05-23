@@ -1,15 +1,48 @@
 import json
 import asyncio
+from collections import Counter
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.models.user import User
 from app.models.watchlist import Watchlist
 from app.models.recommendation_history import RecommendationHistory
+from app.models.user_behavior import UserBehavior
 from app.schemas.recommendation import RecommendRequest, RecommendResponse, HistoryResponse, HistoryItem, RecommendDetail, MovieRecommendation
 from app.services import gemini_service, tmdb_service
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
+
+GENRE_NAMES = {
+    28: "Aksiyon", 12: "Macera", 16: "Animasyon", 35: "Komedi", 80: "Suç",
+    99: "Belgesel", 18: "Drama", 10751: "Aile", 14: "Fantezi", 27: "Korku",
+    9648: "Gizem", 10749: "Romantik", 878: "Bilim Kurgu", 53: "Gerilim", 37: "Western",
+}
+
+
+def build_behavior_summary(events: list) -> str:
+    if not events:
+        return ""
+    searches = [e.search_query for e in events if e.search_query]
+    genre_counts: Counter = Counter()
+    viewed_titles = []
+    for e in events:
+        if e.genre_ids:
+            genre_counts.update(e.genre_ids)
+        if e.title and e.event_type in ("view", "click"):
+            viewed_titles.append(e.title)
+
+    parts = []
+    if searches:
+        unique_searches = list(dict.fromkeys(searches))[:5]
+        parts.append(f"Son aramalar: {', '.join(unique_searches)}")
+    if genre_counts:
+        top_genres = [GENRE_NAMES.get(gid, str(gid)) for gid, _ in genre_counts.most_common(3)]
+        parts.append(f"Sık ilgilenilen türler: {', '.join(top_genres)}")
+    if viewed_titles:
+        parts.append(f"Son incelenen filmler: {', '.join(list(dict.fromkeys(viewed_titles))[:5])}")
+    return " | ".join(parts)
 
 
 @router.post("", response_model=RecommendResponse)
@@ -18,6 +51,20 @@ async def recommend(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Son 7 günlük davranış özetini oluştur
+    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+    recent_events = (
+        db.query(UserBehavior)
+        .filter(
+            UserBehavior.user_id == current_user.id,
+            UserBehavior.created_at >= cutoff,
+        )
+        .order_by(UserBehavior.created_at.desc())
+        .limit(30)
+        .all()
+    )
+    behavior_summary = build_behavior_summary(recent_events)
+
     # Zevk profili kullanılacaksa prompt'a ekle
     effective_prompt = data.prompt
     if data.use_taste_profile:
@@ -34,7 +81,7 @@ async def recommend(
                 )
 
     # Asama 1: Ruh hali analizi
-    mood = await gemini_service.analyze_mood(effective_prompt)
+    mood = await gemini_service.analyze_mood(effective_prompt, behavior_summary=behavior_summary)
 
     # Asama 2: TMDB'den film listesi cek
     try:
@@ -51,7 +98,7 @@ async def recommend(
         raise HTTPException(status_code=404, detail="Uygun film bulunamadi")
 
     # Asama 3: Gemini ile kisisel oneri uret
-    rec_data = await gemini_service.generate_recommendations(effective_prompt, movies)
+    rec_data = await gemini_service.generate_recommendations(effective_prompt, movies, behavior_summary=behavior_summary)
 
     # Oneri edilen filmleri TMDB verisinden eslestirir
     movies_by_id = {str(m.get("id") or m.get("tmdb_id")): m for m in movies}

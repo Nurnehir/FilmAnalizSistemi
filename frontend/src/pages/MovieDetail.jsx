@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { getMovieDetail, getSimilar, getMovieVideos, getWatchProviders } from '../api/movies';
+import { trackEvent } from '../api/behavior';
 import { useLang } from '../context/LangContext';
 import WatchlistButton from '../components/WatchlistButton';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -37,6 +38,12 @@ export default function MovieDetail() {
         setSimilar(sim.results?.slice(0, 10) || []);
         setTrailer(videos[0] || null);
         setWatchProviders(prov || []);
+        trackEvent('view', {
+          tmdb_id: detail.tmdb_id,
+          media_type: mediaType,
+          title: detail.title || detail.name,
+          genre_ids: detail.genres?.map((g) => g.id) || [],
+        });
       } catch {
         setError(t.detail_load_error);
       } finally {

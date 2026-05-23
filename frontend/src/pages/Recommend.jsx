@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getRecommendations, getHistory, getRecommendationById } from '../api/recommendations';
 import { getTasteProfile } from '../api/auth';
+import { trackEvent } from '../api/behavior';
 import { useLang } from '../context/LangContext';
 import MovieCard from '../components/MovieCard';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -95,6 +96,7 @@ export default function Recommend() {
     setIsLoading(true);
     setError(null);
     setResult(null);
+    trackEvent('recommend_request', { search_query: prompt });
     try {
       const data = await getRecommendations(prompt, useTasteProfile);
       setResult(data);
