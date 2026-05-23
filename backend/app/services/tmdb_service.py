@@ -125,6 +125,23 @@ async def get_videos(tmdb_id: int, media_type: str = "movie") -> list:
     return trailers or [v for v in results if v.get("site") in ("YouTube", "Vimeo")]
 
 
+async def get_now_playing(page: int = 1) -> dict:
+    async with httpx.AsyncClient() as client:
+        r = await client.get(
+            f"{BASE_URL}/movie/now_playing",
+            headers=HEADERS,
+            params={"language": "tr-TR", "page": page, "region": "TR"},
+        )
+        r.raise_for_status()
+    data = r.json()
+    for item in data.get("results", []):
+        item["poster_url"] = build_poster_url(item.get("poster_path"))
+        item["backdrop_url"] = build_poster_url(item.get("backdrop_path"), "w1280")
+        item["tmdb_id"] = item.pop("id")
+        item["media_type"] = "movie"
+    return data
+
+
 async def get_watch_providers(tmdb_id: int, media_type: str = "movie") -> list:
     try:
         async with httpx.AsyncClient() as client:

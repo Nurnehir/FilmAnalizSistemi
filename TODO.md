@@ -435,23 +435,15 @@
 > TMDB'nin `now_playing` endpoint'i kullanılacak (sadece `movie` için geçerlidir, dizilerin vizyonu olmaz).
 > "Vizyonda" sekmesi seçiliyken tür sidebar'ı devre dışı bırakılır (vizyondaki filmler zaten filtrelenmiştir).
 
-- [ ] **Backend:** `app/services/tmdb_service.py` — `get_now_playing(page: int = 1)` fonksiyonu ekle
-  - TMDB endpoint: `GET /movie/now_playing`
-  - `params={"language": "tr-TR", "page": page, "region": "TR"}` — TR bölgesi öncelikli
-  - Yanıt: trend filmlerdekiyle aynı formatta normalize et (`poster_url`, `tmdb_id`, `media_type="movie"`)
-- [ ] **Backend:** `app/routers/movies.py` — `GET /movies/now-playing?page=1` endpoint ekle
-  - Auth gerekmez
-  - Response şeması: `MovieListResponse` (mevcut `trending` ile aynı şema kullanılabilir)
-- [ ] **Frontend:** `src/api/movies.js` — `getNowPlaying(page)` fonksiyonu ekle
-- [ ] **Frontend:** `src/pages/Home.jsx` — mevcut "Filmler / Diziler" toggle'a üçüncü sekme olarak "Vizyonda 🎬" eklenmez; bunun yerine ayrı bir filtre chip'i olur
-  - Trend bölümünün başlığının yanına küçük chip: `[Trend] [Vizyonda]` (pill-style)
-  - "Vizyonda" seçilince `getNowPlaying()` çağrılır, filmler/dizi toggle gizlenir
-  - "Trend" seçilince normale döner
-  - Aktif chip vurgulu (mor arka plan), geçiş `transition-all 150ms`
-- [ ] **Frontend:** `src/pages/Home.jsx` — "Vizyonda" aktifken `GenreSidebar` disabled/gizli olur (vizyondaki filmler genre filtresi desteklemez)
-- [ ] **Frontend:** "Vizyonda" modunda her film kartının üzerinde küçük `🎬 Vizyonda` rozeti göster (MovieCard'a opsiyonel `badge` prop ekle)
-- [ ] **Frontend:** Koyu/açık mod uyumlu
-- [ ] **Frontend:** TR/EN i18n — `home_now_playing: "Vizyonda"` / `"Now Playing"`, `home_now_playing_badge: "Vizyonda"` / `"In Theaters"` anahtarları ekle
+- [x] **Backend:** `app/services/tmdb_service.py` — `get_now_playing(page: int = 1)` fonksiyonu eklendi
+- [x] **Backend:** `app/routers/movies.py` — `GET /movies/now-playing?page=1` endpoint eklendi
+- [x] **Frontend:** `src/api/movies.js` — `getNowPlaying(page)` fonksiyonu eklendi
+- [x] **Frontend:** `src/pages/Home.jsx` — `viewMode` state eklendi; `[Trend] [Vizyonda]` chip toggle, Vizyonda'da film/dizi toggle gizlenir
+- [x] **Frontend:** `src/pages/Home.jsx` — Vizyonda aktifken `GenreSidebar` ve mobile drawer gizleniyor
+- [x] **Frontend:** `src/components/MovieCard.jsx` — opsiyonel `badge` prop eklendi (sol üst köşe rozeti)
+- [x] **Frontend:** `src/components/MovieGrid.jsx` — `badge` prop'u MovieCard'a iletiliyor
+- [x] **Frontend:** Koyu/açık mod uyumlu
+- [x] **Frontend:** TR/EN i18n — `home_now_playing`, `home_now_playing_badge`, `home_trending_chip` anahtarları eklendi
 
 ---
 
@@ -647,7 +639,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 17-18 tamamlandı. Sıradaki: 19 (Vizyondaki filmler filtresi).
+**Son guncelleme:** 17-18-19 tamamlandı. Sıradaki: 20 (AI kişisel konuşma tonu).
 
 ---
 

@@ -28,6 +28,14 @@ async def discover(
         raise HTTPException(status_code=503, detail="TMDB servisine ulasilamiyor")
 
 
+@router.get("/now-playing")
+async def now_playing(page: int = Query(1, ge=1)):
+    try:
+        return await tmdb_service.get_now_playing(page)
+    except Exception:
+        raise HTTPException(status_code=503, detail="TMDB servisine ulasilamiyor")
+
+
 @router.get("/search")
 async def search(
     q: str = Query(..., min_length=1),

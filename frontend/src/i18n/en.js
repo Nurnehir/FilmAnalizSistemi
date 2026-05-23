@@ -197,6 +197,11 @@ const en = {
   rec_detail_error: 'Failed to load.',
   rec_sidebar_toggle: 'Open history',
 
+  // Now Playing
+  home_now_playing: 'Now Playing',
+  home_now_playing_badge: '🎬 In Theaters',
+  home_trending_chip: 'Trending',
+
   // Watch Providers
   providers_watch_on: 'Streaming on:',
 

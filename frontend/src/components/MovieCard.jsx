@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import WatchlistButton from './WatchlistButton';
 import { trackEvent } from '../api/behavior';
 
-export default function MovieCard({ movie, reason }) {
+export default function MovieCard({ movie, reason, badge }) {
   const title = movie.title || movie.name || 'Bilinmiyor';
   const year = (movie.release_date || movie.first_air_date || '').slice(0, 4);
   const poster = movie.poster_url || (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null);
@@ -36,6 +36,11 @@ export default function MovieCard({ movie, reason }) {
         {movie.vote_average > 0 && (
           <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-yellow-400 text-xs font-bold px-2 py-1 rounded-lg">
             ★ {movie.vote_average?.toFixed(1)}
+          </div>
+        )}
+        {badge && (
+          <div className="absolute top-2 left-2 bg-purple-600/90 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-lg">
+            {badge}
           </div>
         )}
       </Link>

@@ -1,6 +1,6 @@
 import MovieCard from './MovieCard';
 
-export default function MovieGrid({ movies = [], reasons = {} }) {
+export default function MovieGrid({ movies = [], reasons = {}, badge }) {
   if (!movies.length) return null;
 
   return (
@@ -10,6 +10,7 @@ export default function MovieGrid({ movies = [], reasons = {} }) {
           key={`${movie.tmdb_id || movie.id}-${movie.media_type}`}
           movie={movie}
           reason={reasons[movie.tmdb_id || movie.id]}
+          badge={badge}
         />
       ))}
     </div>

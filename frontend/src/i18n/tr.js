@@ -197,6 +197,11 @@ const tr = {
   rec_detail_error: 'Yüklenemedi.',
   rec_sidebar_toggle: 'Geçmişi aç',
 
+  // Now Playing
+  home_now_playing: 'Vizyonda',
+  home_now_playing_badge: '🎬 Vizyonda',
+  home_trending_chip: 'Trend',
+
   // Watch Providers
   providers_watch_on: 'Yayında:',
 

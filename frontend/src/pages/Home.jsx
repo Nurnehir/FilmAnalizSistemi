@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { getTrending, discoverMovies } from '../api/movies';
+import { getTrending, discoverMovies, getNowPlaying } from '../api/movies';
 import MovieGrid from '../components/MovieGrid';
 import LoadingSpinner from '../components/LoadingSpinner';
 import GenreSidebar from '../components/GenreSidebar';
@@ -12,6 +12,7 @@ export default function Home() {
   const { t, lang } = useLang();
 
   const [mediaType, setMediaType] = useState('movie');
+  const [viewMode, setViewMode] = useState('trending'); // 'trending' | 'now_playing'
   const [movies, setMovies] = useState([]);
   const [trendLoading, setTrendLoading] = useState(true);
   const [trendError, setTrendError] = useState(null);
@@ -20,21 +21,31 @@ export default function Home() {
 
   useEffect(() => {
     setSelectedGenres([]);
-  }, [mediaType]);
+  }, [mediaType, viewMode]);
 
   useEffect(() => {
     setTrendLoading(true);
     setTrendError(null);
-    const fetch = selectedGenres.length > 0
-      ? discoverMovies(selectedGenres, 'popularity.desc', mediaType)
-      : getTrending(mediaType, 1);
+    let fetch;
+    if (viewMode === 'now_playing') {
+      fetch = getNowPlaying(1);
+    } else if (selectedGenres.length > 0) {
+      fetch = discoverMovies(selectedGenres, 'popularity.desc', mediaType);
+    } else {
+      fetch = getTrending(mediaType, 1);
+    }
     fetch
       .then((data) => setMovies(data.results || []))
       .catch(() => setTrendError(t.home_error))
       .finally(() => setTrendLoading(false));
-  }, [mediaType, selectedGenres]);
+  }, [mediaType, selectedGenres, viewMode]);
 
-  const sectionTitle = selectedGenres.length > 0 ? t.genre_filter_results : t.home_trending;
+  const isNowPlaying = viewMode === 'now_playing';
+  const sectionTitle = isNowPlaying
+    ? t.home_now_playing
+    : selectedGenres.length > 0
+    ? t.genre_filter_results
+    : t.home_trending;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
@@ -79,21 +90,18 @@ export default function Home() {
           <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-xl font-bold">{sectionTitle}</h2>
-              {selectedGenres.length > 0 && (
-                <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full">
-                  {selectedGenres.length} {t.genre_filter_active}
-                </span>
-              )}
+
+              {/* Trend / Vizyonda chip toggle */}
               <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
                 {[
-                  { key: 'movie', label: t.home_movies },
-                  { key: 'tv', label: t.home_series },
+                  { key: 'trending', label: t.home_trending_chip },
+                  { key: 'now_playing', label: t.home_now_playing },
                 ].map(({ key, label }) => (
                   <button
                     key={key}
-                    onClick={() => setMediaType(key)}
+                    onClick={() => setViewMode(key)}
                     className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                      mediaType === key
+                      viewMode === key
                         ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
@@ -102,42 +110,74 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+
+              {/* Film / Dizi toggle — sadece Trend modunda */}
+              {!isNowPlaying && (
+                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+                  {[
+                    { key: 'movie', label: t.home_movies },
+                    { key: 'tv', label: t.home_series },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setMediaType(key)}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                        mediaType === key
+                          ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {!isNowPlaying && selectedGenres.length > 0 && (
+                <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full">
+                  {selectedGenres.length} {t.genre_filter_active}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Mobile drawer toggle */}
-              <button
-                className="lg:hidden flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors"
-                onClick={() => setDrawerOpen(true)}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M3 8h14M3 12h10" />
-                </svg>
-                {t.genre_filter_btn}
-                {selectedGenres.length > 0 && (
-                  <span className="bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
-                    {selectedGenres.length}
-                  </span>
-                )}
-              </button>
+              {/* Mobile drawer toggle — sadece Trend modunda */}
+              {!isNowPlaying && (
+                <button
+                  className="lg:hidden flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors"
+                  onClick={() => setDrawerOpen(true)}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M3 8h14M3 12h10" />
+                  </svg>
+                  {t.genre_filter_btn}
+                  {selectedGenres.length > 0 && (
+                    <span className="bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+                      {selectedGenres.length}
+                    </span>
+                  )}
+                </button>
+              )}
               <span className="text-gray-400 dark:text-gray-500 text-xs">{t.home_tmdb_live}</span>
             </div>
           </div>
 
           {/* Two-column layout: sidebar + grid */}
           <div className="flex gap-6">
-            {/* Desktop sidebar */}
-            <aside className="hidden lg:block w-48 shrink-0">
-              <div className="sticky top-20 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
-                <GenreSidebar
-                  mediaType={mediaType}
-                  selected={selectedGenres}
-                  onChange={setSelectedGenres}
-                  t={t}
-                  lang={lang}
-                />
-              </div>
-            </aside>
+            {/* Desktop sidebar — sadece Trend modunda */}
+            {!isNowPlaying && (
+              <aside className="hidden lg:block w-48 shrink-0">
+                <div className="sticky top-20 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+                  <GenreSidebar
+                    mediaType={mediaType}
+                    selected={selectedGenres}
+                    onChange={setSelectedGenres}
+                    t={t}
+                    lang={lang}
+                  />
+                </div>
+              </aside>
+            )}
 
             {/* Main content */}
             <div className="flex-1 min-w-0">
@@ -148,15 +188,18 @@ export default function Home() {
               ) : trendError ? (
                 <div className="text-center py-12 text-red-500 dark:text-red-400">{trendError}</div>
               ) : (
-                <MovieGrid movies={movies.map((m) => ({ ...m, media_type: mediaType }))} />
+                <MovieGrid
+                  movies={movies.map((m) => ({ ...m, media_type: m.media_type || mediaType }))}
+                  badge={isNowPlaying ? t.home_now_playing_badge : undefined}
+                />
               )}
             </div>
           </div>
         </section>
       </div>
 
-      {/* Mobile drawer */}
-      {drawerOpen && (
+      {/* Mobile drawer — sadece Trend modunda */}
+      {!isNowPlaying && drawerOpen && (
         <>
           <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
