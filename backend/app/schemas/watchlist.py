@@ -24,6 +24,7 @@ class WatchlistItem(BaseModel):
     title: str
     poster_path: Optional[str] = None
     collection_id: Optional[int] = None
+    genre_ids: Optional[List[int]] = None
 
 
 class WatchlistOut(BaseModel):
@@ -35,6 +36,7 @@ class WatchlistOut(BaseModel):
     watched: bool = False
     user_rating: Optional[int] = None
     collection_id: Optional[int] = None
+    genre_ids: List[int] = []
     added_at: datetime
 
     class Config:

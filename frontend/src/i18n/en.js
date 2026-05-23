@@ -130,6 +130,13 @@ const en = {
   wl_no_collections_yet: 'No lists yet. Create a list first.',
   wl_no_list: 'Choose list...',
   wl_empty_collection: 'This list is empty.',
+  wl_search_placeholder: 'Search films...',
+  wl_filter_genre: 'By Genre',
+  wl_filter_all: 'All',
+  wl_no_results: 'No results found.',
+  wl_page_of: '/ {total}',
+  wl_prev: 'Previous',
+  wl_next: 'Next',
 
   // Movie Detail
   detail_trailer: 'Watch Trailer',

@@ -27,6 +27,7 @@ export function WatchlistProvider({ children }) {
       title: movie.title || movie.name,
       poster_path: movie.poster_path || null,
       collection_id: collectionId,
+      genre_ids: movie.genre_ids || [],
     });
     setItems((prev) => [...prev, res]);
     if (collectionId !== null) {

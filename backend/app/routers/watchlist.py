@@ -146,6 +146,7 @@ async def add_to_watchlist(
             title=data.title,
             poster_path=data.poster_path,
             collection_id=data.collection_id,
+            genre_ids=data.genre_ids or [],
         )
         db.add(item)
         db.commit()

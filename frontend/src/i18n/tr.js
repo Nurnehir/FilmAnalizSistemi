@@ -130,6 +130,13 @@ const tr = {
   wl_no_collections_yet: 'Henüz listeniz yok. Önce bir liste oluşturun.',
   wl_no_list: 'Liste seç...',
   wl_empty_collection: 'Bu liste boş.',
+  wl_search_placeholder: 'Film ara...',
+  wl_filter_genre: 'Türe Göre',
+  wl_filter_all: 'Tümü',
+  wl_no_results: 'Sonuç bulunamadı.',
+  wl_page_of: '/ {total}',
+  wl_prev: 'Önceki',
+  wl_next: 'Sonraki',
 
   // Movie Detail
   detail_trailer: 'Fragman İzle',

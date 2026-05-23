@@ -10,7 +10,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import StarRating from '../components/StarRating';
 
 export default function Watchlist() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { refresh: refreshContext } = useWatchlistContext();
 
   const [items, setItems] = useState([]);
@@ -24,6 +24,10 @@ export default function Watchlist() {
   const [tab, setTab] = useState('all');
   const [activeColId, setActiveColId] = useState(null); // null = show all
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Collection modals
   const [showNewListModal, setShowNewListModal] = useState(false);
@@ -141,21 +145,57 @@ export default function Watchlist() {
     } catch {}
   };
 
-  // ── Filtering ───────────────────────────────────────────────────────────────
+  // ── Filtering & pagination ───────────────────────────────────────────────────
 
-  const visibleItems = items.filter((i) => {
-    if (activeColId !== null && i.collection_id !== activeColId) return false;
+  const GENRE_NAMES = {
+    28: { tr: 'Aksiyon', en: 'Action' }, 12: { tr: 'Macera', en: 'Adventure' },
+    16: { tr: 'Animasyon', en: 'Animation' }, 35: { tr: 'Komedi', en: 'Comedy' },
+    80: { tr: 'Suç', en: 'Crime' }, 99: { tr: 'Belgesel', en: 'Documentary' },
+    18: { tr: 'Drama', en: 'Drama' }, 10751: { tr: 'Aile', en: 'Family' },
+    14: { tr: 'Fantezi', en: 'Fantasy' }, 27: { tr: 'Korku', en: 'Horror' },
+    9648: { tr: 'Gizem', en: 'Mystery' }, 10749: { tr: 'Romantik', en: 'Romance' },
+    878: { tr: 'Bilim Kurgu', en: 'Sci-Fi' }, 53: { tr: 'Gerilim', en: 'Thriller' },
+    37: { tr: 'Western', en: 'Western' }, 10759: { tr: 'Aksiyon & Macera', en: 'Action & Adventure' },
+    10762: { tr: 'Çocuk', en: 'Kids' }, 10765: { tr: 'Bilim Kurgu & Fantezi', en: 'Sci-Fi & Fantasy' },
+  };
+
+  const colItems = (colId) =>
+    colId === null ? items : items.filter((i) => i.collection_id === colId);
+
+  // Tab + collection filtered (for counts)
+  const tabFiltered = colItems(activeColId).filter((i) => {
     if (tab === 'watched') return i.watched;
     if (tab === 'unwatched') return !i.watched;
     return true;
   });
 
-  const colItems = (colId) =>
-    colId === null ? items : items.filter((i) => i.collection_id === colId);
+  // Available genres in current tab+collection view
+  const availableGenres = [...new Set(tabFiltered.flatMap((i) => i.genre_ids || []))]
+    .filter((gid) => GENRE_NAMES[gid])
+    .sort((a, b) => (GENRE_NAMES[a]?.tr || '').localeCompare(GENRE_NAMES[b]?.tr || ''));
+
+  // Full filter: tab + collection + genres + search
+  const fullyFiltered = tabFiltered.filter((i) => {
+    if (selectedGenres.length > 0) {
+      const hasGenre = selectedGenres.every((gid) => (i.genre_ids || []).includes(gid));
+      if (!hasGenre) return false;
+    }
+    if (searchQuery.trim()) {
+      if (!i.title.toLowerCase().includes(searchQuery.trim().toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  const totalPages   = Math.max(1, Math.ceil(fullyFiltered.length / ITEMS_PER_PAGE));
+  const safePage     = Math.min(page, totalPages);
+  const visibleItems = fullyFiltered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
   const watchedCount   = colItems(activeColId).filter((i) => i.watched).length;
   const unwatchedCount = colItems(activeColId).filter((i) => !i.watched).length;
   const totalInView    = colItems(activeColId).length;
+
+  // Reset page when any filter changes
+  const resetPage = () => setPage(1);
 
   const activeColName = activeColId === null
     ? t.wl_tab_all
@@ -179,7 +219,7 @@ export default function Watchlist() {
       <div className="flex-1 overflow-y-auto py-2">
         {/* All items */}
         <button
-          onClick={() => { setActiveColId(null); setSidebarOpen(false); }}
+          onClick={() => { setActiveColId(null); setSidebarOpen(false); resetPage(); setSelectedGenres([]); setSearchQuery(''); }}
           className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
             activeColId === null
               ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 font-medium'
@@ -204,7 +244,7 @@ export default function Watchlist() {
           >
             {/* Name button */}
             <button
-              onClick={() => { setActiveColId(col.id); setSidebarOpen(false); }}
+              onClick={() => { setActiveColId(col.id); setSidebarOpen(false); resetPage(); setSelectedGenres([]); setSearchQuery(''); }}
               className={`flex-1 flex items-center gap-2 text-sm text-left min-w-0 py-1.5 px-1 ${
                 activeColId === col.id
                   ? 'text-purple-700 dark:text-purple-300 font-medium'
@@ -337,7 +377,7 @@ export default function Watchlist() {
                     {TABS.map(({ key, label, count }) => (
                       <button
                         key={key}
-                        onClick={() => setTab(key)}
+                        onClick={() => { setTab(key); resetPage(); setSelectedGenres([]); }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                           tab === key
                             ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
@@ -358,6 +398,69 @@ export default function Watchlist() {
                 )}
               </div>
 
+              {/* ── Search + Genre filter ── */}
+              {items.length > 0 && (
+                <div className="space-y-3 mb-5">
+                  {/* Search */}
+                  <div className="relative">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      value={searchQuery}
+                      onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
+                      placeholder={t.wl_search_placeholder}
+                      className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:border-purple-400 dark:focus:border-purple-500 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 transition-colors"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => { setSearchQuery(''); resetPage(); }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      >✕</button>
+                    )}
+                  </div>
+
+                  {/* Genre chips */}
+                  {availableGenres.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{t.wl_filter_genre}:</span>
+                      <button
+                        onClick={() => { setSelectedGenres([]); resetPage(); }}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          selectedGenres.length === 0
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {t.wl_filter_all}
+                      </button>
+                      {availableGenres.map((gid) => {
+                        const active = selectedGenres.includes(gid);
+                        const name = GENRE_NAMES[gid];
+                        return (
+                          <button
+                            key={gid}
+                            onClick={() => {
+                              setSelectedGenres((prev) =>
+                                prev.includes(gid) ? prev.filter((g) => g !== gid) : [...prev, gid]
+                              );
+                              resetPage();
+                            }}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                              active
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            {name ? (lang === 'tr' ? name.tr : name.en) : gid}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Empty states */}
               {items.length === 0 ? (
                 <div className="text-center py-20">
@@ -368,10 +471,10 @@ export default function Watchlist() {
                     {t.nav_home}
                   </Link>
                 </div>
-              ) : visibleItems.length === 0 ? (
+              ) : fullyFiltered.length === 0 ? (
                 <div className="text-center py-16 text-gray-400 dark:text-gray-600">
-                  {tab === 'watched' ? '✓ ' : '🎬 '}
-                  {tab === 'watched' ? t.wl_tab_watched : tab === 'unwatched' ? t.wl_tab_unwatched : t.wl_empty_collection}
+                  <div className="text-4xl mb-3">🔍</div>
+                  <p>{t.wl_no_results}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -466,6 +569,49 @@ export default function Watchlist() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {/* ── Pagination ── */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-3 mt-6">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={safePage === 1}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    {t.wl_prev}
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                          p === safePage
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safePage === totalPages}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {t.wl_next}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
               )}
             </div>

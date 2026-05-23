@@ -625,6 +625,31 @@
 
 ---
 
+### 24. İzleme Listesi — Arama, Tür Filtresi ve Sayfalama ✅
+> Watchlist sayfasında kartlar sayfalanır (10'arlı), başlığa göre arama kutusu ve türe göre filtre çipleri eklenir.
+> Tür verisi DB'de tutulur; film eklenirken `genre_ids` da kaydedilir.
+
+- [x] **DB:** `watchlist` tablosuna `genre_ids INTEGER[] DEFAULT '{}'` kolonu eklendi
+- [x] **DB:** Alembic migration `f6a7b8c9d0e1_add_genre_ids_to_watchlist.py` oluşturuldu ve uygulandı
+- [x] **Backend:** `app/models/watchlist.py` — `genre_ids` kolonu eklendi
+- [x] **Backend:** `app/schemas/watchlist.py` — `WatchlistItem`'a `genre_ids: Optional[List[int]] = None`, `WatchlistOut`'a `genre_ids: List[int] = []` eklendi
+- [x] **Backend:** `POST /watchlist` — `genre_ids` artık kaydediliyor
+- [x] **Frontend:** `src/context/WatchlistContext.jsx` — `add()` fonksiyonu `genre_ids: movie.genre_ids || []` geçiyor
+- [x] **Frontend:** `src/pages/Watchlist.jsx` — sayfalama eklendi
+  - `ITEMS_PER_PAGE = 10`, `page` state
+  - Tab / koleksiyon / filtre değişince sayfa 1'e döner
+  - "Önceki / Sonraki" + "Sayfa X / Y" göstergesi
+- [x] **Frontend:** `src/pages/Watchlist.jsx` — başlık arama kutusu eklendi (anlık, debounce yok)
+- [x] **Frontend:** `src/pages/Watchlist.jsx` — tür filtresi çipleri eklendi
+  - Aktif koleksiyondaki öğelerden benzersiz türler çıkarılır
+  - "Tümü" çipi + her tür için bir çip (yatay kaydırmalı satır)
+  - Birden fazla tür seçilebilir (çoklu filtre)
+  - Tür adları sabit map üzerinden TR / EN gösterilir
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu
+  - i18n: `wl_search_placeholder`, `wl_filter_genre`, `wl_filter_all`, `wl_page_of`, `wl_prev`, `wl_next`, `wl_no_results`
+
+---
+
 ## AI MODEL MİGRASYONU (Gemini → Groq)
 
 - [x] Gemini API kota sorunu tespit edildi (ücretsiz tier Türkiye'de limit:0)
