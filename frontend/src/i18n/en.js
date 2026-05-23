@@ -238,6 +238,24 @@ const en = {
   search_type_movie: 'Movies',
   search_type_tv: 'Series',
 
+  // Reviews
+  review_title: 'Reviews',
+  review_write: 'Write a Review',
+  review_count_label: 'reviews',
+  review_avg: 'Average Rating',
+  review_spoiler_warning: 'Contains Spoiler',
+  review_show_spoiler: 'Show Spoiler',
+  review_anonymous: 'Anonymous',
+  review_with_name: 'With my name',
+  review_login_prompt: 'Log in to write a review',
+  review_submit: 'Submit',
+  review_edit: 'Edit',
+  review_delete: 'Delete',
+  review_delete_confirm: 'Delete this review?',
+  review_delete_confirm_sub: 'This action cannot be undone.',
+  review_empty: 'No reviews yet. Be the first to write one!',
+  review_load_more: 'Load more reviews',
+
   // Common
   loading: 'Loading...',
   error_generic: 'Something went wrong.',

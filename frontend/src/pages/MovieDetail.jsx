@@ -1,18 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { getMovieDetail, getSimilar, getMovieVideos, getWatchProviders } from '../api/movies';
+import { getReviews, createReview, updateReview, deleteReview } from '../api/reviews';
 import { trackEvent } from '../api/behavior';
 import { useLang } from '../context/LangContext';
+import { useAuth } from '../context/AuthContext';
 import WatchlistButton from '../components/WatchlistButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import MovieCard from '../components/MovieCard';
 import TrailerModal from '../components/TrailerModal';
 import WatchProviders from '../components/WatchProviders';
+import ReviewCard from '../components/ReviewCard';
+import ReviewForm from '../components/ReviewForm';
 
 export default function MovieDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { t } = useLang();
+  const { user } = useAuth();
   const mediaType = searchParams.get('type') || 'movie';
 
   const [movie, setMovie] = useState(null);
@@ -22,6 +27,35 @@ export default function MovieDetail() {
   const [watchProviders, setWatchProviders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [avgRating, setAvgRating] = useState(null);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const myReview = reviews.find((r) => r.is_own);
+
+  const loadReviews = useCallback(async (page = 1, append = false) => {
+    setReviewsLoading(true);
+    try {
+      const data = await getReviews(id, mediaType, page);
+      setReviews((prev) => append ? [...prev, ...data.reviews] : data.reviews);
+      setReviewsTotal(data.total);
+      setAvgRating(data.avg_rating);
+    } catch {
+      // silent
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [id, mediaType]);
 
   useEffect(() => {
     const load = async () => {
@@ -51,7 +85,54 @@ export default function MovieDetail() {
       }
     };
     load();
+    loadReviews(1, false);
   }, [id, mediaType]);
+
+  const handleReviewSubmit = async (formData) => {
+    setReviewSubmitting(true);
+    setReviewError('');
+    try {
+      if (editingReview) {
+        await updateReview(editingReview.id, formData);
+      } else {
+        await createReview(id, { ...formData, tmdb_id: parseInt(id), media_type: mediaType });
+      }
+      setShowReviewForm(false);
+      setEditingReview(null);
+      setReviewPage(1);
+      await loadReviews(1, false);
+    } catch (err) {
+      setReviewError(err.response?.data?.detail || 'Bir hata oluştu');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const handleEditReview = (review) => {
+    setEditingReview(review);
+    setShowReviewForm(true);
+  };
+
+  const handleDeleteReview = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await deleteReview(deleteTarget.id);
+      setDeleteTarget(null);
+      setReviewPage(1);
+      await loadReviews(1, false);
+    } catch {
+      // silent
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleLoadMore = async () => {
+    const nextPage = reviewPage + 1;
+    setReviewPage(nextPage);
+    await loadReviews(nextPage, true);
+  };
 
   if (isLoading) {
     return (
@@ -190,6 +271,111 @@ export default function MovieDetail() {
             </div>
           </section>
         )}
+
+        {/* Reviews */}
+        <section className="mt-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold">{t.review_title}</h2>
+              {avgRating !== null && (
+                <span className="text-yellow-500 font-semibold text-sm">
+                  ★ {avgRating}
+                </span>
+              )}
+              {reviewsTotal > 0 && (
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  · {reviewsTotal} {t.review_count_label}
+                </span>
+              )}
+            </div>
+            {user && !myReview && !showReviewForm && (
+              <button
+                onClick={() => { setEditingReview(null); setShowReviewForm(true); setReviewError(''); }}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                {t.review_write}
+              </button>
+            )}
+          </div>
+
+          {/* Delete confirm modal */}
+          {deleteTarget && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteTarget(null)} />
+              <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl max-w-sm w-full mx-4">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+                  {t.review_delete_confirm}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+                  {t.review_delete_confirm_sub}
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    {t.cancel}
+                  </button>
+                  <button
+                    onClick={handleDeleteReview}
+                    disabled={deleteLoading}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+                  >
+                    {deleteLoading ? '...' : t.review_delete}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Review form */}
+          {user && showReviewForm && (
+            <div className="mb-6">
+              {reviewError && (
+                <p className="mb-3 text-sm text-red-500">{reviewError}</p>
+              )}
+              <ReviewForm
+                initialData={editingReview}
+                onSubmit={handleReviewSubmit}
+                onCancel={() => { setShowReviewForm(false); setEditingReview(null); setReviewError(''); }}
+                isLoading={reviewSubmitting}
+              />
+            </div>
+          )}
+
+          {!user && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              <Link to="/login" className="text-purple-500 hover:underline">{t.review_login_prompt}</Link>
+            </p>
+          )}
+
+          {/* Review list */}
+          {reviews.length === 0 && !reviewsLoading && (
+            <p className="text-sm text-gray-400 dark:text-gray-500 italic">
+              {t.review_empty}
+            </p>
+          )}
+
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <ReviewCard
+                key={review.id}
+                review={review}
+                onEdit={handleEditReview}
+                onDelete={(r) => setDeleteTarget(r)}
+              />
+            ))}
+          </div>
+
+          {reviews.length < reviewsTotal && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={handleLoadMore}
+                disabled={reviewsLoading}
+                className="px-5 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg transition-colors disabled:opacity-50"
+              >
+                {reviewsLoading ? t.loading : t.review_load_more}
+              </button>
+            </div>
+          )}
+        </section>
 
         {/* Similar */}
         {similar.length > 0 && (

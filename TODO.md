@@ -512,12 +512,12 @@
 
 ---
 
-### 23. Topluluk Yorumları ve Puanlama Sistemi
+### 23. Topluluk Yorumları ve Puanlama Sistemi ✅
 > Kullanıcılar film detay sayfasında herkese açık yorum yazabilsin ve 1-5 yıldız verebilsin.
 > Yorumda spoiler uyarısı ve anonim/isimli görünme seçeneği olsun.
 > Yorumlar herkes tarafından görülebilir (giriş yapmadan da okunabilir, yazmak için giriş gerekli).
 
-- [ ] **DB:** Yeni tablo `reviews` oluştur
+- [x] **DB:** Yeni tablo `reviews` oluştur
   ```sql
   CREATE TABLE reviews (
       id            SERIAL PRIMARY KEY,
@@ -537,61 +537,16 @@
   CREATE INDEX idx_reviews_created ON reviews(created_at DESC);
   ```
   - `UNIQUE(user_id, tmdb_id, media_type)` — bir kullanıcı aynı film için tek yorum yazabilir (düzenleyebilir)
-- [ ] **DB:** Alembic migration `a7b8c9d0e1f2_add_reviews_table.py` oluştur ve uygula
-- [ ] **Backend:** `app/models/review.py` — SQLAlchemy ORM modeli oluştur
-- [ ] **Backend:** `app/schemas/review.py` — Pydantic şemaları oluştur
-  - `ReviewCreate`: `tmdb_id: int`, `media_type: str`, `rating: int` (1-5), `body: str` (10-2000 karakter), `has_spoiler: bool`, `is_anonymous: bool`
-  - `ReviewUpdate`: `rating: int | None`, `body: str | None`, `has_spoiler: bool | None`, `is_anonymous: bool | None`
-  - `ReviewOut`: `id`, `rating`, `body`, `has_spoiler`, `is_anonymous`, `created_at`, `updated_at`
-    - `display_name: str` — `is_anonymous=True` ise `"Anonim"`, False ise `user.username`
-    - `is_own: bool` — isteği yapan kullanıcıya ait mi (frontend'de düzenle/sil butonları için)
-  - `ReviewListResponse`: `reviews: list[ReviewOut]`, `total: int`, `avg_rating: float | None`
-- [ ] **Backend:** `app/routers/reviews.py` — yeni router oluştur
-  - `GET /movies/{tmdb_id}/reviews?media_type=movie&page=1&limit=10` — film yorumlarını getir
-    - Auth opsiyonel: giriş yapmadan da okunabilir, ama `is_own` hesaplanamaz (False döner)
-    - `avg_rating`: tablodaki tüm rating'lerin ortalaması (round 1 decimal)
-    - Sıralama: en yeni önce
-  - `POST /movies/{tmdb_id}/reviews` — yorum yaz (Auth zorunlu)
-    - Aynı kullanıcı aynı film için zaten yorum yazdıysa `409 Conflict: "Bu film için zaten yorum yazdınız. Mevcut yorumunuzu düzenleyebilirsiniz."`
-  - `PUT /reviews/{review_id}` — yorumu düzenle (Auth zorunlu, sadece kendi yorumu)
-    - Başkasının yorumuna erişince `403 Forbidden`
-  - `DELETE /reviews/{review_id}` — yorumu sil (Auth zorunlu, sadece kendi yorumu)
-- [ ] **Backend:** `app/main.py`'e reviews router'ı ekle: `app.include_router(reviews_router, prefix="/movies", tags=["reviews"])`
-- [ ] **Frontend:** `src/api/reviews.js` — fonksiyonlar oluştur
-  - `getReviews(tmdb_id, media_type, page)` → `{reviews, total, avg_rating}`
-  - `createReview(tmdb_id, media_type, data)` → yeni yorum
-  - `updateReview(review_id, data)` → yorumu güncelle
-  - `deleteReview(review_id)` → yorumu sil
-- [ ] **Frontend:** `src/components/ReviewCard.jsx` — tek yorum kartı bileşeni oluştur
-  - Üstte: `display_name` (kullanıcı adı veya "Anonim") + tarih (sağ hizalı)
-  - Yıldız puanı (dolu/boş yıldızlar, 5 üzerinden)
-  - Spoiler içeriyorsa: `⚠️ Spoiler İçeriyor` uyarısı + üstü kapalı metin; "Spoiler'ı Göster" butonuna basınca açılır
-  - Yorum metni (max 5 satır göster, fazlası "Devamını oku" ile açılır)
-  - Sağ alt: `is_own=true` ise "Düzenle" + "Sil" ikonları
-- [ ] **Frontend:** `src/components/ReviewForm.jsx` — yorum yazma/düzenleme formu bileşeni
-  - 1-5 yıldız seçici (hover efektli, `StarRating` bileşenini kullanır)
-  - Textarea: min 10, max 2000 karakter, anlık karakter sayacı (sağ alt köşede `"123 / 2000"`)
-  - Checkbox: `☐ Spoiler içeriyor` — işaretlenince yorum blur'lu gösterilir
-  - Radio/Toggle: `● İsmimle yorum yap  ○ Anonim yorum yap`
-  - "Yorum Gönder" butonu (loading state'li) + iptal butonu
-  - Form altında küçük not: "Yorumlar herkese açık olarak yayınlanır."
-  - Giriş yapmadan form gösterilmez; yerine "Yorum yazmak için giriş yap" linki gösterilir
-- [ ] **Frontend:** `src/pages/MovieDetail.jsx` — yorum bölümünü entegre et
-  - Sayfanın alt bölümüne "Yorumlar" başlığı ekle
-  - Ortalama puan + yorum sayısı özet satırı (örn: "⭐ 4.2 — 12 yorum")
-  - Giriş yapmış kullanıcı için `ReviewForm` göster (kendi yorumu varsa formu düzenleme modunda göster)
-  - Altında `ReviewCard` listesi (sayfalama: "Daha fazla yorum yükle" butonu — limit 10, offset bazlı)
-  - Yorumlar bölümü `Benzer Filmler`'den önce gelir
-- [ ] **Frontend:** Koyu/açık mod uyumlu (ReviewCard, ReviewForm tüm dark: variantları eklenmiş)
-- [ ] **Frontend:** TR/EN i18n anahtarları ekle:
-  - `review_title: "Yorumlar"` / `"Reviews"`, `review_write: "Yorum Yaz"` / `"Write a Review"`
-  - `review_avg: "Ortalama Puan"` / `"Average Rating"`, `review_count: "{n} yorum"` / `"{n} reviews"`
-  - `review_spoiler_warning: "Spoiler İçeriyor"` / `"Contains Spoiler"`, `review_show_spoiler: "Spoiler'ı Göster"` / `"Show Spoiler"`
-  - `review_anonymous: "Anonim"` / `"Anonymous"`, `review_with_name: "İsmimle"` / `"With my name"`
-  - `review_login_prompt: "Yorum yazmak için giriş yap"` / `"Log in to write a review"`
-  - `review_submit: "Gönder"` / `"Submit"`, `review_edit: "Düzenle"` / `"Edit"`, `review_delete: "Sil"` / `"Delete"`
-  - `review_already_exists: "Yorumunuzu güncellediniz."` / `"Your review has been updated."`
-  - `review_chars_remaining: "{n} / 2000"` (formatlanmış)
+- [x] **DB:** Alembic migration `a7b8c9d0e1f2_add_reviews_table.py` oluşturuldu ve uygulandı
+- [x] **Backend:** `app/models/review.py` — SQLAlchemy ORM modeli oluşturuldu
+- [x] **Backend:** `app/schemas/review.py` — ReviewCreate, ReviewUpdate, ReviewOut (display_name, is_own), ReviewListResponse
+- [x] **Backend:** `app/routers/reviews.py` — GET (opsiyonel auth), POST (auth), PUT (auth, 403 if not own), DELETE (auth, 403 if not own)
+- [x] **Backend:** `app/main.py`'e `reviews.router` eklendi (`prefix="/movies"`)
+- [x] **Frontend:** `src/api/reviews.js` — getReviews, createReview, updateReview, deleteReview
+- [x] **Frontend:** `src/components/ReviewCard.jsx` — avatar harf, yıldız görüntüsü, spoiler blur/reveal, devamını oku, düzenle/sil ikonları
+- [x] **Frontend:** `src/components/ReviewForm.jsx` — StarRating, textarea + karakter sayacı, spoiler checkbox, anonim checkbox, gönder/iptal
+- [x] **Frontend:** `src/pages/MovieDetail.jsx` — reviews bölümü benzer filmlerden önce; ortalama puan + sayaç, "Yorum Yaz" butonu, silme onay modalı, "daha fazla yükle" butonu
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu (review_* anahtarları eklendi)
 
 ---
 
@@ -602,7 +557,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 17-18-19-20-21 tamamlandı. Sıradaki: 22 (Çoklu isimlendirilmiş watchlist).
+**Son guncelleme:** 22-23 tamamlandı. 25 (Misafir Modu) eklendi — sıradaki görev.
 
 ---
 
@@ -640,3 +595,108 @@
 - [x] `docker-compose.yml` — `GROQ_API_KEY` ile güncellendi
 - [x] `backend/.env` — `GROQ_API_KEY` ile güncellendi
 - [x] Backend rebuild edildi, yeni anahtar container'a yüklendi
+
+---
+
+### 25. Misafir Modu (Login Olmadan Gezinti + Sign In Modal)
+> Kullanıcı giriş yapmadan da uygulamayı gezebilsin.
+> Giriş gerektiren aksiyonlarda (öneri isteme, watchlist'e ekleme) redirect yerine bir **Login Modal** açılsın.
+> Misafir navbar'ında "Giriş Yap" ve "Kayıt Ol" butonları çıksın, profil simgesi olmasın.
+> Profil sayfası misafirler için erişilemez (PrivateRoute kalır).
+> Ayarlar (TR/EN, koyu/açık mod) misafirler için de erişilebilir.
+>
+> **Backend/DB değişikliği yok** — tamamen frontend değişikliği.
+
+#### A. LoginModal Bileşeni (YENİ)
+- [ ] `src/components/LoginModal.jsx` — tam ekranlı overlay üzerinde açılan login formu
+  - Login.jsx'teki form tasarımının aynısı (e-posta + şifre + buton + loading + hata)
+  - Üst sağ köşede X (kapat) butonu; dışarı tıklayınca da kapanır
+  - Modal alt: "Hesabın yok mu? → Kayıt Ol" linki (`/register`'a gider, modal kapanır)
+  - Modal alt: "Şifremi Unuttum" linki (`/forgot-password`'a gider, modal kapanır)
+  - Başarılı login sonrası: modal kapanır, kullanıcı **aynı sayfada kalır** (yönlendirme yok)
+  - Props: `open: bool`, `onClose: () => void`, `onSuccess?: () => void`
+  - Koyu/açık mod uyumlu, TR/EN uyumlu
+  - i18n başlık: `guest_modal_title: "Devam etmek için giriş yap"` / `"Sign in to continue"`
+
+#### B. AuthContext Güncellemesi
+- [ ] `src/context/AuthContext.jsx` — `loginModal` state + helper fonksiyonları ekle
+  - `loginModalOpen: bool` state
+  - `openLoginModal: () => void` — `setLoginModalOpen(true)`
+  - `closeLoginModal: () => void` — `setLoginModalOpen(false)`
+  - Context value'ya 3 yeni alan ekle
+- [ ] `src/App.jsx` — `<LoginModal open={loginModalOpen} onClose={closeLoginModal} />` en dışa ekle (Routes'un dışında)
+
+#### C. App.jsx Route Değişiklikleri
+- [ ] `src/App.jsx` — PrivateRoute'ları güncelle:
+  - `/` (Home) → `<Home />` (PrivateRoute kaldırılır — misafirler ana sayfa görebilir)
+  - `/recommend` → `<Recommend />` (PrivateRoute kaldırılır — misafirler sayfayı görür ama kısıtlı)
+  - `/watchlist` → `<Watchlist />` (PrivateRoute kaldırılır — misafirler boş liste görür)
+  - `/settings` → `<Settings />` (zaten PrivateRoute'dan çıkarılması gerekiyorsa çıkar)
+  - `/profile` → `<PrivateRoute><Profile /></PrivateRoute>` **KALIR** (profil sadece login kullanıcılara)
+  - Şu an Home, Settings de PrivateRoute içindeyse çıkar
+
+#### D. Login Sayfası — "Misafir Olarak Devam Et" Butonu
+- [ ] `src/pages/Login.jsx` — form'un altına, "Kayıt Ol" linkinin altına "atla" butonu ekle
+  - Tasarım: `href="/"` ile ana sayfaya yönlendiren soluk/outline link benzeri buton
+  - Metin: `guest_skip: "Giriş yapmadan devam et →"` / `"Continue without signing in →"`
+  - Stil: küçük, soluk (`text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-sm`), üstte ince ayırıcı çizgi
+  - Sadece Login sayfasında görünür, Register sayfasında görünmez
+
+#### E. Navbar — Misafir Durumu
+- [ ] `src/components/Navbar.jsx` — `user` null iken farklı sağ bölüm göster:
+  - **Misafir sağ bölümü:** `[Giriş Yap]` (outline buton, `/login`'e gider) + `[Kayıt Ol]` (mor dolgu buton, `/register`'a gider)
+  - Profil avatar dairesi, dropdown, profil/ayarlar linkleri gösterilmez
+  - Arama ikonu ve dil/tema ikonları misafirler için de görünür (arama çalışır, tema/dil değişir)
+  - i18n: `guest_nav_signin: "Giriş Yap"` / `"Sign In"`, `guest_nav_signup: "Kayıt Ol"` / `"Sign Up"`
+
+#### F. WatchlistButton — Misafir Durumu
+- [ ] `src/components/WatchlistButton.jsx` — `if (!user) return null` satırını değiştir:
+  - Mevcut: `if (!user) return null` → buton hiç görünmez
+  - Yeni: Misafir için buton göster, tıklayınca `openLoginModal()` çağır
+  - Misafir butonu stili: `bg-gray-100 dark:bg-gray-800 ...` (normal pasif stil)
+  - Metin: `+ ${t.wl_add}` (normal ekleme metni, fark edilmez)
+  - `onClick` → `e.preventDefault(); e.stopPropagation(); openLoginModal()`
+  - LoginModal zaten `App.jsx`'te mount olduğu için burada sadece `openLoginModal()` çağrılır
+
+#### G. Recommend Sayfası — Misafir Kısıtlaması
+- [ ] `src/pages/Recommend.jsx` — misafir için sol sidebar'ı tamamen gizle:
+  - `user` yoksa: `<div className="flex-1 ...">` (sadece sağ alan, tam genişlik)
+  - Sidebar (öneri geçmişi) gösterilmez — kişisel veri olmadığı için anlamsız
+- [ ] `src/pages/Recommend.jsx` — "Öneri İste" butonuna misafir kontrolü:
+  - `handleSubmit` başında: `if (!user) { openLoginModal(); return; }`
+  - Buton görünümü değişmez, tıklayınca modal açılır
+  - i18n ipucu (buton altında küçük yazı): opsiyonel — `guest_rec_hint: "Öneri almak için giriş gerekli"` / `"Sign in required to get recommendations"`
+
+#### H. Watchlist Sayfası — Misafir Durumu
+- [ ] `src/pages/Watchlist.jsx` — `user` yoksa özel empty state göster:
+  - Sol sidebar gösterilmez (koleksiyonlar kişisel)
+  - Ana alan: büyük ikon + `guest_wl_empty: "İzleme listeni görmek için giriş yap"` / `"Sign in to see your watchlist"`
+  - "Giriş Yap" butonu → `openLoginModal()`
+  - Sağ üstte (normalde olan) sekme/filtre/arama hiçbiri gösterilmez
+  - Film ekleme aksiyonları yoktur (sayfada misafir film listesi olmadığı için buton da yok)
+
+#### I. i18n Anahtarları
+- [ ] `src/i18n/tr.js` ve `src/i18n/en.js` — yeni anahtarlar ekle:
+  ```
+  guest_skip:             "Giriş yapmadan devam et →"       / "Continue without signing in →"
+  guest_modal_title:      "Devam etmek için giriş yap"      / "Sign in to continue"
+  guest_nav_signin:       "Giriş Yap"                       / "Sign In"
+  guest_nav_signup:       "Kayıt Ol"                        / "Sign Up"
+  guest_rec_hint:         "Öneri almak için giriş gerekli"  / "Sign in required to get recommendations"
+  guest_wl_empty:         "İzleme listeni görmek için giriş yap"  / "Sign in to see your watchlist"
+  guest_wl_signin_btn:    "Giriş Yap"                       / "Sign In"
+  ```
+
+#### J. Kontrol Listesi (Uygulama Sonrası)
+- [ ] Misafir olarak ana sayfaya gidince trend filmler görünüyor ✓
+- [ ] Misafir olarak film detay sayfası açılıyor ✓
+- [ ] Misafir olarak arama çalışıyor ✓
+- [ ] Misafir olarak tema/dil değişiyor ✓
+- [ ] Misafir olarak `/profile` → `/login`'e yönlendiriyor ✓
+- [ ] "İzleme Listesine Ekle" butonuna basınca Login Modal açılıyor ✓
+- [ ] Recommend sayfasında sidebar yok, öneri butonuna basınca Login Modal açılıyor ✓
+- [ ] Watchlist sayfasında boş state + giriş yap butonu görünüyor ✓
+- [ ] Navbar'da "Giriş Yap" + "Kayıt Ol" butonları görünüyor ✓
+- [ ] Login Modal'da başarılı giriş sonrası sayfa aynı kalıyor ✓
+- [ ] Login Modal dışına tıklayınca kapanıyor ✓
+- [ ] Koyu/açık mod + TR/EN uyumlu ✓

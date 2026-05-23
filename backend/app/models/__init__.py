@@ -3,3 +3,4 @@ from app.models.watchlist_collection import WatchlistCollection
 from app.models.watchlist import Watchlist
 from app.models.recommendation_history import RecommendationHistory
 from app.models.user_behavior import UserBehavior
+from app.models.review import Review

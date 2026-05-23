@@ -238,6 +238,24 @@ const tr = {
   search_type_movie: 'Filmler',
   search_type_tv: 'Diziler',
 
+  // Reviews
+  review_title: 'Yorumlar',
+  review_write: 'Yorum Yaz',
+  review_count_label: 'yorum',
+  review_avg: 'Ortalama Puan',
+  review_spoiler_warning: 'Spoiler İçeriyor',
+  review_show_spoiler: 'Spoiler\'ı Göster',
+  review_anonymous: 'Anonim',
+  review_with_name: 'İsmimle',
+  review_login_prompt: 'Yorum yazmak için giriş yap',
+  review_submit: 'Gönder',
+  review_edit: 'Düzenle',
+  review_delete: 'Sil',
+  review_delete_confirm: 'Yorumu silmek istiyor musunuz?',
+  review_delete_confirm_sub: 'Bu işlem geri alınamaz.',
+  review_empty: 'Henüz yorum yapılmamış. İlk yorumu sen yaz!',
+  review_load_more: 'Daha fazla yorum yükle',
+
   // Common
   loading: 'Yükleniyor...',
   error_generic: 'Bir hata oluştu.',
