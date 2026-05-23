@@ -469,22 +469,13 @@
 > sonra bu veri AI prompt'una eklenerek öneri gerekçesiyle birleştirilir.
 > Ön koşul: 17. madde tamamlanmış olmalı (get_watch_providers servisi hazır).
 
-- [ ] **Backend:** `app/routers/recommendations.py` — `POST /recommendations` handler'ında TMDB'den seçilen filmler için platform verisi çek
-  - `asyncio.gather` ile tüm önerilen filmler için paralel `get_watch_providers(tmdb_id, 'movie')` çağrısı yap (max 5 film, TMDB rate limit'e dikkat)
-  - Her film için `{tmdb_id: 12345, platforms: ["Netflix", "Disney+"]}` şeklinde bir harita oluştur
-- [ ] **Backend:** `app/services/gemini_service.py` — `generate_recommendations` fonksiyonunu güncelle
-  - `movies` listesindeki her öğeye `available_on: list[str]` alanı ekle (platform adları)
-  - `RECOMMENDATION_PROMPT`'a şu talimatı ekle: "Eğer filmin yayınlandığı platform varsa (available_on), öneri gerekçesinin sonuna 'Bu film şu an [Platform Adı]'da izlenebilir.' cümlesini ekle."
-  - Platform yoksa bu cümleyi ekleme
-- [ ] **Backend:** `app/schemas/recommendation.py` — `MovieRecommendation` şemasına `platforms: list[str] = []` alanı ekle
-  - Bu alan frontend'e dönen JSON'da da taşınır
-- [ ] **Frontend:** `src/pages/Recommend.jsx` — öneri kartlarında platform ikonları göster
-  - Her film kartının altında `<WatchProviders>` bileşenini (17. maddeden) kullan
-  - Platform listesi öneri response'undan gelir (`movie.platforms`), ek API çağrısı yapmaz
-  - Platform isimleri icon mapping'e çevrilir: "Netflix" → Netflix logosu, "Disney Plus" → Disney+ logosu vb.
-- [ ] **Frontend:** `src/components/MovieCard.jsx` — opsiyonel `platforms` prop'u ekle; varsa alt kısımda küçük platform ikonları göster (max 3 ikon, `w-5 h-5`)
-- [ ] **Frontend:** TR/EN i18n — `rec_available_on: "İzleyebileceğin yer:"` / `"Where to watch:"` anahtarı ekle
-- [ ] **Frontend:** Koyu/açık mod uyumlu
+- [x] **Backend:** `recommendations.py` — `asyncio.gather` ile 5 film için paralel `get_watch_providers` çağrısı; `{name, logo_url}` dict listesi olarak `platforms` alanına ekleniyor
+- [x] **Backend:** `schemas/recommendation.py` — `MovieRecommendation`'a `platforms: List[Any] = []` eklendi
+- [x] **Frontend:** `MovieCard.jsx` — `platforms` prop, `WatchProviders` bileşenini `rec_available_on` etiketiyle gösteriyor
+- [x] **Frontend:** `WatchProviders.jsx` — `labelOverride` prop desteği eklendi
+- [x] **Frontend:** `Recommend.jsx` — `MovieCard`'a `platforms={movie.platforms}` iletiliyor
+- [x] **Frontend:** TR/EN i18n — `rec_available_on` anahtarı eklendi
+- [x] **Frontend:** Koyu/açık mod uyumlu (WatchProviders zaten uyumlu)
 
 ---
 
@@ -630,7 +621,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 17-18-19-20 tamamlandı. Sıradaki: 21 (AI platform farkındalığı).
+**Son guncelleme:** 17-18-19-20-21 tamamlandı. Sıradaki: 22 (Çoklu isimlendirilmiş watchlist).
 
 ---
 

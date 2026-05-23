@@ -115,7 +115,25 @@ async def recommend(
                 "release_date": movie.get("release_date") or movie.get("first_air_date"),
                 "reason": rec["reason"],
                 "media_type": movie.get("media_type", "movie"),
+                "platforms": [],
             })
+
+    # Her öneri için izleme platformlarını paralel çek
+    async def fetch_providers(tmdb_id: int, media_type: str) -> list:
+        try:
+            providers = await tmdb_service.get_watch_providers(tmdb_id, media_type)
+            flatrate = [p for p in providers if p.get("type") == "flatrate"]
+            chosen = flatrate[:3] if flatrate else providers[:3]
+            return [{"name": p["name"], "logo_url": p.get("logo_url")} for p in chosen]
+        except Exception:
+            return []
+
+    provider_results = await asyncio.gather(*[
+        fetch_providers(m["tmdb_id"], m.get("media_type", "movie"))
+        for m in result_movies
+    ])
+    for m, plats in zip(result_movies, provider_results):
+        m["platforms"] = plats
 
     # DB'ye kaydet (analysis + movies with reasons JSON olarak)
     try:

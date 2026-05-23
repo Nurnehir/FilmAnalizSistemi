@@ -337,7 +337,7 @@ export default function Recommend() {
                   </h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {result.movies?.map((movie) => (
-                      <MovieCard key={movie.tmdb_id} movie={movie} reason={movie.reason} />
+                      <MovieCard key={movie.tmdb_id} movie={movie} reason={movie.reason} platforms={movie.platforms} />
                     ))}
                   </div>
                 </div>

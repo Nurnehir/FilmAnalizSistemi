@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import { useLang } from '../context/LangContext';
 
-export default function WatchProviders({ providers = [] }) {
+export default function WatchProviders({ providers = [], labelOverride }) {
   const { t } = useLang();
   const [tooltip, setTooltip] = useState(null);
 
   if (!providers.length) return null;
 
   const visible = providers.slice(0, 5);
+  const label = labelOverride ? t[labelOverride] : t.providers_watch_on;
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-        {t.providers_watch_on}
+        {label}
       </span>
       <div className="flex items-center gap-1.5">
         {visible.map((p, i) => (

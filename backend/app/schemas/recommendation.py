@@ -16,6 +16,7 @@ class MovieRecommendation(BaseModel):
     release_date: Optional[str] = None
     reason: Optional[str] = None
     media_type: Optional[str] = None
+    platforms: List[Any] = []
 
 
 class RecommendResponse(BaseModel):

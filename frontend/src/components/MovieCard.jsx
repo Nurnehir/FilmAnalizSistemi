@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import WatchlistButton from './WatchlistButton';
+import WatchProviders from './WatchProviders';
 import { trackEvent } from '../api/behavior';
 
-export default function MovieCard({ movie, reason, badge }) {
+export default function MovieCard({ movie, reason, badge, platforms }) {
   const title = movie.title || movie.name || 'Bilinmiyor';
   const year = (movie.release_date || movie.first_air_date || '').slice(0, 4);
   const poster = movie.poster_url || (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null);
@@ -60,6 +61,12 @@ export default function MovieCard({ movie, reason, badge }) {
           <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed line-clamp-3 bg-gray-100 dark:bg-gray-800/50 rounded-lg p-2 italic">
             "{reason}"
           </p>
+        )}
+
+        {platforms?.length > 0 && (
+          <div className="pt-1">
+            <WatchProviders providers={platforms} labelOverride="rec_available_on" />
+          </div>
         )}
 
         <div className="mt-auto pt-1">

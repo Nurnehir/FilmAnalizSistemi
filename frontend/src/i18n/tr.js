@@ -204,6 +204,7 @@ const tr = {
 
   // Watch Providers
   providers_watch_on: 'Yayında:',
+  rec_available_on: 'İzleyebileceğin yer:',
 
   // Search
   search_placeholder: 'Film veya dizi ara...',

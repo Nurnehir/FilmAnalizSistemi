@@ -204,6 +204,7 @@ const en = {
 
   // Watch Providers
   providers_watch_on: 'Streaming on:',
+  rec_available_on: 'Where to watch:',
 
   // Search
   search_placeholder: 'Search movies or series...',
