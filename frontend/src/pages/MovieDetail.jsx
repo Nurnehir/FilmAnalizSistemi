@@ -296,7 +296,7 @@ export default function MovieDetail() {
             </div>
             <div className="flex items-center gap-2">
               {/* Sort selector */}
-              {reviewsTotal > 1 && (
+              {reviewsTotal > 0 && (
                 <select
                   value={reviewSort}
                   onChange={(e) => handleSortChange(e.target.value)}
