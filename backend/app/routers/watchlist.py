@@ -1,12 +1,102 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.models.user import User
 from app.models.watchlist import Watchlist
-from app.schemas.watchlist import WatchlistItem, WatchlistOut, WatchlistResponse, WatchedUpdate, RatingUpdate
+from app.models.watchlist_collection import WatchlistCollection
+from app.schemas.watchlist import (
+    WatchlistItem, WatchlistOut, WatchlistResponse,
+    WatchedUpdate, RatingUpdate, MoveItem,
+    CollectionCreate, CollectionUpdate, CollectionOut,
+)
 
 router = APIRouter(prefix="/watchlist", tags=["watchlist"])
 
+
+# ── Collections ──────────────────────────────────────────────────────────────
+
+@router.get("/collections", response_model=List[CollectionOut])
+async def get_collections(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    cols = (
+        db.query(WatchlistCollection)
+        .filter(WatchlistCollection.user_id == current_user.id)
+        .order_by(WatchlistCollection.created_at)
+        .all()
+    )
+    result = []
+    for col in cols:
+        count = db.query(Watchlist).filter(Watchlist.collection_id == col.id).count()
+        result.append(CollectionOut(id=col.id, name=col.name, item_count=count, created_at=col.created_at))
+    return result
+
+
+@router.post("/collections", response_model=CollectionOut, status_code=status.HTTP_201_CREATED)
+async def create_collection(
+    data: CollectionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        col = WatchlistCollection(user_id=current_user.id, name=data.name.strip())
+        db.add(col)
+        db.commit()
+        db.refresh(col)
+        return CollectionOut(id=col.id, name=col.name, item_count=0, created_at=col.created_at)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Liste oluşturulamadı")
+
+
+@router.put("/collections/{col_id}", response_model=CollectionOut)
+async def rename_collection(
+    col_id: int,
+    data: CollectionUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    col = db.query(WatchlistCollection).filter(
+        WatchlistCollection.id == col_id,
+        WatchlistCollection.user_id == current_user.id,
+    ).first()
+    if not col:
+        raise HTTPException(status_code=404, detail="Liste bulunamadı")
+    try:
+        col.name = data.name.strip()
+        db.commit()
+        db.refresh(col)
+        count = db.query(Watchlist).filter(Watchlist.collection_id == col.id).count()
+        return CollectionOut(id=col.id, name=col.name, item_count=count, created_at=col.created_at)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Liste yeniden adlandırılamadı")
+
+
+@router.delete("/collections/{col_id}", status_code=status.HTTP_200_OK)
+async def delete_collection(
+    col_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    col = db.query(WatchlistCollection).filter(
+        WatchlistCollection.id == col_id,
+        WatchlistCollection.user_id == current_user.id,
+    ).first()
+    if not col:
+        raise HTTPException(status_code=404, detail="Liste bulunamadı")
+    try:
+        db.delete(col)
+        db.commit()
+        return {"message": "Liste silindi"}
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Liste silinemedi")
+
+
+# ── Watchlist items ───────────────────────────────────────────────────────────
 
 @router.get("", response_model=WatchlistResponse)
 async def get_watchlist(
@@ -40,6 +130,14 @@ async def add_to_watchlist(
     if existing:
         raise HTTPException(status_code=409, detail="Bu icerik zaten listenizde")
 
+    if data.collection_id is not None:
+        col = db.query(WatchlistCollection).filter(
+            WatchlistCollection.id == data.collection_id,
+            WatchlistCollection.user_id == current_user.id,
+        ).first()
+        if not col:
+            raise HTTPException(status_code=404, detail="Liste bulunamadı")
+
     try:
         item = Watchlist(
             user_id=current_user.id,
@@ -47,6 +145,7 @@ async def add_to_watchlist(
             media_type=data.media_type,
             title=data.title,
             poster_path=data.poster_path,
+            collection_id=data.collection_id,
         )
         db.add(item)
         db.commit()
@@ -55,6 +154,38 @@ async def add_to_watchlist(
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail="Listeye eklenemedi")
+
+
+@router.patch("/{item_id}/move", response_model=WatchlistOut)
+async def move_item(
+    item_id: int,
+    data: MoveItem,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    item = db.query(Watchlist).filter(
+        Watchlist.id == item_id,
+        Watchlist.user_id == current_user.id,
+    ).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Liste öğesi bulunamadı")
+
+    if data.collection_id is not None:
+        col = db.query(WatchlistCollection).filter(
+            WatchlistCollection.id == data.collection_id,
+            WatchlistCollection.user_id == current_user.id,
+        ).first()
+        if not col:
+            raise HTTPException(status_code=404, detail="Liste bulunamadı")
+
+    try:
+        item.collection_id = data.collection_id
+        db.commit()
+        db.refresh(item)
+        return item
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Taşınamadı")
 
 
 @router.patch("/{item_id}/watched", response_model=WatchlistOut)

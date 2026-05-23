@@ -1,5 +1,21 @@
 import client from './client';
 
+// ── Collections ───────────────────────────────────────────────────────────────
+
+export const getCollections = () =>
+  client.get('/watchlist/collections').then((r) => r.data);
+
+export const createCollection = (name) =>
+  client.post('/watchlist/collections', { name }).then((r) => r.data);
+
+export const updateCollection = (id, name) =>
+  client.put(`/watchlist/collections/${id}`, { name }).then((r) => r.data);
+
+export const deleteCollection = (id) =>
+  client.delete(`/watchlist/collections/${id}`).then((r) => r.data);
+
+// ── Items ─────────────────────────────────────────────────────────────────────
+
 export const getWatchlist = () =>
   client.get('/watchlist').then((r) => r.data);
 
@@ -14,3 +30,6 @@ export const markWatched = (id, watched) =>
 
 export const rateMovie = (id, rating) =>
   client.patch(`/watchlist/${id}/rating`, { rating }).then((r) => r.data);
+
+export const moveToCollection = (itemId, collectionId) =>
+  client.patch(`/watchlist/${itemId}/move`, { collection_id: collectionId }).then((r) => r.data);

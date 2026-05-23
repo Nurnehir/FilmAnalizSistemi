@@ -115,6 +115,14 @@ const tr = {
   wl_mark_watched: 'İzledim',
   wl_mark_unwatched: 'Geri Al',
   wl_watched_badge: 'İzlendi ✓',
+  wl_my_lists: 'Listelerim',
+  wl_new_list: 'Yeni Liste',
+  wl_new_list_placeholder: 'Liste adı...',
+  wl_rename: 'Yeniden Adlandır',
+  wl_delete_list: 'Listeyi Sil',
+  wl_add_to_list: 'Listeye Ekle',
+  wl_no_list: 'Liste seç...',
+  wl_empty_collection: 'Bu liste boş.',
 
   // Movie Detail
   detail_trailer: 'Fragman İzle',

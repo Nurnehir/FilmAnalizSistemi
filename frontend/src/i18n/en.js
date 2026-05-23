@@ -115,6 +115,14 @@ const en = {
   wl_mark_watched: 'Mark Watched',
   wl_mark_unwatched: 'Undo',
   wl_watched_badge: 'Watched ✓',
+  wl_my_lists: 'My Lists',
+  wl_new_list: 'New List',
+  wl_new_list_placeholder: 'List name...',
+  wl_rename: 'Rename',
+  wl_delete_list: 'Delete List',
+  wl_add_to_list: 'Add to List',
+  wl_no_list: 'Choose list...',
+  wl_empty_collection: 'This list is empty.',
 
   // Movie Detail
   detail_trailer: 'Watch Trailer',

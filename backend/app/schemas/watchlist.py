@@ -3,11 +3,27 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class CollectionCreate(BaseModel):
+    name: str
+
+
+class CollectionUpdate(BaseModel):
+    name: str
+
+
+class CollectionOut(BaseModel):
+    id: int
+    name: str
+    item_count: int
+    created_at: datetime
+
+
 class WatchlistItem(BaseModel):
     tmdb_id: int
     media_type: str
     title: str
     poster_path: Optional[str] = None
+    collection_id: Optional[int] = None
 
 
 class WatchlistOut(BaseModel):
@@ -18,6 +34,7 @@ class WatchlistOut(BaseModel):
     poster_path: Optional[str] = None
     watched: bool = False
     user_rating: Optional[int] = None
+    collection_id: Optional[int] = None
     added_at: datetime
 
     class Config:
@@ -34,4 +51,8 @@ class WatchedUpdate(BaseModel):
 
 
 class RatingUpdate(BaseModel):
-    rating: Optional[int] = None  # 1-5 veya null (puan kaldır)
+    rating: Optional[int] = None
+
+
+class MoveItem(BaseModel):
+    collection_id: Optional[int] = None
