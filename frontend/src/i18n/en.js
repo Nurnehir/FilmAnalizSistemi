@@ -197,6 +197,9 @@ const en = {
   rec_detail_error: 'Failed to load.',
   rec_sidebar_toggle: 'Open history',
 
+  // Watch Providers
+  providers_watch_on: 'Streaming on:',
+
   // Search
   search_placeholder: 'Search movies or series...',
   search_results_title: 'Search Results',

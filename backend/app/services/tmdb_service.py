@@ -125,6 +125,30 @@ async def get_videos(tmdb_id: int, media_type: str = "movie") -> list:
     return trailers or [v for v in results if v.get("site") in ("YouTube", "Vimeo")]
 
 
+async def get_watch_providers(tmdb_id: int, media_type: str = "movie") -> list:
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                f"{BASE_URL}/{media_type}/{tmdb_id}/watch/providers",
+                headers=HEADERS,
+            )
+            r.raise_for_status()
+        results = r.json().get("results", {})
+        country_data = results.get("TR") or results.get("US") or {}
+        providers = []
+        for ptype in ("flatrate", "rent", "buy"):
+            for p in country_data.get(ptype, []):
+                if not any(x["name"] == p["provider_name"] for x in providers):
+                    providers.append({
+                        "name": p["provider_name"],
+                        "logo_url": build_poster_url(p.get("logo_path"), "w45"),
+                        "type": ptype,
+                    })
+        return providers
+    except Exception:
+        return []
+
+
 async def get_similar(tmdb_id: int, media_type: str = "movie") -> dict:
     async with httpx.AsyncClient() as client:
         r = await client.get(

@@ -385,26 +385,26 @@
 > Film detay sayfasında "Fragmanı İzle" butonunun sağ tarafında platform ikonlarını göster.
 > Ön koşul: yok — bağımsız bir TMDB API çağrısıdır.
 
-- [ ] **Backend:** `app/services/tmdb_service.py` — `get_watch_providers(tmdb_id, media_type)` fonksiyonu ekle
+- [x] **Backend:** `app/services/tmdb_service.py` — `get_watch_providers(tmdb_id, media_type)` fonksiyonu ekle
   - TMDB endpoint: `GET /movie/{id}/watch/providers` (veya `/tv/{id}/watch/providers`)
   - `params={"language": "tr-TR"}` — ülke önceliği: `TR`, yoksa `US`
   - Yanıt: `{flatrate: [{provider_name, logo_path}], rent: [...], buy: [...]}` — `flatrate` (abonelik) öncelikli
   - `logo_path` için tam URL: `https://image.tmdb.org/t/p/w45{logo_path}`
   - Sağlanamıyorsa boş liste dön, hata fırlatma
-- [ ] **Backend:** `app/routers/movies.py` — `GET /movies/{tmdb_id}/providers?media_type=movie` endpoint ekle
+- [x] **Backend:** `app/routers/movies.py` — `GET /movies/{tmdb_id}/providers?media_type=movie` endpoint ekle
   - Response şeması: `{providers: [{name: str, logo_url: str, type: str}]}` — type: "flatrate" | "rent" | "buy"
   - Auth gerekmez (public endpoint)
-- [ ] **Frontend:** `src/api/movies.js` — `getWatchProviders(tmdb_id, media_type)` fonksiyonu ekle
-- [ ] **Frontend:** `src/components/WatchProviders.jsx` — platform ikonları bileşeni oluştur
+- [x] **Frontend:** `src/api/movies.js` — `getWatchProviders(tmdb_id, media_type)` fonksiyonu ekle
+- [x] **Frontend:** `src/components/WatchProviders.jsx` — platform ikonları bileşeni oluştur
   - Platform logolarını 32x32 yuvarlak ikonlar olarak göster (max 5 ikon yan yana)
   - Her ikonun üzerine gelinince tooltip: platform adı
   - Flatrate (Netflix, Disney+ vb.) ikonları önce; yoksa rent/buy ikonları
   - Provider yoksa bileşen hiçbir şey render etmez
-- [ ] **Frontend:** `src/pages/MovieDetail.jsx` — "Fragmanı İzle" buton satırının sağına `<WatchProviders>` ekle
+- [x] **Frontend:** `src/pages/MovieDetail.jsx` — "Fragmanı İzle" buton satırının sağına `<WatchProviders>` ekle
   - Layout: `flex items-center justify-between` — sol: fragman butonu, sağ: platform ikonları
   - Platform çekimi MovieDetail'in mount'unda paralel çalışır (`Promise.all` ile `getMovieDetail` + `getWatchProviders` + `getSimilar`)
-- [ ] **Frontend:** Koyu/açık mod uyumlu (ikon çevresi `bg-gray-100 dark:bg-gray-800`)
-- [ ] **Frontend:** TR/EN i18n — `providers_watch_on: "İzle:"` / `"Watch on:"` anahtarı ekle
+- [x] **Frontend:** Koyu/açık mod uyumlu (ikon çevresi `bg-gray-100 dark:bg-gray-800`)
+- [x] **Frontend:** TR/EN i18n — `providers_watch_on: "İzle:"` / `"Watch on:"` anahtarı ekle
 
 ---
 
@@ -681,7 +681,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 17-23 arası yeni görevler eklendi. 16 tamamlandı. Sıradaki yapılacak: 17 (Platform bilgisi — film detay sayfası).
+**Son guncelleme:** 17 tamamlandı. Platform/yayın servisi ikonları film detay sayfasına eklendi. Sıradaki: 18 (Davranış tabanlı AI kişiselleştirme).
 
 ---
 

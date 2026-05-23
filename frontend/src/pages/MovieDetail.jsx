@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { getMovieDetail, getSimilar, getMovieVideos } from '../api/movies';
+import { getMovieDetail, getSimilar, getMovieVideos, getWatchProviders } from '../api/movies';
 import { useLang } from '../context/LangContext';
 import WatchlistButton from '../components/WatchlistButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import MovieCard from '../components/MovieCard';
 import TrailerModal from '../components/TrailerModal';
+import WatchProviders from '../components/WatchProviders';
 
 export default function MovieDetail() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ export default function MovieDetail() {
   const [similar, setSimilar] = useState([]);
   const [trailer, setTrailer] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [watchProviders, setWatchProviders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,14 +27,16 @@ export default function MovieDetail() {
       setIsLoading(true);
       setError(null);
       try {
-        const [detail, sim, videos] = await Promise.all([
+        const [detail, sim, videos, prov] = await Promise.all([
           getMovieDetail(id, mediaType),
           getSimilar(id, mediaType),
           getMovieVideos(id, mediaType),
+          getWatchProviders(id, mediaType),
         ]);
         setMovie(detail);
         setSimilar(sim.results?.slice(0, 10) || []);
         setTrailer(videos[0] || null);
+        setWatchProviders(prov || []);
       } catch {
         setError(t.detail_load_error);
       } finally {
@@ -134,19 +138,22 @@ export default function MovieDetail() {
               <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{movie.overview}</p>
             )}
 
-            <div className="flex flex-wrap gap-3">
-              <WatchlistButton
-                movie={{ ...movie, tmdb_id: movie.tmdb_id, media_type: mediaType }}
-                className="px-5 py-2"
-              />
-              {trailer && (
-                <button
-                  onClick={() => setShowTrailer(true)}
-                  className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-semibold px-5 py-2 rounded-lg transition-colors"
-                >
-                  ▶ {t.detail_trailer}
-                </button>
-              )}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap gap-3">
+                <WatchlistButton
+                  movie={{ ...movie, tmdb_id: movie.tmdb_id, media_type: mediaType }}
+                  className="px-5 py-2"
+                />
+                {trailer && (
+                  <button
+                    onClick={() => setShowTrailer(true)}
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-semibold px-5 py-2 rounded-lg transition-colors"
+                  >
+                    ▶ {t.detail_trailer}
+                  </button>
+                )}
+              </div>
+              <WatchProviders providers={watchProviders} />
             </div>
           </div>
         </div>

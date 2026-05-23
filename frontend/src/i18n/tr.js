@@ -197,6 +197,9 @@ const tr = {
   rec_detail_error: 'Yüklenemedi.',
   rec_sidebar_toggle: 'Geçmişi aç',
 
+  // Watch Providers
+  providers_watch_on: 'Yayında:',
+
   // Search
   search_placeholder: 'Film veya dizi ara...',
   search_results_title: 'Arama Sonuçları',
