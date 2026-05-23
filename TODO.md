@@ -479,55 +479,36 @@
 
 ---
 
-### 22. Çoklu İsimlendirilmiş Watchlist
+### 22. Çoklu İsimlendirilmiş Watchlist ✅
 > Kullanıcı tek bir varsayılan "İzleme Listesi" yerine birden fazla, isimlendirilmiş liste oluşturabilsin.
 > Örnek: "Haftasonu Listesi", "Ailecek İzleyeceklerimiz", "Favorilerim"
-> Mevcut `watchlist` tablosuna `list_id` foreign key eklenerek mevcut sistem genişletilir.
-> Mevcut kayıtlar "Varsayılan Liste" adlı otomatik oluşturulan bir listeye taşınır.
 
-- [ ] **DB:** Yeni tablo `watchlist_collections` oluştur
-  ```sql
-  CREATE TABLE watchlist_collections (
-      id          SERIAL PRIMARY KEY,
-      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      name        VARCHAR(100) NOT NULL,
-      is_default  BOOLEAN DEFAULT FALSE,
-      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-  );
-  CREATE INDEX idx_collections_user_id ON watchlist_collections(user_id);
-  ```
-- [ ] **DB:** `watchlist` tablosuna `collection_id INTEGER REFERENCES watchlist_collections(id) ON DELETE SET NULL` kolonu ekle (nullable — eski kayıtlar NULL kalır geçiş sırasında)
-- [ ] **DB:** Alembic migration `f6a7b8c9d0e1_add_watchlist_collections.py` oluştur ve uygula
-  - Migration içinde: her kullanıcı için "Varsayılan Liste" (`is_default=TRUE`) collection kaydı otomatik oluştur
-  - Mevcut watchlist kayıtlarının `collection_id`'sini bu varsayılan listeye bağla (`UPDATE watchlist SET collection_id = ...`)
-- [ ] **Backend:** `app/models/watchlist_collection.py` — SQLAlchemy ORM modeli oluştur
-- [ ] **Backend:** `app/schemas/watchlist.py` — yeni şemalar ekle
-  - `CollectionCreate`: `name: str` (1-100 karakter, boş olamaz)
-  - `CollectionUpdate`: `name: str`
-  - `CollectionOut`: `id`, `name`, `is_default`, `item_count: int`, `created_at`
-- [ ] **Backend:** `app/routers/watchlist.py` — koleksiyon yönetimi endpointleri ekle
-  - `GET /watchlist/collections` — kullanıcının tüm listelerini döner (her birinde `item_count`)
-  - `POST /watchlist/collections` — yeni liste oluştur (body: `CollectionCreate`), `201` dön
-  - `PUT /watchlist/collections/{collection_id}` — liste adını güncelle
-  - `DELETE /watchlist/collections/{collection_id}` — listeyi sil (içindeki filmler `collection_id=NULL` olur veya varsayılan listeye taşınır; varsayılan liste silinemez → `400`)
-  - `GET /watchlist?collection_id=` — belirli listedeki filmleri getir (collection_id verilmezse tümünü getirir)
-  - `POST /watchlist` — body'ye `collection_id: int | None = None` ekle (None → varsayılan listeye ekle)
-  - `PATCH /watchlist/{id}/move` — filmi başka bir listeye taşı, body: `{collection_id: int}`
-- [ ] **Frontend:** `src/api/watchlist.js` — yeni fonksiyonlar ekle
-  - `getCollections()`, `createCollection(name)`, `updateCollection(id, name)`, `deleteCollection(id)`, `moveToCollection(item_id, collection_id)`
-- [ ] **Frontend:** `src/pages/Watchlist.jsx` — tamamen yeniden tasarla
-  - Sol panel: liste adları (collection'lar), "+" butonu ile yeni liste oluştur
-  - Her liste adının yanında: düzenle (kalem ikonu) + sil (çöp ikonu) — varsayılan listede sil ikonu gösterilmez
-  - Liste adına çift tıklayınca inline düzenleme (input field, Enter ile kaydet, Escape ile iptal)
-  - Sağ/ana alan: seçili listedeki filmler
-  - Film kartında "Listeye Taşı" butonu → dropdown'dan hedef liste seç
-  - Boş listede "Bu liste boş. Film eklemek için 🔖 ikonuna tıkla." mesajı
-- [ ] **Frontend:** `src/components/MovieCard.jsx` ve `WatchlistButton.jsx` — film ekleme akışını güncelle
-  - Film eklenirken birden fazla liste varsa hangi listeye ekleneceğini soran küçük bir dropdown/modal göster
-  - Sadece bir liste varsa (varsayılan) doğrudan ekle
-- [ ] **Frontend:** Koyu/açık mod + TR/EN uyumlu
-  - i18n anahtarları: `watchlist_new_list`, `watchlist_rename`, `watchlist_delete_list`, `watchlist_move_to`, `watchlist_default_name: "İzleme Listem"` / `"My Watchlist"`, `watchlist_empty_collection`
+- [x] **DB:** `watchlist_collections` tablosu oluşturuldu (id, user_id FK CASCADE, name, created_at)
+- [x] **DB:** `watchlist` tablosuna `collection_id FK → watchlist_collections ON DELETE SET NULL` eklendi
+- [x] **DB:** Alembic migration `e5f6a7b8c9d0_add_watchlist_collections.py` oluşturuldu ve uygulandı
+  - Her mevcut kullanıcı için "İzleme Listem" adlı koleksiyon otomatik oluşturuldu
+  - Mevcut watchlist öğeleri bu koleksiyona bağlandı (`UPDATE watchlist SET collection_id = ...`)
+- [x] **Backend:** `app/models/watchlist_collection.py` — SQLAlchemy ORM modeli oluşturuldu
+- [x] **Backend:** `app/schemas/watchlist.py` — `CollectionCreate`, `CollectionUpdate`, `CollectionOut` (item_count dahil), `MoveItem` şemaları eklendi; `WatchlistItem` ve `WatchlistOut`'a `collection_id` eklendi
+- [x] **Backend:** `app/routers/watchlist.py` — koleksiyon CRUD endpointleri eklendi
+  - `GET /watchlist/collections` — item_count ile birlikte listeler
+  - `POST /watchlist/collections` → 201
+  - `PUT /watchlist/collections/{col_id}` — yeniden adlandır
+  - `DELETE /watchlist/collections/{col_id}` — sil (öğeler NULL kalır)
+  - `POST /watchlist` — `collection_id` artık kabul ediliyor
+  - `PATCH /watchlist/{id}/move` — filmi başka listeye taşı
+- [x] **Frontend:** `src/api/watchlist.js` — `getCollections`, `createCollection`, `updateCollection`, `deleteCollection`, `moveToCollection` eklendi
+- [x] **Frontend:** `src/context/WatchlistContext.jsx` — `collections` state ve `add(movie, collectionId)` güncellendi
+- [x] **Frontend:** `src/pages/Watchlist.jsx` — sol sidebar + sağ içerik düzeni
+  - Sol sidebar: "Tümü" + koleksiyonlar (item_count rozeti), kalem (mavi) ve çöp (kırmızı) ikonları
+  - Yeni liste: "+" butonuyla modal açılır, isim yazılıp kaydedilir
+  - Düzenleme: kalem ikonuyla modal açılır, mevcut ad dolu gelir
+  - Silme: çöp ikonuyla onay modalı açılır ("emin misiniz?" + açıklama)
+  - Sağ alanda film kartlarında çoklu liste varsa koleksiyon taşıma select'i gösterilir
+  - Boş liste/filtre için uygun empty state mesajları
+  - Mobilde hamburger → overlay sidebar
+- [x] **Frontend:** `src/components/WatchlistButton.jsx` — liste seçim modalı; her zaman modal açılır, kullanıcı hangi listeye ekleyeceğini seçer (listesiz ekleme yok)
+- [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu (wl_my_lists, wl_new_list, wl_rename, wl_delete_list, wl_select_list, wl_delete_confirm vb. anahtarlar eklendi)
 
 ---
 
