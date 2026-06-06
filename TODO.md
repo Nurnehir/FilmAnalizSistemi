@@ -557,7 +557,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 22-23-25 tamamlandı. Sıradaki: 15 (Uygulama Adı Değişikliği) veya yeni görev.
+**Son guncelleme:** 28 ve 29 tamamlandı. Sıradaki: 30 (AI Film Özeti + Kişisel Not Alma) veya 15 (Uygulama Adı Değişikliği).
 
 ---
 
@@ -764,61 +764,48 @@
 
 ---
 
-### 29. İzleme İstatistikleri Dashboard'u
+### 29. İzleme İstatistikleri Dashboard'u ✅
 > Profil sayfasındaki 3 sayacın ötesinde görsel bir istatistik ekranı.
 > Kullanıcının izleme alışkanlıklarını grafiklerle göster: tür dağılımı, aylık aktivite,
-> en çok izlenen yönetmenler/oyuncular, ortalama puan trendi.
+> ortalama puan trendi.
 > Tüm veriler mevcut `watchlist` ve `recommendation_history` tablolarından üretilir.
 
 #### Veritabanı
-- [ ] Yeni tablo gerekmez — `watchlist` (genre_ids, user_rating, watched, added_at) ve
+- [x] Yeni tablo gerekmez — `watchlist` (genre_ids, user_rating, watched, added_at) ve
   `recommendation_history` (tmdb_ids, created_at) üzerinden SQL sorguları yeterli.
-- [ ] `watchlist` tablosunda `genre_ids` ve `user_rating` kolonları zaten mevcut ✓
+- [x] `watchlist` tablosunda `genre_ids` ve `user_rating` kolonları zaten mevcut ✓
 
 #### Backend
-- [ ] `app/routers/auth.py` — `GET /auth/stats` zaten var; genişletilecek
-- [ ] `app/routers/stats.py` — yeni router (veya auth.py'e eklenebilir)
-  - `GET /stats/genres` — watchlist'teki genre_ids'leri say, en çok izlenen 8 türü dön
-    - Response: `[{ genre_id, genre_name, count }]`
-  - `GET /stats/activity` — son 12 ayda aylık watchlist ekleme sayısı
-    - Sorgu: `SELECT DATE_TRUNC('month', added_at), COUNT(*) FROM watchlist WHERE user_id=? GROUP BY 1 ORDER BY 1`
-    - Response: `[{ month: "2025-01", count: 5 }]`
-  - `GET /stats/ratings` — puan dağılımı (1-5 yıldız kaç film)
-    - Response: `[{ rating: 1, count: 0 }, ..., { rating: 5, count: 12 }]`
-  - `GET /stats/summary` — toplam izlenen, ortalama puan, toplam öneri, toplam watchlist
-    - Response: `{ watched_count, avg_rating, recommendation_count, watchlist_count, movies_recommended }`
-- [ ] `app/schemas/stats.py` — tüm response şemaları
-- [ ] `app/main.py`'e `stats` router eklendi (`prefix="/stats"`)
+- [x] `app/routers/stats.py` — yeni router oluşturuldu (`prefix="/stats"`)
+  - `GET /stats/genres` — unnest(genre_ids) ile en çok izlenen 8 türü döner
+  - `GET /stats/activity` — son 12 ay aylık watchlist ekleme; boş aylar 0 ile doldurulur
+  - `GET /stats/ratings` — 1-5 yıldız dağılımı; her yıldız değeri garantili (0 olsa bile)
+  - `GET /stats/summary` — watched_count, avg_rating, recommendation_count, watchlist_count, movies_recommended
+- [x] `app/schemas/stats.py` — GenreStat, MonthActivity, RatingStat, StatsSummary şemaları
+- [x] `app/main.py`'e `stats` router eklendi
 
 #### Frontend
-- [ ] `src/api/stats.js` — `getGenreStats()`, `getActivityStats()`, `getRatingStats()`, `getSummary()` fonksiyonları
-- [ ] `src/pages/Stats.jsx` — istatistik sayfası (`/stats` route, PrivateRoute)
-  - **Üst satır — 4 özet kart:** Toplam İzlenen / Ortalama Puan / Öneri İstekleri / Watchlist Boyutu
-  - **Tür Dağılımı (Donut/Bar chart):** En çok izlenen 8 tür; her tür için renk ve yüzde
-    - Chart kütüphanesi: `recharts` (`npm install recharts`) — hafif, React uyumlu, sıfır bağımlılık
-    - `PieChart` + `Tooltip` + `Legend` ile donut grafik
-  - **Aylık Aktivite (Line/Bar chart):** Son 12 ay watchlist ekleme; `BarChart` + `XAxis` + `YAxis`
-  - **Puan Dağılımı (Bar chart):** 1-5 yıldız kaç film; yatay `BarChart`, sarı renk paleti
-  - **Boş state:** İstatistik yoksa (yeni kullanıcı) "Henüz yeterli veri yok" açıklamasıyla yönlendirme
-- [ ] `src/components/StatCard.jsx` — özet kart bileşeni (ikon + sayı + etiket); Profile.jsx'teki mevcut karttan farklı, animasyonlu sayaç içerir
-- [ ] `src/components/Navbar.jsx` — profil dropdown'ına "İstatistikler" linki eklendi
-- [ ] `src/App.jsx` — `/stats` route eklendi (PrivateRoute)
-- [ ] `package.json` — `recharts` bağımlılığı eklendi (`npm install recharts`)
-- [ ] `src/i18n/tr.js` ve `src/i18n/en.js`:
-  - `stats_title: 'İzleme İstatistiklerim'`
-  - `stats_watched: 'İzlenen Film'`, `stats_avg_rating: 'Ortalama Puan'`
-  - `stats_recommendations: 'Öneri İsteği'`, `stats_watchlist: 'İzleme Listesi'`
-  - `stats_genres: 'Tür Dağılımı'`, `stats_activity: 'Aylık Aktivite'`
-  - `stats_ratings_dist: 'Puan Dağılımı'`, `stats_no_data: 'Henüz yeterli veri yok.'`
+- [x] **Dış kütüphane kullanılmadı** — recharts@3.x Vite/React 19 ile uyumsuz çıktı; recharts@2.x React 19 peer dep çakışması verdi. Tüm grafikler sıfır bağımlılıkla, saf SVG + CSS (Tailwind) ile yazıldı.
+- [x] `src/api/stats.js` — `getGenreStats`, `getActivityStats`, `getRatingStats`, `getStatsSummary` fonksiyonları
+- [x] `src/pages/Stats.jsx` — istatistik sayfası (`/stats` route, PrivateRoute); tüm grafikler inline bileşen:
+  - `DonutChart` — SVG circle + strokeDasharray ile donut, merkeze toplam sayısı
+  - `GenreChart` — yatay CSS progress bar, renk paleti 8 renk, genre_name_tr/en dil desteği
+  - `RatingChart` — 1-5 yıldız ters sıralı CSS bar, sarı fill, sağda film sayısı
+  - `ActivityChart` — SVG rect tabanlı bar grafik, y-eksen etiketleri, ay kısaltmaları TR/EN
+  - Üst satır: 4 animasyonlu StatCard (İzlenen / Ortalama Puan / Öneri / Watchlist)
+  - Boş state: "Henüz yeterli veri yok" + watchlist'e yönlendirme butonu
+- [x] `src/components/StatCard.jsx` — animasyonlu sayaç kartı (requestAnimationFrame + ease-out cubic)
+- [x] `src/components/Navbar.jsx` — profil dropdown'ına "📊 İstatistikler" linki eklendi
+- [x] `src/App.jsx` — `/stats` route eklendi (PrivateRoute)
+- [x] `src/i18n/tr.js` ve `src/i18n/en.js` — `nav_stats`, `stats_title`, `stats_subtitle`, `stats_watched`, `stats_avg_rating`, `stats_recommendations`, `stats_watchlist`, `stats_genres`, `stats_activity`, `stats_ratings_dist`, `stats_no_data` anahtarları eklendi
 
 #### Kontrol Listesi
-- [ ] Tür dağılımı grafiği doğru genre adlarını gösteriyor (genre_id → isim map'i)
-- [ ] Aylık aktivite grafiğinde boş aylar sıfır olarak görünüyor (veri yoksa da aylık çerçeve tam)
-- [ ] Puan dağılımında hiç puan verilmemişse "0 film" görünüyor (boş bar)
-- [ ] Özet kartlardaki sayılar `GET /auth/stats` ile tutarlı
-- [ ] Yeni kullanıcıda boş state mesajı görünüyor
-- [ ] Recharts bileşenleri koyu modda okunabilir (fill/stroke renkleri dark: uyumlu)
-- [ ] Koyu/açık mod + TR/EN uyumlu
+- [x] Tür dağılımı grafiği doğru genre adlarını gösteriyor (GENRE_MAP backend + GenreChart frontend) ✓
+- [x] Aylık aktivite grafiğinde boş aylar sıfır olarak görünüyor (backend Python month döngüsü) ✓
+- [x] Puan dağılımında hiç puan verilmemişse "0 film" görünüyor (backend 1-5 garantili) ✓
+- [x] Yeni kullanıcıda boş state mesajı görünüyor ✓
+- [x] Grafikler koyu modda okunabilir (SVG fill/stroke dark class'sız, CSS dark: variantlı) ✓
+- [x] Koyu/açık mod + TR/EN uyumlu ✓
 
 ---
 

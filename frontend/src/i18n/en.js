@@ -300,6 +300,19 @@ const en = {
   compare_detail_error: 'Failed to load comparison.',
   compare_sidebar_toggle: 'Open history',
 
+  // Stats
+  nav_stats: 'Statistics',
+  stats_title: 'My Watching Statistics',
+  stats_subtitle: 'A visual overview of your viewing habits.',
+  stats_watched: 'Watched Films',
+  stats_avg_rating: 'Avg. Rating',
+  stats_recommendations: 'Recommendations',
+  stats_watchlist: 'Watchlist Size',
+  stats_genres: 'Genre Distribution',
+  stats_activity: 'Monthly Activity',
+  stats_ratings_dist: 'Rating Distribution',
+  stats_no_data: 'Not enough data yet. Start adding and rating films!',
+
   // Common
   loading: 'Loading...',
   error_generic: 'Something went wrong.',

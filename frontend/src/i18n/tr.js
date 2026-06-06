@@ -300,6 +300,19 @@ const tr = {
   compare_detail_error: 'Karşılaştırma yüklenemedi.',
   compare_sidebar_toggle: 'Geçmişi aç',
 
+  // Stats
+  nav_stats: 'İstatistikler',
+  stats_title: 'İzleme İstatistiklerim',
+  stats_subtitle: 'İzleme alışkanlıklarının görsel özeti.',
+  stats_watched: 'İzlenen Film',
+  stats_avg_rating: 'Ortalama Puan',
+  stats_recommendations: 'Öneri İsteği',
+  stats_watchlist: 'İzleme Listesi',
+  stats_genres: 'Tür Dağılımı',
+  stats_activity: 'Aylık Aktivite',
+  stats_ratings_dist: 'Puan Dağılımı',
+  stats_no_data: 'Henüz yeterli veri yok. Film ekleyip puanlamaya başla!',
+
   // Common
   loading: 'Yükleniyor...',
   error_generic: 'Bir hata oluştu.',

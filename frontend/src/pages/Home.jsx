@@ -57,11 +57,15 @@ export default function Home() {
       fetchPage(tmdbStart + 1),
       fetchPage(tmdbStart + 2),
     ]).then((results) => {
+      const seen = new Set();
       const combined = [];
       let tmdbTotal = 1;
       results.forEach((r) => {
         if (r.status === 'fulfilled') {
-          combined.push(...(r.value.results || []));
+          (r.value.results || []).forEach((m) => {
+            const key = `${m.tmdb_id || m.id}-${m.media_type || mediaType}`;
+            if (!seen.has(key)) { seen.add(key); combined.push(m); }
+          });
           tmdbTotal = Math.max(tmdbTotal, r.value.total_pages || 1);
         }
       });

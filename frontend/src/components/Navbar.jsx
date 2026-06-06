@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLang } from '../context/LangContext';
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, openLoginModal } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { lang, toggleLang, t } = useLang();
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ export default function Navbar() {
     { to: '/', label: t.nav_home },
     { to: '/recommend', label: t.nav_recommend },
     { to: '/watchlist', label: t.nav_watchlist },
-    ...(user ? [{ to: '/compare', label: t.nav_compare }] : []),
+    { to: '/compare', label: t.nav_compare, guestAction: !user ? openLoginModal : null },
   ];
 
   return (
@@ -113,19 +113,18 @@ export default function Navbar() {
                   <span className="text-gray-900 dark:text-white font-bold text-lg tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">FilmAI</span>
                 </Link>
                 <div className="hidden md:flex items-center gap-1">
-                  {navLinks.map(({ to, label }) => (
-                    <Link
-                      key={to}
-                      to={to}
-                      className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
-                        isActive(to)
-                          ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/60'
-                      }`}
-                    >
-                      {label}
-                    </Link>
-                  ))}
+                  {navLinks.map(({ to, label, guestAction }) => {
+                    const cls = `text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
+                      isActive(to)
+                        ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/60'
+                    }`;
+                    return guestAction ? (
+                      <button key={to} onClick={guestAction} className={cls}>{label}</button>
+                    ) : (
+                      <Link key={to} to={to} className={cls}>{label}</Link>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -200,6 +199,14 @@ export default function Navbar() {
                           >
                             <span className="text-base">👤</span>
                             {t.nav_profile}
+                          </Link>
+                          <Link
+                            to="/stats"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          >
+                            <span className="text-base">📊</span>
+                            {t.nav_stats}
                           </Link>
                           <Link
                             to="/settings"
