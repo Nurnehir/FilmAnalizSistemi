@@ -688,3 +688,328 @@
 - [x] Vizyonda modunda yerli/yabancı toggle gizleniyor — `{!isNowPlaying && (...)}` ile sarılı ✓
 - [x] Film/Dizi toggle ile birlikte çalışıyor — test: media_type=tv + tr → Yalı Çapkını, Kuruluş: Osman ✓
 - [x] Koyu/açık mod + TR/EN uyumlu — mevcut chip stili (bg-gray-100/dark:bg-gray-800) kullanıldı, i18n anahtarları tr.js ve en.js'e eklendi ✓
+
+---
+
+### 27. Sonsuz Kaydırma / Sayfalama (Anasayfa + Discover)
+> Şu an tüm listeler sabit 20 filmle sınırlı. Kullanıcı aşağı kaydırdıkça TMDB'den sonraki sayfa
+> otomatik yüklensin (infinite scroll). Trend, Vizyonda, Discover ve Yerli/Yabancı modlarının
+> tamamında çalışmalı. Backend sadece mevcut `page` parametresini kullanır — yeni endpoint gerekmez.
+
+#### Veritabanı
+- [ ] Değişiklik yok — TMDB zaten sayfalama destekliyor (`page` parametresi).
+
+#### Backend
+- [ ] `app/routers/movies.py` — `/movies/trending` endpoint'inde `page` query param zaten mevcut ✓
+- [ ] `app/routers/movies.py` — `/movies/discover` endpoint'ine `page: int = Query(1, ge=1)` parametresi eklendi; `tmdb_service.discover_movies`'e iletiliyor
+- [ ] `app/routers/movies.py` — `/movies/now-playing` endpoint'inde `page` query param zaten mevcut ✓
+- [ ] `app/services/tmdb_service.py` — `discover_movies`'e `page: int = 1` parametresi eklendi; `extra["page"] = page` olarak TMDB'ye iletiliyor
+
+#### Frontend
+- [ ] `src/api/movies.js` — `discoverMovies(genreIds, sortBy, mediaType, originalLanguage, page)` imzasına `page` parametresi eklendi
+- [ ] `src/pages/Home.jsx` — infinite scroll altyapısı:
+  - `page` state (`1`'den başlar), `hasMore` state (`true`), `loadingMore` state
+  - `movies` state: append moduna geçti — yeni sayfa sonuçları mevcut listeye ekleniyor (`setMovies(prev => [...prev, ...newResults])`)
+  - `viewMode`, `mediaType`, `originFilter`, `selectedGenres` değişince `movies` sıfırlanır, `page = 1` olur
+  - `IntersectionObserver` ile sayfa sonuna gelinince `page` artırılır → useEffect tetiklenir → sonraki sayfa fetch edilir
+  - TMDB `total_pages` bilgisi response'dan okunarak `hasMore` güncellenir
+  - `loadingMore` aktifken liste sonunda küçük spinner gösterilir; ana `trendLoading` sadece ilk sayfa için kullanılır
+- [ ] `src/components/LoadMoreSpinner.jsx` — sayfa sonunda gösterilen küçük yükleme göstergesi (mevcut `LoadingSpinner`'dan bağımsız, daha küçük)
+- [ ] `src/i18n/tr.js` ve `src/i18n/en.js` — `home_load_more: 'Daha Fazla Yükle'`, `home_no_more: 'Tüm içerikler yüklendi'` anahtarları eklendi
+
+#### Kontrol Listesi
+- [ ] Trend modunda aşağı kaydırınca sayfa 2, 3... otomatik yükleniyor
+- [ ] Discover (tür/yerli/yabancı) modunda sayfalama çalışıyor
+- [ ] Vizyonda modunda sayfalama çalışıyor
+- [ ] Filtre/mod değişince liste sıfırlanıyor (eski filmler kalmıyor)
+- [ ] Son sayfaya ulaşınca "Tüm içerikler yüklendi" mesajı görünüyor
+- [ ] Ana yükleme spinner'ı (ilk sayfa) ile "daha fazla" spinner'ı birbirinden bağımsız çalışıyor
+- [ ] Koyu/açık mod + TR/EN uyumlu
+
+---
+
+### 28. Film Karşılaştırma (AI Destekli)
+> Kullanıcı iki film seçer, AI her iki filmi birden değerlendirerek kişiselleştirilmiş bir
+> karşılaştırma metni üretir: senaryo, atmosfer, tempo, kime göre daha uygun.
+> Sonuçta "Sana göre hangisi?" sorusuna net bir öneri verilir.
+> Ön koşul: yok — bağımsız özellik, mevcut servisleri yeniden kullanır.
+
+#### Veritabanı
+- [ ] Yeni tablo: `comparisons`
+  ```sql
+  CREATE TABLE comparisons (
+      id           SERIAL PRIMARY KEY,
+      user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      tmdb_id_a    INTEGER NOT NULL,
+      tmdb_id_b    INTEGER NOT NULL,
+      media_type   VARCHAR(10) NOT NULL DEFAULT 'movie',
+      ai_result    TEXT NOT NULL,        -- AI'ın ürettiği karşılaştırma metni (JSON)
+      winner_id    INTEGER,              -- AI'ın önerdiği film tmdb_id (nullable)
+      created_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  );
+  CREATE INDEX idx_comparisons_user ON comparisons(user_id);
+  ```
+- [ ] Alembic migration: `compare_table.py` oluşturuldu ve uygulandı
+
+#### Backend
+- [ ] `app/models/comparison.py` — SQLAlchemy ORM modeli oluşturuldu
+- [ ] `app/schemas/comparison.py` — `CompareRequest`, `CompareResponse` Pydantic şemaları
+  - `CompareRequest`: `{ tmdb_id_a: int, tmdb_id_b: int, media_type: str }`
+  - `CompareResponse`: `{ title_a, title_b, poster_a, poster_b, comparison: str, winner_id: int | null, ai_verdict: str }`
+- [ ] `app/services/gemini_service.py` — `compare_movies(movie_a: dict, movie_b: dict, username: str)` fonksiyonu eklendi
+  - Her iki filmin title, overview, genre, vote_average bilgileri prompt'a ekleniyor
+  - Prompt: senaryo, atmosfer, tempo, kime daha uygun, hangisi daha iyi — "sen" kipi, kişisel ton
+  - Yanıt JSON: `{ "comparison": "...", "winner_id": 12345, "verdict": "Sana göre X daha iyi çünkü..." }`
+  - Groq Llama 3.3-70b-versatile ile üretiliyor
+- [ ] `app/routers/compare.py` — yeni router
+  - `POST /compare` (auth zorunlu): iki film tmdb_id al → TMDB'den detay çek → Gemini'ye gönder → DB'ye kaydet → yanıt dön
+  - `GET /compare/history` (auth zorunlu): kullanıcının geçmiş karşılaştırmaları, limit/offset ile
+  - `GET /compare/{id}` (auth zorunlu): tek karşılaştırma detayı
+- [ ] `app/main.py`'e `compare` router'ı eklendi (`prefix="/compare"`)
+
+#### Frontend
+- [ ] `src/api/compare.js` — `compareMovies(tmdbIdA, tmdbIdB, mediaType)`, `getCompareHistory()` fonksiyonları
+- [ ] `src/pages/Compare.jsx` — karşılaştırma sayfası (`/compare` route, PrivateRoute)
+  - İki arama kutusu (debounce 400ms, `searchMovies` API'yi çağırır) yan yana
+  - Her kutunun altında sonuç dropdown'ı; film seçilince poster + başlık küçük kartla gösterilir
+  - İki film de seçilince "Karşılaştır" butonu aktif hale gelir
+  - Submit → loading → AI sonucu: iki poster yan yana, ortada karşılaştırma metni, altta "Kazanan" rozeti
+  - "Geçmiş Karşılaştırmalar" accordion bölümü (son 5 karşılaştırma)
+- [ ] `src/components/CompareCard.jsx` — tek bir karşılaştırma sonucunu gösteren kart bileşeni
+  - Sol: film A posteri + başlık, Sağ: film B posteri + başlık
+  - Orta: AI metni, altında kazanan rozeti (mor kenarlık + "✓ AI Önerisi")
+- [ ] `src/components/Navbar.jsx` — "Karşılaştır" nav linki eklendi (giriş yapılıysa görünür)
+- [ ] `src/App.jsx` — `/compare` route eklendi (PrivateRoute)
+- [ ] `src/i18n/tr.js` ve `src/i18n/en.js`:
+  - `compare_title: 'Film Karşılaştır'`, `compare_subtitle: 'İki film seç, AI hangisinin sana daha uygun olduğunu söylesin.'`
+  - `compare_search_a: 'Birinci Film'`, `compare_search_b: 'İkinci Film'`
+  - `compare_btn: 'Karşılaştır'`, `compare_loading: 'Karşılaştırılıyor...'`
+  - `compare_winner: 'AI Önerisi'`, `compare_history: 'Geçmiş Karşılaştırmalar'`
+  - `compare_no_history: 'Henüz karşılaştırma yapmadın.'`
+
+#### Kontrol Listesi
+- [ ] İki film seçilmeden "Karşılaştır" butonu disabled
+- [ ] Aynı filmi iki kez seçince uyarı gösteriliyor
+- [ ] AI karşılaştırma metni hem film A hem film B'ye değiniyor
+- [ ] Kazanan rozeti doğru filme gidiyor
+- [ ] Karşılaştırma DB'ye kaydediliyor
+- [ ] Geçmiş karşılaştırmalar sayfada görünüyor
+- [ ] Misafir → giriş yap modal açılıyor
+- [ ] Koyu/açık mod + TR/EN uyumlu
+
+---
+
+### 29. İzleme İstatistikleri Dashboard'u
+> Profil sayfasındaki 3 sayacın ötesinde görsel bir istatistik ekranı.
+> Kullanıcının izleme alışkanlıklarını grafiklerle göster: tür dağılımı, aylık aktivite,
+> en çok izlenen yönetmenler/oyuncular, ortalama puan trendi.
+> Tüm veriler mevcut `watchlist` ve `recommendation_history` tablolarından üretilir.
+
+#### Veritabanı
+- [ ] Yeni tablo gerekmez — `watchlist` (genre_ids, user_rating, watched, added_at) ve
+  `recommendation_history` (tmdb_ids, created_at) üzerinden SQL sorguları yeterli.
+- [ ] `watchlist` tablosunda `genre_ids` ve `user_rating` kolonları zaten mevcut ✓
+
+#### Backend
+- [ ] `app/routers/auth.py` — `GET /auth/stats` zaten var; genişletilecek
+- [ ] `app/routers/stats.py` — yeni router (veya auth.py'e eklenebilir)
+  - `GET /stats/genres` — watchlist'teki genre_ids'leri say, en çok izlenen 8 türü dön
+    - Response: `[{ genre_id, genre_name, count }]`
+  - `GET /stats/activity` — son 12 ayda aylık watchlist ekleme sayısı
+    - Sorgu: `SELECT DATE_TRUNC('month', added_at), COUNT(*) FROM watchlist WHERE user_id=? GROUP BY 1 ORDER BY 1`
+    - Response: `[{ month: "2025-01", count: 5 }]`
+  - `GET /stats/ratings` — puan dağılımı (1-5 yıldız kaç film)
+    - Response: `[{ rating: 1, count: 0 }, ..., { rating: 5, count: 12 }]`
+  - `GET /stats/summary` — toplam izlenen, ortalama puan, toplam öneri, toplam watchlist
+    - Response: `{ watched_count, avg_rating, recommendation_count, watchlist_count, movies_recommended }`
+- [ ] `app/schemas/stats.py` — tüm response şemaları
+- [ ] `app/main.py`'e `stats` router eklendi (`prefix="/stats"`)
+
+#### Frontend
+- [ ] `src/api/stats.js` — `getGenreStats()`, `getActivityStats()`, `getRatingStats()`, `getSummary()` fonksiyonları
+- [ ] `src/pages/Stats.jsx` — istatistik sayfası (`/stats` route, PrivateRoute)
+  - **Üst satır — 4 özet kart:** Toplam İzlenen / Ortalama Puan / Öneri İstekleri / Watchlist Boyutu
+  - **Tür Dağılımı (Donut/Bar chart):** En çok izlenen 8 tür; her tür için renk ve yüzde
+    - Chart kütüphanesi: `recharts` (`npm install recharts`) — hafif, React uyumlu, sıfır bağımlılık
+    - `PieChart` + `Tooltip` + `Legend` ile donut grafik
+  - **Aylık Aktivite (Line/Bar chart):** Son 12 ay watchlist ekleme; `BarChart` + `XAxis` + `YAxis`
+  - **Puan Dağılımı (Bar chart):** 1-5 yıldız kaç film; yatay `BarChart`, sarı renk paleti
+  - **Boş state:** İstatistik yoksa (yeni kullanıcı) "Henüz yeterli veri yok" açıklamasıyla yönlendirme
+- [ ] `src/components/StatCard.jsx` — özet kart bileşeni (ikon + sayı + etiket); Profile.jsx'teki mevcut karttan farklı, animasyonlu sayaç içerir
+- [ ] `src/components/Navbar.jsx` — profil dropdown'ına "İstatistikler" linki eklendi
+- [ ] `src/App.jsx` — `/stats` route eklendi (PrivateRoute)
+- [ ] `package.json` — `recharts` bağımlılığı eklendi (`npm install recharts`)
+- [ ] `src/i18n/tr.js` ve `src/i18n/en.js`:
+  - `stats_title: 'İzleme İstatistiklerim'`
+  - `stats_watched: 'İzlenen Film'`, `stats_avg_rating: 'Ortalama Puan'`
+  - `stats_recommendations: 'Öneri İsteği'`, `stats_watchlist: 'İzleme Listesi'`
+  - `stats_genres: 'Tür Dağılımı'`, `stats_activity: 'Aylık Aktivite'`
+  - `stats_ratings_dist: 'Puan Dağılımı'`, `stats_no_data: 'Henüz yeterli veri yok.'`
+
+#### Kontrol Listesi
+- [ ] Tür dağılımı grafiği doğru genre adlarını gösteriyor (genre_id → isim map'i)
+- [ ] Aylık aktivite grafiğinde boş aylar sıfır olarak görünüyor (veri yoksa da aylık çerçeve tam)
+- [ ] Puan dağılımında hiç puan verilmemişse "0 film" görünüyor (boş bar)
+- [ ] Özet kartlardaki sayılar `GET /auth/stats` ile tutarlı
+- [ ] Yeni kullanıcıda boş state mesajı görünüyor
+- [ ] Recharts bileşenleri koyu modda okunabilir (fill/stroke renkleri dark: uyumlu)
+- [ ] Koyu/açık mod + TR/EN uyumlu
+
+---
+
+### 30. AI Film Özeti + Kişisel Not Alma
+> Kullanıcı izlediği bir filmi işaretledikten sonra AI otomatik kısa bir özet üretsin.
+> Kullanıcı bu özete kendi notunu (spoiler içerebilir) ekleyebilsin.
+> Not ve özet watchlist kartında ve film detay sayfasında görünür.
+
+#### Veritabanı
+- [ ] `watchlist` tablosuna iki yeni kolon eklendi:
+  - `ai_summary TEXT NULL` — AI'ın ürettiği kısa özet (Türkçe, ~3 cümle)
+  - `personal_note TEXT NULL` — kullanıcının kendi notu (max 500 karakter)
+- [ ] Alembic migration: `add_summary_note_to_watchlist.py` oluşturuldu ve uygulandı
+
+#### Backend
+- [ ] `app/schemas/watchlist.py` — `WatchlistOut`'a `ai_summary: str | None` ve `personal_note: str | None` eklendi
+- [ ] `app/schemas/watchlist.py` — `NoteUpdate` şeması: `{ personal_note: str }` (max_length=500 validasyon)
+- [ ] `app/services/gemini_service.py` — `generate_movie_summary(title, overview, genres, username)` fonksiyonu eklendi
+  - Prompt: film bilgilerini ver → 3 cümlelik kişisel ton özet üret, spoiler içerme
+  - Groq Llama 3.3-70b-versatile
+  - Hata durumunda `None` dön (sessiz fallback)
+- [ ] `app/routers/watchlist.py` — yeni endpointler:
+  - `POST /watchlist/{id}/summarize` (auth zorunlu): `gemini_service.generate_movie_summary` çağır → `watchlist.ai_summary` alanını güncelle → güncel WatchlistOut dön
+    - Aynı film için ikinci kez çağrılırsa mevcut özeti sil ve yeniden üret
+  - `PATCH /watchlist/{id}/note` (auth zorunlu): `personal_note` alanını güncelle → `NoteUpdate` şeması, 500 karakter validasyon
+    - `personal_note: ""` veya `null` gelirse alan temizlenir
+
+#### Frontend
+- [ ] `src/api/watchlist.js` — `summarizeMovie(id)`, `updateNote(id, note)` fonksiyonları eklendi
+- [ ] `src/pages/Watchlist.jsx` — watchlist kartlarına not/özet alanı eklendi:
+  - "AI Özeti Al" butonu: tıklayınca `POST /watchlist/{id}/summarize` → loading → özet textarea'nın üzerinde gri kutu içinde gösterilir
+  - Özet zaten varsa buton "Yenile" olarak görünür; üzeri hafif gri arka planla
+  - "Notum" textarea (max 500 karakter): blur'da otomatik `PATCH /watchlist/{id}/note` çağrısı (debounce 800ms); karakter sayacı gösterilir (`125 / 500`)
+  - Not kaydedilince küçük "Kaydedildi ✓" toast animasyonu
+- [ ] `src/pages/MovieDetail.jsx` — kullanıcının bu film için watchlist'te notu varsa "Notum" bölümü gösterilir (salt okunur özet + düzenlenebilir not); watchlist dışındaysa bu bölüm gizlenir
+- [ ] `src/components/NoteEditor.jsx` — textarea + karakter sayacı + otomatik kaydetme debounce logic'i içeren reusable bileşen (Watchlist ve MovieDetail'de ortak kullanılır)
+- [ ] `src/i18n/tr.js` ve `src/i18n/en.js`:
+  - `note_ai_summary: 'AI Özeti'`, `note_get_summary: 'Özet Al'`, `note_refresh_summary: 'Özeti Yenile'`
+  - `note_summarizing: 'Özet hazırlanıyor...'`, `note_my_note: 'Notum'`
+  - `note_placeholder: 'Bu film hakkında düşüncelerini yaz...'`
+  - `note_saved: 'Kaydedildi ✓'`, `note_char_limit: '/ 500'`
+
+#### Kontrol Listesi
+- [ ] "Özet Al" butonuna basınca AI Türkçe özet üretiyor (spoiler yok)
+- [ ] Özet DB'ye kaydediliyor; sayfa yenilenince tekrar üretilmiyor
+- [ ] "Yenile" butonuyla yeni özet üretiliyor (eskinin üzerine yazılıyor)
+- [ ] Not textarea'sına yazınca 800ms sonra otomatik kaydediliyor
+- [ ] "Kaydedildi ✓" toast görünüyor
+- [ ] 500 karakteri aşınca backend 422 dönüyor, frontend uyarı gösteriyor
+- [ ] MovieDetail sayfasında watchlist'teki film için not görünüyor; watchlist dışındakilerde not alanı yok
+- [ ] AI özeti üretilemezse (Groq hatası) sessizce atlanıyor, kullanıcıya hata gösterilmiyor
+- [ ] Koyu/açık mod + TR/EN uyumlu
+
+---
+
+### 31. Arkadaş Sistemi ve Sosyal Watchlist
+> Kullanıcılar birbirini takip edebilsin. Takip edilen kullanıcıların herkese açık
+> watchlist'leri görüntülenebilsin. İki kullanıcı ortak bir "Birlikte İzleyeceklerimiz"
+> listesi oluşturabilsin (her ikisi de ekleyip çıkarabilir).
+
+#### Veritabanı
+- [ ] Yeni tablo: `friendships`
+  ```sql
+  CREATE TABLE friendships (
+      id          SERIAL PRIMARY KEY,
+      follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      following_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      CONSTRAINT no_self_follow CHECK (follower_id != following_id),
+      CONSTRAINT unique_follow UNIQUE (follower_id, following_id)
+  );
+  CREATE INDEX idx_friendships_follower ON friendships(follower_id);
+  CREATE INDEX idx_friendships_following ON friendships(following_id);
+  ```
+- [ ] Yeni tablo: `shared_lists`
+  ```sql
+  CREATE TABLE shared_lists (
+      id          SERIAL PRIMARY KEY,
+      name        VARCHAR(100) NOT NULL DEFAULT 'Birlikte İzleyeceklerimiz',
+      owner_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  );
+  CREATE TABLE shared_list_members (
+      list_id     INTEGER NOT NULL REFERENCES shared_lists(id) ON DELETE CASCADE,
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      joined_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      PRIMARY KEY (list_id, user_id)
+  );
+  CREATE TABLE shared_list_items (
+      id          SERIAL PRIMARY KEY,
+      list_id     INTEGER NOT NULL REFERENCES shared_lists(id) ON DELETE CASCADE,
+      tmdb_id     INTEGER NOT NULL,
+      media_type  VARCHAR(10) NOT NULL DEFAULT 'movie',
+      title       VARCHAR(255) NOT NULL,
+      poster_path VARCHAR(255),
+      added_by    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      added_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      CONSTRAINT unique_shared_item UNIQUE (list_id, tmdb_id, media_type)
+  );
+  ```
+- [ ] `watchlist_collections` tablosuna `is_public BOOLEAN DEFAULT TRUE` kolonu eklendi
+  - Kullanıcı koleksiyonunu gizli yapabilir; default herkese açık
+- [ ] Alembic migration: `add_social_tables.py` — tüm tablolar tek migration'da oluşturuldu
+
+#### Backend
+- [ ] `app/models/friendship.py`, `app/models/shared_list.py` — SQLAlchemy modelleri
+- [ ] `app/schemas/social.py` — `FollowRequest`, `UserPublicOut`, `SharedListCreate`, `SharedListOut`, `SharedListItemAdd` şemaları
+- [ ] `app/routers/social.py` — yeni router (`prefix="/social"`)
+  - `POST /social/follow/{user_id}` (auth): takip et → `friendships` kaydı oluştur
+  - `DELETE /social/follow/{user_id}` (auth): takibi bırak
+  - `GET /social/following` (auth): takip edilenler listesi (avatar, username, watchlist_count)
+  - `GET /social/followers` (auth): takipçiler listesi
+  - `GET /social/users/{username}` (public): kullanıcı profil özeti + herkese açık koleksiyonlar
+  - `GET /social/users/{username}/watchlist` (public): herkese açık watchlist koleksiyonları ve içerikleri
+- [ ] `app/routers/shared.py` — ortak liste router (`prefix="/shared"`)
+  - `POST /shared` (auth): ortak liste oluştur + başlangıç üyesi ekle (owner)
+  - `POST /shared/{list_id}/invite/{user_id}` (auth, sadece owner): üye ekle
+  - `DELETE /shared/{list_id}/leave` (auth): listeden ayrıl (owner ise liste silinir)
+  - `GET /shared` (auth): kullanıcının dahil olduğu tüm ortak listeler
+  - `GET /shared/{list_id}` (auth, sadece üyeler): liste detayı + filmler
+  - `POST /shared/{list_id}/items` (auth, üyeler): film ekle
+  - `DELETE /shared/{list_id}/items/{item_id}` (auth, üyeler): film sil
+- [ ] `app/main.py`'e `social` ve `shared` router'ları eklendi
+
+#### Frontend
+- [ ] `src/api/social.js` — `followUser`, `unfollowUser`, `getFollowing`, `getFollowers`, `getUserProfile`, `getUserWatchlist` fonksiyonları
+- [ ] `src/api/shared.js` — `createSharedList`, `inviteToList`, `leaveList`, `getSharedLists`, `getSharedListDetail`, `addSharedItem`, `removeSharedItem` fonksiyonları
+- [ ] `src/pages/UserProfile.jsx` — başka kullanıcının profil sayfası (`/user/:username`)
+  - Avatar, kullanıcı adı, takipçi/takip sayısı
+  - "Takip Et / Takipten Çık" butonu (kendi profili ise gizli)
+  - Herkese açık watchlist koleksiyonları grid halinde
+- [ ] `src/pages/Social.jsx` — sosyal sayfa (`/social`, PrivateRoute)
+  - "Takip Ettiklerim" sekmesi: avatar kartlar, her kartın altında son eklediği film
+  - "Ortak Listelerim" sekmesi: katılınan ortak listeler, film sayısı rozeti
+  - "Yeni Ortak Liste" butonu → modal: liste adı + kullanıcı adıyla üye davet
+- [ ] `src/pages/SharedList.jsx` — ortak liste detay sayfası (`/shared/:id`, PrivateRoute)
+  - Üye avatarları satırı
+  - Film grid'i: her filmde "Ekleyen: @kullanıcı" etiketi
+  - "Film Ekle" arama modalı
+  - "Listeden Ayrıl" butonu
+- [ ] `src/components/Navbar.jsx` — "Sosyal" nav linki eklendi
+- [ ] `src/App.jsx` — `/social`, `/shared/:id`, `/user/:username` route'ları eklendi
+- [ ] `src/i18n/tr.js` ve `src/i18n/en.js`:
+  - `social_title: 'Sosyal'`, `social_following: 'Takip Ettiklerim'`, `social_followers: 'Takipçilerim'`
+  - `social_follow: 'Takip Et'`, `social_unfollow: 'Takipten Çık'`
+  - `social_shared_lists: 'Ortak Listelerim'`, `social_new_shared: 'Yeni Ortak Liste'`
+  - `social_invite: 'Davet Et'`, `social_leave: 'Listeden Ayrıl'`
+  - `social_added_by: 'Ekleyen'`
+
+#### Kontrol Listesi
+- [ ] Kullanıcı A, kullanıcı B'yi takip edebiliyor
+- [ ] Kendini takip etmeye çalışınca 400 hatası geliyor
+- [ ] Kullanıcı B'nin public watchlist'i `/user/:username` sayfasında görünüyor
+- [ ] Private koleksiyon başka kullanıcıya görünmüyor
+- [ ] Ortak liste oluşturulup üye davet edilebiliyor
+- [ ] Davet edilen üye film ekleyip silebiliyor; owner da ekleyip silebiliyor
+- [ ] Owner listeden ayrılınca liste siliniyor
+- [ ] Ortak listedeki filmde "Ekleyen: @kullanıcı" etiketi doğru
+- [ ] Koyu/açık mod + TR/EN uyumlu
