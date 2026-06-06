@@ -557,7 +557,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 29 ve 30 tamamlandı. Sıradaki: 31 (Arkadaş Sistemi) veya 15 (Uygulama Adı Değişikliği).
+**Son guncelleme:** 15, 29, 30, 31-A tamamlandı. Sıradaki: 31-B (Ortak İzleme Listesi) veya başka yeni özellik.
 
 ---
 
@@ -830,37 +830,98 @@
 
 ---
 
-### 31. Arkadaş Sistemi ve Sosyal Watchlist
-> Kullanıcılar birbirini takip edebilsin. Takip edilen kullanıcıların herkese açık
-> watchlist'leri görüntülenebilsin. İki kullanıcı ortak bir "Birlikte İzleyeceklerimiz"
-> listesi oluşturabilsin (her ikisi de ekleyip çıkarabilir).
+### 31-A. Takip Sistemi ve Kullanıcı Profili (Sosyal — Faz 1)
+> Kullanıcılar birbirini takip edebilsin. Takip edilen kullanıcının herkese açık
+> watchlist koleksiyonları `/user/:username` sayfasında görüntülenebilsin.
+> Ortak liste yok — sadece takip + profil görüntüleme.
 
 #### Veritabanı
-- [ ] Yeni tablo: `friendships`
+- [x] Yeni tablo: `friendships`
   ```sql
   CREATE TABLE friendships (
-      id          SERIAL PRIMARY KEY,
-      follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      id           SERIAL PRIMARY KEY,
+      follower_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       following_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      created_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       CONSTRAINT no_self_follow CHECK (follower_id != following_id),
       CONSTRAINT unique_follow UNIQUE (follower_id, following_id)
   );
   CREATE INDEX idx_friendships_follower ON friendships(follower_id);
   CREATE INDEX idx_friendships_following ON friendships(following_id);
   ```
-- [ ] Yeni tablo: `shared_lists`
+- [x] `watchlist_collections` tablosuna `is_public BOOLEAN DEFAULT TRUE` kolonu eklendi
+- [x] Alembic migration: `i9j0k1l2m3n4_add_friendships_table.py` oluşturuldu ve uygulandı
+
+#### Backend
+- [x] `app/models/friendship.py` — SQLAlchemy ORM modeli oluşturuldu
+- [x] `app/schemas/social.py` — `UserPublicOut` (id, username, avatar_url, follower_count, following_count, watchlist_count, collection_count), `FollowOut`, `PublicCollection`, `PublicCollectionItem`
+- [x] `app/routers/social.py` — yeni router (`prefix="/social"`)
+  - `POST /social/follow/{user_id}` (auth) — takip et
+  - `DELETE /social/follow/{user_id}` (auth) — takibi bırak
+  - `GET /social/following` (auth) — takip ettiklerim listesi
+  - `GET /social/followers` (auth) — takipçilerim listesi
+  - `GET /social/follower-count` (auth) — hafif sayaç endpoint'i (bildirim için)
+  - `GET /social/search?q=` (opsiyonel auth) — kullanıcı adı ile partial arama
+  - `GET /social/users/{username}` (public) — kullanıcı profil özeti
+  - `GET /social/users/{username}/watchlist` (public) — herkese açık koleksiyonlar + içerikleri
+- [x] `app/main.py`'e `social` router eklendi
+- [x] `app/routers/watchlist.py` — `is_public` alanı koleksiyon CRUD'a eklendi; koleksiyon listesi `is_public` döner
+- [x] `app/dependencies.py` — `get_current_user_optional` eklendi (HTTPBearer auto_error=False)
+
+#### Frontend
+- [x] `src/api/social.js` — `followUser`, `unfollowUser`, `getFollowing`, `getFollowers`, `getFollowerCount`, `searchUsers`, `getUserProfile`, `getUserWatchlist`
+- [x] `src/pages/UserProfile.jsx` — `/user/:username` (public route)
+  - Avatar harfi, kullanıcı adı, takipçi/takip/liste sayısı/film sayısı (iyeliksiz etiket)
+  - "Takip Et / Takipten Çık" butonu (kendi profilinde gizli, misafirde login modal)
+  - Herkese açık koleksiyonlar ve film kartları
+- [x] `src/pages/Social.jsx` — `/social` (PrivateRoute)
+  - "Takip Ettiklerim" / "Takipçilerim" sekmeleri + sayaç badge
+  - Kullanıcı arama: debounce (400ms) + dropdown (partial match, 2+ karakter)
+  - Sosyal sayfaya girilince follower bildirimi sıfırlanır (`clearSocialNotif`)
+- [x] `src/context/SocialNotifContext.jsx` — `followerNotif` state, `clearSocialNotif()` fonksiyonu
+  - Kullanıcı girişinde `GET /social/follower-count` çekilir
+  - `localStorage.social_seen_followers` ile karşılaştırılır → badge = fark
+  - `/social`'a girilince localStorage güncellenir, badge 0 olur
+- [x] `src/components/Navbar.jsx` — "Sosyal" nav linki üzerinde mor bildirim rozeti
+  - Yeni takipçi sayısı badge içinde gösterilir (max 99+)
+  - `/social`'a girilince badge kaybolur
+- [x] `src/App.jsx` — `SocialNotifProvider` eklendi; `/social` ve `/user/:username` route'ları eklendi
+- [x] `src/i18n/tr.js` ve `src/i18n/en.js`:
+  - `social_title`, `social_following`, `social_followers`
+  - `social_follow`, `social_unfollow`, `social_search_user`
+  - `social_public_lists`, `social_no_public_lists`
+  - `social_followers_count`, `social_following_count`, `social_watchlist_count`, `social_list_count` (iyeliksiz)
+
+#### Kontrol Listesi
+- [x] Kullanıcı A, kullanıcı B'yi takip edebiliyor
+- [x] Kendini takip etmeye çalışınca 400 hatası geliyor
+- [x] `/user/:username` sayfası misafirler için de açılıyor
+- [x] Kullanıcı B'nin public koleksiyonları görünüyor, private olanlar görünmüyor
+- [x] Takip et/bırak butonu anlık güncelleniyor
+- [x] Profilde "N liste · M film" (iyeliksiz) gösteriliyor
+- [x] Navbar'da yeni takipçi rozeti görünüyor; /social'a girilince sıfırlanıyor
+- [x] Koyu/açık mod + TR/EN uyumlu
+
+---
+
+### 31-B. Ortak İzleme Listesi (Sosyal — Faz 2)
+> Takip eden iki kullanıcı ortak bir liste oluşturabilsin.
+> Her ikisi de filme ekleyip çıkarabilsin.
+> **Ön koşul:** 31-A tamamlanmış olmalı.
+
+#### Veritabanı
+- [ ] Yeni tablolar: `shared_lists`, `shared_list_members`, `shared_list_items`
   ```sql
   CREATE TABLE shared_lists (
-      id          SERIAL PRIMARY KEY,
-      name        VARCHAR(100) NOT NULL DEFAULT 'Birlikte İzleyeceklerimiz',
-      owner_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      id        SERIAL PRIMARY KEY,
+      name      VARCHAR(100) NOT NULL DEFAULT 'Birlikte İzleyeceklerimiz',
+      owner_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
   );
   CREATE TABLE shared_list_members (
-      list_id     INTEGER NOT NULL REFERENCES shared_lists(id) ON DELETE CASCADE,
-      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      joined_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      list_id   INTEGER NOT NULL REFERENCES shared_lists(id) ON DELETE CASCADE,
+      user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       PRIMARY KEY (list_id, user_id)
   );
   CREATE TABLE shared_list_items (
@@ -875,64 +936,41 @@
       CONSTRAINT unique_shared_item UNIQUE (list_id, tmdb_id, media_type)
   );
   ```
-- [ ] `watchlist_collections` tablosuna `is_public BOOLEAN DEFAULT TRUE` kolonu eklendi
-  - Kullanıcı koleksiyonunu gizli yapabilir; default herkese açık
-- [ ] Alembic migration: `add_social_tables.py` — tüm tablolar tek migration'da oluşturuldu
+- [ ] Alembic migration: `add_shared_lists_tables.py`
 
 #### Backend
-- [ ] `app/models/friendship.py`, `app/models/shared_list.py` — SQLAlchemy modelleri
-- [ ] `app/schemas/social.py` — `FollowRequest`, `UserPublicOut`, `SharedListCreate`, `SharedListOut`, `SharedListItemAdd` şemaları
-- [ ] `app/routers/social.py` — yeni router (`prefix="/social"`)
-  - `POST /social/follow/{user_id}` (auth): takip et → `friendships` kaydı oluştur
-  - `DELETE /social/follow/{user_id}` (auth): takibi bırak
-  - `GET /social/following` (auth): takip edilenler listesi (avatar, username, watchlist_count)
-  - `GET /social/followers` (auth): takipçiler listesi
-  - `GET /social/users/{username}` (public): kullanıcı profil özeti + herkese açık koleksiyonlar
-  - `GET /social/users/{username}/watchlist` (public): herkese açık watchlist koleksiyonları ve içerikleri
-- [ ] `app/routers/shared.py` — ortak liste router (`prefix="/shared"`)
-  - `POST /shared` (auth): ortak liste oluştur + başlangıç üyesi ekle (owner)
-  - `POST /shared/{list_id}/invite/{user_id}` (auth, sadece owner): üye ekle
-  - `DELETE /shared/{list_id}/leave` (auth): listeden ayrıl (owner ise liste silinir)
-  - `GET /shared` (auth): kullanıcının dahil olduğu tüm ortak listeler
-  - `GET /shared/{list_id}` (auth, sadece üyeler): liste detayı + filmler
-  - `POST /shared/{list_id}/items` (auth, üyeler): film ekle
-  - `DELETE /shared/{list_id}/items/{item_id}` (auth, üyeler): film sil
-- [ ] `app/main.py`'e `social` ve `shared` router'ları eklendi
+- [ ] `app/models/shared_list.py` — SQLAlchemy modelleri (SharedList, SharedListMember, SharedListItem)
+- [ ] `app/schemas/social.py`'e `SharedListCreate`, `SharedListOut`, `SharedListItemAdd` eklendi
+- [ ] `app/routers/shared.py` — yeni router (`prefix="/shared"`)
+  - `POST /shared` (auth) — liste oluştur
+  - `POST /shared/{list_id}/invite/{user_id}` (auth, owner) — üye davet et
+  - `DELETE /shared/{list_id}/leave` (auth) — ayrıl (owner ise liste silinir)
+  - `GET /shared` (auth) — katıldığım ortak listeler
+  - `GET /shared/{list_id}` (auth, üyeler) — liste detayı + filmler
+  - `POST /shared/{list_id}/items` (auth, üyeler) — film ekle
+  - `DELETE /shared/{list_id}/items/{item_id}` (auth, üyeler) — film sil
+- [ ] `app/main.py`'e `shared` router eklendi
 
 #### Frontend
-- [ ] `src/api/social.js` — `followUser`, `unfollowUser`, `getFollowing`, `getFollowers`, `getUserProfile`, `getUserWatchlist` fonksiyonları
-- [ ] `src/api/shared.js` — `createSharedList`, `inviteToList`, `leaveList`, `getSharedLists`, `getSharedListDetail`, `addSharedItem`, `removeSharedItem` fonksiyonları
-- [ ] `src/pages/UserProfile.jsx` — başka kullanıcının profil sayfası (`/user/:username`)
-  - Avatar, kullanıcı adı, takipçi/takip sayısı
-  - "Takip Et / Takipten Çık" butonu (kendi profili ise gizli)
-  - Herkese açık watchlist koleksiyonları grid halinde
-- [ ] `src/pages/Social.jsx` — sosyal sayfa (`/social`, PrivateRoute)
-  - "Takip Ettiklerim" sekmesi: avatar kartlar, her kartın altında son eklediği film
-  - "Ortak Listelerim" sekmesi: katılınan ortak listeler, film sayısı rozeti
-  - "Yeni Ortak Liste" butonu → modal: liste adı + kullanıcı adıyla üye davet
-- [ ] `src/pages/SharedList.jsx` — ortak liste detay sayfası (`/shared/:id`, PrivateRoute)
+- [ ] `src/api/shared.js` — `createSharedList`, `inviteToList`, `leaveList`, `getSharedLists`, `getSharedListDetail`, `addSharedItem`, `removeSharedItem`
+- [ ] `src/pages/Social.jsx`'e "Ortak Listelerim" sekmesi eklendi
+  - Liste kartları (isim, üye avatarları, film sayısı)
+  - "Yeni Ortak Liste" butonu → modal (isim + kullanıcı adı ile davet)
+- [ ] `src/pages/SharedList.jsx` — `/shared/:id` (PrivateRoute)
   - Üye avatarları satırı
-  - Film grid'i: her filmde "Ekleyen: @kullanıcı" etiketi
+  - Film grid'i — her filmde "Ekleyen: @kullanıcı" etiketi
   - "Film Ekle" arama modalı
   - "Listeden Ayrıl" butonu
-- [ ] `src/components/Navbar.jsx` — "Sosyal" nav linki eklendi
-- [ ] `src/App.jsx` — `/social`, `/shared/:id`, `/user/:username` route'ları eklendi
+- [ ] `src/App.jsx` — `/shared/:id` route eklendi
 - [ ] `src/i18n/tr.js` ve `src/i18n/en.js`:
-  - `social_title: 'Sosyal'`, `social_following: 'Takip Ettiklerim'`, `social_followers: 'Takipçilerim'`
-  - `social_follow: 'Takip Et'`, `social_unfollow: 'Takipten Çık'`
-  - `social_shared_lists: 'Ortak Listelerim'`, `social_new_shared: 'Yeni Ortak Liste'`
-  - `social_invite: 'Davet Et'`, `social_leave: 'Listeden Ayrıl'`
-  - `social_added_by: 'Ekleyen'`
+  - `social_shared_lists`, `social_new_shared`, `social_invite`, `social_leave`, `social_added_by`
 
 #### Kontrol Listesi
-- [ ] Kullanıcı A, kullanıcı B'yi takip edebiliyor
-- [ ] Kendini takip etmeye çalışınca 400 hatası geliyor
-- [ ] Kullanıcı B'nin public watchlist'i `/user/:username` sayfasında görünüyor
-- [ ] Private koleksiyon başka kullanıcıya görünmüyor
 - [ ] Ortak liste oluşturulup üye davet edilebiliyor
-- [ ] Davet edilen üye film ekleyip silebiliyor; owner da ekleyip silebiliyor
-- [ ] Owner listeden ayrılınca liste siliniyor
-- [ ] Ortak listedeki filmde "Ekleyen: @kullanıcı" etiketi doğru
+- [ ] Davet edilen üye film ekleyip silebiliyor
+- [ ] Owner listeden ayrılınca liste tamamen siliniyor
+- [ ] Üye olmayan biri `/shared/:id`'ye girince 403 alıyor
+- [ ] Her filmde "Ekleyen: @kullanıcı" etiketi doğru
 - [ ] Koyu/açık mod + TR/EN uyumlu
 
 ---

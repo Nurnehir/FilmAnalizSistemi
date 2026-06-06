@@ -5,11 +5,14 @@ import client from './client';
 export const getCollections = () =>
   client.get('/watchlist/collections').then((r) => r.data);
 
-export const createCollection = (name) =>
-  client.post('/watchlist/collections', { name }).then((r) => r.data);
+export const createCollection = (name, isPublic = true) =>
+  client.post('/watchlist/collections', { name, is_public: isPublic }).then((r) => r.data);
 
-export const updateCollection = (id, name) =>
-  client.put(`/watchlist/collections/${id}`, { name }).then((r) => r.data);
+export const updateCollection = (id, name, isPublic = null) =>
+  client.put(`/watchlist/collections/${id}`, {
+    name,
+    ...(isPublic !== null ? { is_public: isPublic } : {}),
+  }).then((r) => r.data);
 
 export const deleteCollection = (id) =>
   client.delete(`/watchlist/collections/${id}`).then((r) => r.data);

@@ -135,7 +135,9 @@ const tr = {
   wl_add_to_list: 'Listeye Ekle',
   wl_select_list: 'Listeye Ekle',
   wl_select_list_subtitle: 'Bu filmi hangi listeye eklemek istersiniz?',
-  wl_no_collections_yet: 'Henüz listeniz yok. Önce bir liste oluşturun.',
+  wl_no_collections_yet: 'Henüz listeniz yok.',
+  wl_create_new_list: 'Yeni Liste Oluştur',
+  wl_create_and_add: 'Oluştur ve Ekle',
   wl_no_list: 'Liste seç...',
   wl_empty_collection: 'Bu liste boş.',
   wl_search_placeholder: 'Film ara...',
@@ -333,6 +335,30 @@ const tr = {
   note_char_limit: '/ 500',
   note_too_long: 'Not en fazla 500 karakter olabilir.',
   note_delete: 'Sil',
+
+  // Social
+  social_title: 'Sosyal',
+  social_following: 'Takip Ettiklerim',
+  social_followers: 'Takipçilerim',
+  social_following_count: 'takip',
+  social_followers_count: 'takipçi',
+  social_watchlist_count: 'film',
+  social_list_count: 'liste',
+  social_follow: 'Takip Et',
+  social_unfollow: 'Takipten Çık',
+  social_search_user: 'Kullanıcı adı ile ara...',
+  social_user_not_found: 'Kullanıcı bulunamadı.',
+  social_no_following: 'Henüz kimseyi takip etmiyorsunuz.',
+  social_no_followers: 'Henüz takipçiniz yok.',
+  social_public_lists: 'Herkese Açık Listeler',
+  social_no_public_lists: 'Henüz herkese açık liste yok.',
+
+  // Collection visibility
+  wl_visibility: 'Görünürlük',
+  wl_public: 'Herkese Açık',
+  wl_public_hint: 'Profilinizi ziyaret edenler bu listeyi görebilir',
+  wl_private: 'Sadece Ben',
+  wl_private_hint: 'Bu liste yalnızca size görünür',
 
   // Common
   loading: 'Yükleniyor...',

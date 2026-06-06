@@ -3,11 +3,13 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLang } from '../context/LangContext';
+import { useSocialNotif } from '../context/SocialNotifContext';
 
 export default function Navbar() {
   const { user, logout, openLoginModal } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { lang, toggleLang, t } = useLang();
+  const { followerNotif } = useSocialNotif();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -74,6 +76,7 @@ export default function Navbar() {
     { to: '/recommend', label: t.nav_recommend },
     { to: '/watchlist', label: t.nav_watchlist },
     { to: '/compare', label: t.nav_compare, guestAction: !user ? openLoginModal : null },
+    ...(user ? [{ to: '/social', label: t.social_title }] : []),
   ];
 
   return (
@@ -114,15 +117,27 @@ export default function Navbar() {
                 </Link>
                 <div className="hidden md:flex items-center gap-1">
                   {navLinks.map(({ to, label, guestAction }) => {
-                    const cls = `text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
+                    const cls = `relative text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
                       isActive(to)
                         ? 'text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/60'
                     }`;
+                    const isSocial = to === '/social';
+                    const badge = isSocial && followerNotif > 0 ? followerNotif : 0;
+                    const inner = (
+                      <>
+                        {label}
+                        {badge > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-purple-600 text-white text-[10px] font-bold leading-none">
+                            {badge > 99 ? '99+' : badge}
+                          </span>
+                        )}
+                      </>
+                    );
                     return guestAction ? (
-                      <button key={to} onClick={guestAction} className={cls}>{label}</button>
+                      <button key={to} onClick={guestAction} className={cls}>{inner}</button>
                     ) : (
-                      <Link key={to} to={to} className={cls}>{label}</Link>
+                      <Link key={to} to={to} className={cls}>{inner}</Link>
                     );
                   })}
                 </div>

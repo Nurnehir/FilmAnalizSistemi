@@ -135,7 +135,9 @@ const en = {
   wl_add_to_list: 'Add to List',
   wl_select_list: 'Add to List',
   wl_select_list_subtitle: 'Which list do you want to add this film to?',
-  wl_no_collections_yet: 'No lists yet. Create a list first.',
+  wl_no_collections_yet: 'No lists yet.',
+  wl_create_new_list: 'Create New List',
+  wl_create_and_add: 'Create & Add',
   wl_no_list: 'Choose list...',
   wl_empty_collection: 'This list is empty.',
   wl_search_placeholder: 'Search films...',
@@ -333,6 +335,30 @@ const en = {
   note_char_limit: '/ 500',
   note_too_long: 'Note must be 500 characters or fewer.',
   note_delete: 'Delete',
+
+  // Social
+  social_title: 'Social',
+  social_following: 'Following',
+  social_followers: 'Followers',
+  social_following_count: 'following',
+  social_followers_count: 'followers',
+  social_watchlist_count: 'films',
+  social_list_count: 'lists',
+  social_follow: 'Follow',
+  social_unfollow: 'Unfollow',
+  social_search_user: 'Search by username...',
+  social_user_not_found: 'User not found.',
+  social_no_following: 'You are not following anyone yet.',
+  social_no_followers: 'You have no followers yet.',
+  social_public_lists: 'Public Lists',
+  social_no_public_lists: 'No public lists yet.',
+
+  // Collection visibility
+  wl_visibility: 'Visibility',
+  wl_public: 'Public',
+  wl_public_hint: 'Anyone visiting your profile can see this list',
+  wl_private: 'Private',
+  wl_private_hint: 'Only visible to you',
 
   // Common
   loading: 'Loading...',

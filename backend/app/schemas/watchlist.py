@@ -5,15 +5,18 @@ from pydantic import BaseModel
 
 class CollectionCreate(BaseModel):
     name: str
+    is_public: bool = True
 
 
 class CollectionUpdate(BaseModel):
     name: str
+    is_public: Optional[bool] = None
 
 
 class CollectionOut(BaseModel):
     id: int
     name: str
+    is_public: bool = True
     item_count: int
     created_at: datetime
 

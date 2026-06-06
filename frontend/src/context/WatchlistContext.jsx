@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getWatchlist, addToWatchlist, removeFromWatchlist, getCollections } from '../api/watchlist';
+import { getWatchlist, addToWatchlist, removeFromWatchlist, getCollections, createCollection } from '../api/watchlist';
 import { useAuth } from './AuthContext';
 
 const WatchlistContext = createContext(null);
@@ -49,6 +49,12 @@ export function WatchlistProvider({ children }) {
     }
   };
 
+  const addCollection = async (name) => {
+    const col = await createCollection(name);
+    setCollections((prev) => [...prev, { ...col, item_count: 0 }]);
+    return col;
+  };
+
   const isInList = (tmdbId, mediaType = 'movie') =>
     items.some((i) => i.tmdb_id === tmdbId && i.media_type === mediaType);
 
@@ -56,7 +62,7 @@ export function WatchlistProvider({ children }) {
     items.find((i) => i.tmdb_id === tmdbId && i.media_type === mediaType);
 
   return (
-    <WatchlistContext.Provider value={{ items, collections, add, remove, isInList, getItem, refresh: fetchList }}>
+    <WatchlistContext.Provider value={{ items, collections, add, remove, addCollection, isInList, getItem, refresh: fetchList }}>
       {children}
     </WatchlistContext.Provider>
   );

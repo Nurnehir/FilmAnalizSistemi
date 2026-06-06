@@ -32,7 +32,7 @@ async def get_collections(
     result = []
     for col in cols:
         count = db.query(Watchlist).filter(Watchlist.collection_id == col.id).count()
-        result.append(CollectionOut(id=col.id, name=col.name, item_count=count, created_at=col.created_at))
+        result.append(CollectionOut(id=col.id, name=col.name, is_public=col.is_public, item_count=count, created_at=col.created_at))
     return result
 
 
@@ -43,11 +43,11 @@ async def create_collection(
     current_user: User = Depends(get_current_user),
 ):
     try:
-        col = WatchlistCollection(user_id=current_user.id, name=data.name.strip())
+        col = WatchlistCollection(user_id=current_user.id, name=data.name.strip(), is_public=data.is_public)
         db.add(col)
         db.commit()
         db.refresh(col)
-        return CollectionOut(id=col.id, name=col.name, item_count=0, created_at=col.created_at)
+        return CollectionOut(id=col.id, name=col.name, is_public=col.is_public, item_count=0, created_at=col.created_at)
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail="Liste oluşturulamadı")
@@ -68,10 +68,12 @@ async def rename_collection(
         raise HTTPException(status_code=404, detail="Liste bulunamadı")
     try:
         col.name = data.name.strip()
+        if data.is_public is not None:
+            col.is_public = data.is_public
         db.commit()
         db.refresh(col)
         count = db.query(Watchlist).filter(Watchlist.collection_id == col.id).count()
-        return CollectionOut(id=col.id, name=col.name, item_count=count, created_at=col.created_at)
+        return CollectionOut(id=col.id, name=col.name, is_public=col.is_public, item_count=count, created_at=col.created_at)
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail="Liste yeniden adlandırılamadı")

@@ -40,10 +40,12 @@ export default function Watchlist() {
   // Collection modals
   const [showNewListModal, setShowNewListModal] = useState(false);
   const [newListName, setNewListName] = useState('');
+  const [newListPublic, setNewListPublic] = useState(true);
   const [creatingList, setCreatingList] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editTarget, setEditTarget] = useState(null); // {id, name}
+  const [editTarget, setEditTarget] = useState(null); // {id, name, is_public}
   const [editName, setEditName] = useState('');
+  const [editPublic, setEditPublic] = useState(true);
   const [savingEdit, setSavingEdit] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null); // {id, name}
@@ -196,9 +198,10 @@ export default function Watchlist() {
     if (!name) return;
     setCreatingList(true);
     try {
-      const col = await createCollection(name);
+      const col = await createCollection(name, newListPublic);
       setCollections((prev) => [...prev, col]);
       setNewListName('');
+      setNewListPublic(true);
       setShowNewListModal(false);
       refreshContext();
     } catch {} finally { setCreatingList(false); }
@@ -207,6 +210,7 @@ export default function Watchlist() {
   const handleEditOpen = (col) => {
     setEditTarget(col);
     setEditName(col.name);
+    setEditPublic(col.is_public !== false);
     setShowEditModal(true);
   };
 
@@ -215,8 +219,8 @@ export default function Watchlist() {
     if (!name || !editTarget) return;
     setSavingEdit(true);
     try {
-      const updated = await updateCollection(editTarget.id, name);
-      setCollections((prev) => prev.map((c) => (c.id === editTarget.id ? { ...c, name: updated.name } : c)));
+      const updated = await updateCollection(editTarget.id, name, editPublic);
+      setCollections((prev) => prev.map((c) => (c.id === editTarget.id ? { ...c, name: updated.name, is_public: updated.is_public } : c)));
       setShowEditModal(false);
     } catch {} finally { setSavingEdit(false); }
   };
@@ -346,6 +350,11 @@ export default function Watchlist() {
             >
               <span className="text-base shrink-0">🎬</span>
               <span className="truncate">{col.name}</span>
+              {col.is_public === false && (
+                <svg className="w-3 h-3 shrink-0 text-gray-400 dark:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+              )}
               <span className={`text-xs px-1.5 py-0.5 rounded-full shrink-0 ml-auto ${
                 activeColId === col.id
                   ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300'
@@ -871,6 +880,43 @@ export default function Watchlist() {
               autoFocus
               maxLength={100}
             />
+            {/* Visibility toggle */}
+            <div className="mt-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">{t.wl_visibility}</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditPublic(true)}
+                  className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-colors ${
+                    editPublic
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{t.wl_public}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditPublic(false)}
+                  className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-colors ${
+                    !editPublic
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>{t.wl_private}</span>
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+                {editPublic ? t.wl_public_hint : t.wl_private_hint}
+              </p>
+            </div>
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setShowEditModal(false)}
@@ -941,6 +987,43 @@ export default function Watchlist() {
               autoFocus
               maxLength={100}
             />
+            {/* Visibility toggle */}
+            <div className="mt-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">{t.wl_visibility}</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNewListPublic(true)}
+                  className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-colors ${
+                    newListPublic
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{t.wl_public}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewListPublic(false)}
+                  className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-colors ${
+                    !newListPublic
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>{t.wl_private}</span>
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+                {newListPublic ? t.wl_public_hint : t.wl_private_hint}
+              </p>
+            </div>
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setShowNewListModal(false)}

@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { WatchlistProvider } from './context/WatchlistContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LangProvider } from './context/LangContext';
+import { SocialNotifProvider } from './context/SocialNotifContext';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import LoginModal from './components/LoginModal';
@@ -19,6 +20,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Compare from './pages/Compare';
 import Stats from './pages/Stats';
+import Social from './pages/Social';
+import UserProfile from './pages/UserProfile';
 
 function AppShell() {
   const { loginModalOpen, closeLoginModal } = useAuth();
@@ -37,6 +40,8 @@ function AppShell() {
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/compare" element={<PrivateRoute><Compare /></PrivateRoute>} />
         <Route path="/stats" element={<PrivateRoute><Stats /></PrivateRoute>} />
+        <Route path="/social" element={<PrivateRoute><Social /></PrivateRoute>} />
+        <Route path="/user/:username" element={<UserProfile />} />
         <Route path="/movie/:id" element={<MovieDetail />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -53,7 +58,9 @@ function App() {
         <BrowserRouter>
           <AuthProvider>
             <WatchlistProvider>
-              <AppShell />
+              <SocialNotifProvider>
+                <AppShell />
+              </SocialNotifProvider>
             </WatchlistProvider>
           </AuthProvider>
         </BrowserRouter>
