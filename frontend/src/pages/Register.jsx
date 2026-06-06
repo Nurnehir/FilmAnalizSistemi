@@ -35,9 +35,12 @@ export default function Register() {
         {/* Left panel */}
         <div className="hidden md:flex flex-col justify-between w-2/5 bg-gradient-to-br from-purple-900 via-indigo-950 to-gray-950 p-10">
           <div>
-            <div className="flex items-center gap-2 mb-10">
-              <span className="text-3xl">🎬</span>
-              <span className="text-white font-bold text-xl tracking-tight">FilmAI</span>
+            <div className="flex flex-col gap-1 mb-10">
+              <div className="flex items-center gap-2">
+                <span className="text-3xl">🎬</span>
+                <span className="text-white font-bold text-2xl tracking-tight">MARS</span>
+              </div>
+              <span className="text-purple-200/60 text-xs tracking-wide pl-1">Movie Analysis & Recommendation System</span>
             </div>
             <h2 className="text-white text-2xl font-bold leading-snug mb-3">
               {t.register_brand_title}

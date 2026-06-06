@@ -63,7 +63,7 @@ export default function LoginModal({ open, onClose }) {
         {/* Header */}
         <div className="flex items-center gap-2 mb-1">
           <span className="text-2xl">🎬</span>
-          <span className="text-gray-900 dark:text-white font-bold text-lg">FilmAI</span>
+          <span className="text-gray-900 dark:text-white font-bold text-lg">MARS</span>
         </div>
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{t.guest_modal_title}</h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">{t.login_subtitle}</p>

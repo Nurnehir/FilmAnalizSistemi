@@ -6,7 +6,9 @@
       "Bash(curl -s \"http://localhost:8000/movies/now-playing?original_language=!tr&genres=35\")",
       "Bash(npm install *)",
       "Bash(node -e \"require\\('./node_modules/recharts'\\)\")",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(sed -n '35,55p' /Users/nurnehirarca/GitHub/FilmAnalizSistemi/frontend/src/pages/Login.jsx)",
+      "Bash(sed -n '35,55p' /Users/nurnehirarca/GitHub/FilmAnalizSistemi/frontend/src/pages/Register.jsx)"
     ]
   }
 }

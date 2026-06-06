@@ -110,7 +110,7 @@ export default function Navbar() {
               <div className="flex items-center gap-8">
                 <Link to="/" className="flex items-center gap-2 group">
                   <span className="text-2xl">🎬</span>
-                  <span className="text-gray-900 dark:text-white font-bold text-lg tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">FilmAI</span>
+                  <span className="text-gray-900 dark:text-white font-bold text-lg tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">MARS</span>
                 </Link>
                 <div className="hidden md:flex items-center gap-1">
                   {navLinks.map(({ to, label, guestAction }) => {

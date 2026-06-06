@@ -347,17 +347,17 @@
   - Mobilde hamburger ile açılır sidebar (overlay + backdrop)
 - [x] **Frontend:** Koyu/açık mod + TR/EN uyumlu (rec_new, rec_history_* anahtarları eklendi)
 
-### 15. Uygulama Adı Değişikliği
-> "FilmAI" ismi değiştirilecek. Yeni isim belirlendikten sonra tüm görünen yerlerde güncellenecek.
+### 15. Uygulama Adı Değişikliği ✅
+> "FilmAI" → "MARS" (Movie Analysis & Recommendation System)
 
-- [ ] **Karar:** Yeni uygulama adını belirle (örn: "CineMatch", "FilmRadar", "MoodCine", "Sinefil" vb.)
-- [ ] **Frontend:** `frontend/index.html` — `<title>` etiketi güncelle
-- [ ] **Frontend:** `src/components/Navbar.jsx` — logo/marka adı güncelle (sol üst köşe metni)
-- [ ] **Frontend:** `src/pages/Login.jsx` — sol panel branding başlığı güncelle (eğer uygulama adı geçiyorsa)
-- [ ] **Frontend:** `src/pages/Register.jsx` — sol panel branding güncelle (eğer uygulama adı geçiyorsa)
-- [ ] **Frontend:** `src/i18n/tr.js` ve `src/i18n/en.js` — uygulama adı içeren string anahtarları güncelle
-- [ ] **Diğer:** `README.md` başlığı ve açıklaması güncelle
-- [ ] **Diğer:** `CLAUDE.md` / `AGENTS.md` içinde geçen referanslar güncelle (opsiyonel)
+- [x] **Karar:** MARS — Movie Analysis & Recommendation System
+- [x] **Frontend:** `frontend/index.html` — `<title>` güncellendi
+- [x] **Frontend:** `src/components/Navbar.jsx` — "MARS" (kısa)
+- [x] **Frontend:** `src/pages/Login.jsx` — sol panel: 🎬 MARS + tam isim altta
+- [x] **Frontend:** `src/pages/Register.jsx` — sol panel: 🎬 MARS + tam isim altta
+- [x] **Frontend:** `src/pages/ForgotPassword.jsx` — sol panel güncellendi
+- [x] **Frontend:** `src/pages/ResetPassword.jsx` — sol panel güncellendi
+- [x] **Frontend:** `src/components/LoginModal.jsx` — "MARS" (kısa)
 
 ### 16. Şifre Göster / Gizle (Göz İkonu — Password Toggle) ✅
 > Login, Register ve Profile sayfalarındaki şifre alanlarının sağında göz ikonu olacak.
