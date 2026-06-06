@@ -21,9 +21,14 @@ export const getNowPlaying = (page = 1) =>
 export const getWatchProviders = (tmdbId, mediaType = 'movie') =>
   client.get(`/movies/${tmdbId}/providers`, { params: { media_type: mediaType } }).then((r) => r.data);
 
-export const discoverMovies = (genreIds = [], sortBy = 'popularity.desc', mediaType = 'movie') =>
+export const discoverMovies = (genreIds = [], sortBy = 'popularity.desc', mediaType = 'movie', originalLanguage = '') =>
   client
     .get('/movies/discover', {
-      params: { genres: genreIds.join(','), sort_by: sortBy, media_type: mediaType },
+      params: {
+        genres: genreIds.join(','),
+        sort_by: sortBy,
+        media_type: mediaType,
+        original_language: originalLanguage,
+      },
     })
     .then((r) => r.data);

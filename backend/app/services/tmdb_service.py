@@ -73,6 +73,7 @@ async def discover_movies(
     sort_by: str = "popularity.desc",
     media_type: str = "movie",
     exclude_genre_ids: list = None,
+    original_language: str = None,
 ) -> dict:
     extra = {
         "language": "tr-TR",
@@ -84,6 +85,11 @@ async def discover_movies(
         extra["with_genres"] = "|".join(map(str, genre_ids))
     if exclude_genre_ids:
         extra["without_genres"] = "|".join(map(str, exclude_genre_ids))
+    if original_language:
+        if original_language.startswith("!"):
+            extra["without_original_language"] = original_language[1:]
+        else:
+            extra["with_original_language"] = original_language
     async with httpx.AsyncClient() as client:
         r = await client.get(
             f"{BASE_URL}/discover/{media_type}",

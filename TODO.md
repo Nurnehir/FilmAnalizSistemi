@@ -648,3 +648,43 @@
 - [x] Login Modal'da başarılı giriş sonrası sayfa aynı kalıyor ✓
 - [x] Login Modal dışına tıklayınca kapanıyor ✓
 - [x] Koyu/açık mod + TR/EN uyumlu ✓
+
+---
+
+### 26. Yerli / Yabancı İçerik Filtresi (Anasayfa)
+> Anasayfada kullanıcı içeriği menşeine göre filtreleyebilsin: **Tümü / Yerli (TR) / Yabancı**.
+> TMDB API'nin `with_original_language` ve `without_original_language` parametreleri kullanılır.
+> Filtre aktifken trending yerine discover endpoint'i çağrılır. DB değişikliği yoktur.
+>
+> **Konum:** Trend/Vizyonda chip toggle'ının hemen yanına "Tümü / Yerli / Yabancı" chip grubu eklenir.
+> Vizyonda modunda filtre gizlenir (vizyondaki filtreler TMDB tarafından zaten uygulanmış olur).
+
+#### Veritabanı
+- [x] Değişiklik yok — TMDB API `with_original_language=tr` parametresi yeterli.
+
+#### Backend
+- [x] `app/services/tmdb_service.py` — `discover_movies`'e `original_language: str = None` parametresi eklendi
+  - `original_language` varsa: `params["with_original_language"] = original_language` (yerli için `"tr"`)
+  - `original_language` değeri `"!tr"` ise: `params["without_original_language"] = "tr"` (yabancı filtresi)
+- [x] `app/routers/movies.py` — `/movies/discover` endpoint'ine `original_language: str = Query("")` query param eklendi; tmdb_service'e iletiliyor
+
+#### Frontend
+- [x] `src/api/movies.js` — `discoverMovies(genreIds, sortBy, mediaType, originalLanguage)` imzası genişletildi
+- [x] `src/pages/Home.jsx` — `originFilter` state eklendi (`'all' | 'domestic' | 'foreign'`); fetch logic güncellendi:
+  - `originFilter = 'all'` + tür yok: `getTrending` (mevcut davranış)
+  - `originFilter = 'all'` + tür var: `discoverMovies(genres)` (mevcut davranış)
+  - `originFilter = 'domestic'`: `discoverMovies(genres, 'popularity.desc', mediaType, 'tr')`
+  - `originFilter = 'foreign'`: `discoverMovies(genres, 'popularity.desc', mediaType, '!tr')`
+  - `viewMode = 'now_playing'`: filtre gösterilmez, getNowPlaying çağrısı değişmez
+  - `mediaType` veya `originFilter` değişince `selectedGenres` sıfırlanır
+- [x] `src/pages/Home.jsx` — "Tümü / Yerli / Yabancı" chip toggle: Film/Dizi toggle'ının sağına eklendi; sadece Trend modunda görünür
+- [x] `src/i18n/tr.js` ve `src/i18n/en.js` — `home_origin_all`, `home_origin_domestic`, `home_origin_foreign` anahtarları eklendi
+
+#### Kontrol Listesi
+- [x] "Yerli" seçince Türkçe yapım filmler geliyor (original_language=tr) — test: Koğuştaki Mucize, Ayla, Recep İvedik ✓
+- [x] "Yabancı" seçince Türk yapımı filmler gelmiyor — test: 20 sonuçta TR dil sayısı: 0 ✓
+- [x] "Tümü" seçince eski trending davranışı geri dönüyor — getTrending çağrısına düşüyor ✓
+- [x] Tür filtresi + yerli/yabancı filtresi birlikte çalışıyor — test: genres=35 + tr → Recep İvedik, Mucize ✓
+- [x] Vizyonda modunda yerli/yabancı toggle gizleniyor — `{!isNowPlaying && (...)}` ile sarılı ✓
+- [x] Film/Dizi toggle ile birlikte çalışıyor — test: media_type=tv + tr → Yalı Çapkını, Kuruluş: Osman ✓
+- [x] Koyu/açık mod + TR/EN uyumlu — mevcut chip stili (bg-gray-100/dark:bg-gray-800) kullanıldı, i18n anahtarları tr.js ve en.js'e eklendi ✓

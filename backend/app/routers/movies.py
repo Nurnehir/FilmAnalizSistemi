@@ -20,10 +20,14 @@ async def discover(
     genres: str = Query("", description="Comma-separated TMDB genre IDs"),
     sort_by: str = Query("popularity.desc"),
     media_type: str = Query("movie", pattern="^(movie|tv)$"),
+    original_language: str = Query("", description="Filter by original language, prefix ! to exclude (e.g. tr, !tr)"),
 ):
     genre_ids = [int(g) for g in genres.split(",") if g.strip().isdigit()] if genres else []
     try:
-        return await tmdb_service.discover_movies(genre_ids, sort_by, media_type)
+        return await tmdb_service.discover_movies(
+            genre_ids, sort_by, media_type,
+            original_language=original_language or None,
+        )
     except Exception:
         raise HTTPException(status_code=503, detail="TMDB servisine ulasilamiyor")
 

@@ -13,6 +13,7 @@ export default function Home() {
 
   const [mediaType, setMediaType] = useState('movie');
   const [viewMode, setViewMode] = useState('trending'); // 'trending' | 'now_playing'
+  const [originFilter, setOriginFilter] = useState('all'); // 'all' | 'domestic' | 'foreign'
   const [movies, setMovies] = useState([]);
   const [trendLoading, setTrendLoading] = useState(true);
   const [trendError, setTrendError] = useState(null);
@@ -21,7 +22,7 @@ export default function Home() {
 
   useEffect(() => {
     setSelectedGenres([]);
-  }, [mediaType, viewMode]);
+  }, [mediaType, viewMode, originFilter]);
 
   useEffect(() => {
     setTrendLoading(true);
@@ -29,16 +30,21 @@ export default function Home() {
     let fetch;
     if (viewMode === 'now_playing') {
       fetch = getNowPlaying(1);
-    } else if (selectedGenres.length > 0) {
-      fetch = discoverMovies(selectedGenres, 'popularity.desc', mediaType);
     } else {
-      fetch = getTrending(mediaType, 1);
+      const langParam =
+        originFilter === 'domestic' ? 'tr' :
+        originFilter === 'foreign' ? '!tr' : '';
+      if (langParam || selectedGenres.length > 0) {
+        fetch = discoverMovies(selectedGenres, 'popularity.desc', mediaType, langParam);
+      } else {
+        fetch = getTrending(mediaType, 1);
+      }
     }
     fetch
       .then((data) => setMovies(data.results || []))
       .catch(() => setTrendError(t.home_error))
       .finally(() => setTrendLoading(false));
-  }, [mediaType, selectedGenres, viewMode]);
+  }, [mediaType, selectedGenres, viewMode, originFilter]);
 
   const isNowPlaying = viewMode === 'now_playing';
   const sectionTitle = isNowPlaying
@@ -123,6 +129,29 @@ export default function Home() {
                       onClick={() => setMediaType(key)}
                       className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                         mediaType === key
+                          ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Yerli / Yabancı toggle — sadece Trend modunda */}
+              {!isNowPlaying && (
+                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+                  {[
+                    { key: 'all', label: t.home_origin_all },
+                    { key: 'domestic', label: t.home_origin_domestic },
+                    { key: 'foreign', label: t.home_origin_foreign },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setOriginFilter(key)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                        originFilter === key
                           ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                           : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                       }`}

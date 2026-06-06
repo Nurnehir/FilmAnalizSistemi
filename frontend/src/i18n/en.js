@@ -77,6 +77,9 @@ const en = {
   home_error: 'Failed to load movies.',
   home_movies: 'Movies',
   home_series: 'Series',
+  home_origin_all: 'All',
+  home_origin_domestic: 'Turkish',
+  home_origin_foreign: 'Foreign',
 
   // Genre filter
   genre_filter_title: 'Filter by Genre',

@@ -77,6 +77,9 @@ const tr = {
   home_error: 'Filmler yüklenemedi.',
   home_movies: 'Filmler',
   home_series: 'Diziler',
+  home_origin_all: 'Tümü',
+  home_origin_domestic: 'Yerli',
+  home_origin_foreign: 'Yabancı',
 
   // Genre filter
   genre_filter_title: 'Türe Göre Filtrele',
