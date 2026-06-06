@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.models.user import User
@@ -7,9 +7,11 @@ from app.models.watchlist import Watchlist
 from app.models.watchlist_collection import WatchlistCollection
 from app.schemas.watchlist import (
     WatchlistItem, WatchlistOut, WatchlistResponse,
-    WatchedUpdate, RatingUpdate, MoveItem,
+    WatchedUpdate, RatingUpdate, MoveItem, NoteUpdate,
     CollectionCreate, CollectionUpdate, CollectionOut,
 )
+from app.services import gemini_service
+from app.services import tmdb_service
 
 router = APIRouter(prefix="/watchlist", tags=["watchlist"])
 
@@ -237,6 +239,74 @@ async def update_rating(
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail="Puan kaydedilemedi")
+
+
+@router.post("/{item_id}/summarize", response_model=WatchlistOut)
+async def summarize_movie(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    item = (
+        db.query(Watchlist)
+        .filter(Watchlist.id == item_id, Watchlist.user_id == current_user.id)
+        .first()
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Liste öğesi bulunamadı")
+
+    try:
+        detail = await tmdb_service.get_movie_detail(item.tmdb_id, item.media_type)
+        genres = [g.get("name", "") for g in detail.get("genres", [])]
+        overview = detail.get("overview", "")
+    except Exception:
+        genres = []
+        overview = ""
+
+    summary = await gemini_service.generate_movie_summary(
+        title=item.title,
+        overview=overview,
+        genres=genres,
+        username=current_user.username,
+    )
+
+    try:
+        item.ai_summary = summary
+        db.commit()
+        db.refresh(item)
+        return item
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Özet kaydedilemedi")
+
+
+@router.patch("/{item_id}/note", response_model=WatchlistOut)
+async def update_note(
+    item_id: int,
+    data: NoteUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    item = (
+        db.query(Watchlist)
+        .filter(Watchlist.id == item_id, Watchlist.user_id == current_user.id)
+        .first()
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Liste öğesi bulunamadı")
+
+    note = data.personal_note
+    if note is not None and len(note) > 500:
+        raise HTTPException(status_code=422, detail="Not en fazla 500 karakter olabilir")
+
+    try:
+        item.personal_note = note if note else None
+        db.commit()
+        db.refresh(item)
+        return item
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Not kaydedilemedi")
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_200_OK)

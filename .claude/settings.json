@@ -5,7 +5,8 @@
       "Bash(curl -s \"http://localhost:8000/movies/now-playing?original_language=tr\")",
       "Bash(curl -s \"http://localhost:8000/movies/now-playing?original_language=!tr&genres=35\")",
       "Bash(npm install *)",
-      "Bash(node -e \"require\\('./node_modules/recharts'\\)\")"
+      "Bash(node -e \"require\\('./node_modules/recharts'\\)\")",
+      "Bash(npx vite *)"
     ]
   }
 }

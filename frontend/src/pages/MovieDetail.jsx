@@ -3,8 +3,10 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { getMovieDetail, getSimilar, getMovieVideos, getWatchProviders } from '../api/movies';
 import { getReviews, createReview, updateReview, deleteReview } from '../api/reviews';
 import { trackEvent } from '../api/behavior';
+import { summarizeMovie, updateNote } from '../api/watchlist';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
+import { useWatchlistContext } from '../context/WatchlistContext';
 import WatchlistButton from '../components/WatchlistButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import MovieCard from '../components/MovieCard';
@@ -18,7 +20,13 @@ export default function MovieDetail() {
   const [searchParams] = useSearchParams();
   const { t } = useLang();
   const { user, openLoginModal } = useAuth();
+  const { getItem, refresh: refreshWatchlist } = useWatchlistContext();
   const mediaType = searchParams.get('type') || 'movie';
+
+  const [wlItem, setWlItem] = useState(null);
+  const [summarizingDetail, setSummarizingDetail] = useState(false);
+  const [summaryVisible, setSummaryVisible] = useState(false);
+  const [noteState, setNoteState] = useState(null); // null = view, {draft, saving} = edit
 
   const [movie, setMovie] = useState(null);
   const [similar, setSimilar] = useState([]);
@@ -89,6 +97,51 @@ export default function MovieDetail() {
     load();
     loadReviews(1, 'newest');
   }, [id, mediaType]);
+
+  // Sync watchlist item from context
+  useEffect(() => {
+    if (user) setWlItem(getItem(parseInt(id), mediaType) || null);
+    else setWlItem(null);
+  }, [user, id, mediaType, getItem]);
+
+  const handleDetailSummarize = async () => {
+    if (!wlItem) return;
+    setSummarizingDetail(true);
+    try {
+      const updated = await summarizeMovie(wlItem.id);
+      setWlItem((prev) => ({ ...prev, ai_summary: updated.ai_summary }));
+      setSummaryVisible(true);
+    } catch {} finally {
+      setSummarizingDetail(false);
+    }
+  };
+
+  const toggleDetailSummary = () => setSummaryVisible((v) => !v);
+
+  const startDetailNote = () => setNoteState({ draft: wlItem?.personal_note || '', saving: false });
+  const cancelDetailNote = () => setNoteState(null);
+  const changeDetailDraft = (val) => setNoteState((prev) => ({ ...prev, draft: val }));
+  const saveDetailNote = async () => {
+    if (!noteState || noteState.draft.length > 500) return;
+    setNoteState((prev) => ({ ...prev, saving: true }));
+    try {
+      const updated = await updateNote(wlItem.id, noteState.draft);
+      setWlItem((prev) => (prev ? { ...prev, personal_note: updated.personal_note } : prev));
+      setNoteState(null);
+    } catch {
+      setNoteState((prev) => ({ ...prev, saving: false }));
+    }
+  };
+  const deleteDetailNote = async () => {
+    setNoteState((prev) => ({ ...(prev || { draft: '' }), saving: true }));
+    try {
+      const updated = await updateNote(wlItem.id, '');
+      setWlItem((prev) => (prev ? { ...prev, personal_note: updated.personal_note } : prev));
+      setNoteState(null);
+    } catch {
+      setNoteState((prev) => ({ ...(prev || { draft: '' }), saving: false }));
+    }
+  };
 
   const handleReviewSubmit = async (formData) => {
     setReviewSubmitting(true);
@@ -279,6 +332,113 @@ export default function MovieDetail() {
             </div>
           </div>
         </div>
+
+        {/* Note + Summary (only if in watchlist & logged in) */}
+        {user && wlItem && (
+          <section className="mt-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 space-y-3">
+            {/* Summary row */}
+            <div className="flex items-center gap-2">
+              {wlItem.ai_summary && (
+                <button
+                  onClick={toggleDetailSummary}
+                  className="flex-1 text-sm py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-1"
+                >
+                  {summaryVisible ? `▲ ${t.note_summary_hide}` : `▼ ${t.note_summary_show}`}
+                </button>
+              )}
+              <button
+                onClick={handleDetailSummarize}
+                disabled={summarizingDetail}
+                className={`text-sm py-2 rounded-xl border border-purple-200 dark:border-purple-900/50 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors disabled:opacity-40 flex items-center justify-center gap-2 ${wlItem.ai_summary ? 'px-4' : 'flex-1'}`}
+              >
+                {summarizingDetail ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                    {t.note_summarizing}
+                  </>
+                ) : wlItem.ai_summary ? `↻ ${t.note_refresh_summary}` : `✨ ${t.note_create_summary}`}
+              </button>
+            </div>
+
+            {/* Summary text */}
+            {wlItem.ai_summary && summaryVisible && (
+              <div className="bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-xl px-4 py-3">
+                <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">✨ {t.note_ai_summary}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{wlItem.ai_summary}</p>
+              </div>
+            )}
+
+            {/* Personal note */}
+            {noteState ? (
+              /* Edit mode */
+              <div className="space-y-2">
+                <textarea
+                  value={noteState.draft}
+                  onChange={(e) => changeDetailDraft(e.target.value)}
+                  placeholder={t.note_placeholder}
+                  rows={3}
+                  maxLength={500}
+                  autoFocus
+                  className={`w-full text-sm rounded-xl px-3 py-2 resize-none border focus:outline-none focus:ring-2 transition-colors bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 ${
+                    noteState.draft.length > 500
+                      ? 'border-red-400 focus:ring-red-400'
+                      : 'border-gray-200 dark:border-gray-700 focus:ring-purple-500'
+                  }`}
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-xs tabular-nums ${noteState.draft.length > 500 ? 'text-red-500' : 'text-gray-400'}`}>
+                    {noteState.draft.length} {t.note_char_limit}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={cancelDetailNote}
+                      disabled={noteState.saving}
+                      className="text-sm px-4 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-40"
+                    >
+                      {t.cancel}
+                    </button>
+                    <button
+                      onClick={saveDetailNote}
+                      disabled={noteState.saving || noteState.draft.length > 500}
+                      className="text-sm px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-40"
+                    >
+                      {noteState.saving ? '...' : t.save}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : wlItem.personal_note ? (
+              /* View mode — note exists */
+              <div className="space-y-2">
+                <div className="rounded-xl border border-gray-100 dark:border-gray-800 px-4 py-3">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">📝 {wlItem.personal_note}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={startDetailNote}
+                    className="flex-1 text-sm py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-purple-400 dark:hover:border-purple-600 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                  >
+                    {t.wl_edit}
+                  </button>
+                  <button
+                    onClick={deleteDetailNote}
+                    className="flex-1 text-sm py-2 rounded-xl border border-red-200 dark:border-red-900/40 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    {t.note_delete}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* View mode — no note */
+              <button
+                onClick={startDetailNote}
+                className="w-full text-sm py-2 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 hover:border-purple-300 dark:hover:border-purple-700 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
+              >
+                + {t.note_add}
+              </button>
+            )}
+          </section>
+        )}
 
         {/* Cast */}
         <section className="mt-10">

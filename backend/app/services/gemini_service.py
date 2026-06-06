@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 from groq import Groq
 from app.config import settings
 
@@ -246,6 +247,52 @@ async def compare_movies(movie_a: dict, movie_b: dict, username: str = "Kullanic
             "winner_id": movie_a.get("tmdb_id"),
             "verdict": f"İkisi de iyi seçimler, ama {movie_a.get('title','Film A')} biraz daha öne çıkıyor.",
         }
+
+
+MOVIE_SUMMARY_PROMPT = """
+Bir film hakkında kısa, samimi bir özet yaz.
+
+Film: {title}
+Türler: {genres}
+TMDB Özeti: {overview}
+
+Kullanıcının adı: {username}
+
+Yalnızca bu JSON formatında cevap ver, başka hiçbir şey yazma:
+{{
+  "summary": "Filmi 2-3 cümlede özetle. 'Sen' kipini kullan, {username}'e seslenir gibi yaz. Spoiler VERME. Filmin havasını, atmosferini anlat."
+}}
+"""
+
+
+async def generate_movie_summary(
+    title: str,
+    overview: str,
+    genres: list,
+    username: str = "Kullanıcı",
+) -> Optional[str]:
+    genres_str = ", ".join(genres) if genres else "Bilinmiyor"
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{
+                "role": "user",
+                "content": MOVIE_SUMMARY_PROMPT.format(
+                    title=title,
+                    genres=genres_str,
+                    overview=(overview or "")[:300],
+                    username=username,
+                ),
+            }],
+            temperature=0.5,
+            max_tokens=256,
+        )
+        text = response.choices[0].message.content
+        result = json.loads(_extract_json(text))
+        return result.get("summary")
+    except Exception as e:
+        print(f"=== GROQ SUMMARY HATA: {type(e).__name__}: {str(e)[:200]} ===", flush=True)
+        return None
 
 
 async def generate_recommendations(prompt: str, movies: list, behavior_summary: str = "", username: str = "Kullanici") -> dict:

@@ -126,6 +126,7 @@ const en = {
   wl_new_list: 'New List',
   wl_new_list_subtitle: 'Give your list a name.',
   wl_new_list_placeholder: 'List name...',
+  wl_edit: 'Edit',
   wl_rename: 'Rename',
   wl_rename_subtitle: 'Enter a new name for this list.',
   wl_delete_list: 'Delete List',
@@ -316,6 +317,22 @@ const en = {
   stats_watched_ratio: 'Watched / To Watch',
   stats_to_watch: 'To Watch',
   stats_no_data: 'Not enough data yet. Start adding and rating films!',
+
+  // AI Summary + Personal Note
+  note_ai_summary: 'AI Summary',
+  note_get_summary: 'Get Summary',
+  note_create_summary: 'Create Summary',
+  note_refresh_summary: 'Refresh Summary',
+  note_summarizing: 'Generating summary...',
+  note_summary_show: 'Show Summary',
+  note_summary_hide: 'Hide',
+  note_my_note: 'My Note',
+  note_add: 'Add Note',
+  note_placeholder: 'Write your thoughts about this film...',
+  note_saved: 'Saved ✓',
+  note_char_limit: '/ 500',
+  note_too_long: 'Note must be 500 characters or fewer.',
+  note_delete: 'Delete',
 
   // Common
   loading: 'Loading...',

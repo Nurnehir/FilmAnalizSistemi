@@ -126,6 +126,7 @@ const tr = {
   wl_new_list: 'Yeni Liste',
   wl_new_list_subtitle: 'Listenize bir isim verin.',
   wl_new_list_placeholder: 'Liste adı...',
+  wl_edit: 'Düzenle',
   wl_rename: 'Yeniden Adlandır',
   wl_rename_subtitle: 'Liste için yeni bir isim girin.',
   wl_delete_list: 'Listeyi Sil',
@@ -316,6 +317,22 @@ const tr = {
   stats_watched_ratio: 'İzlendi / İzlenecek',
   stats_to_watch: 'İzlenecek',
   stats_no_data: 'Henüz yeterli veri yok. Film ekleyip puanlamaya başla!',
+
+  // AI Özeti + Kişisel Not
+  note_ai_summary: 'AI Özeti',
+  note_get_summary: 'Özet Al',
+  note_create_summary: 'Özet Oluştur',
+  note_refresh_summary: 'Özeti Yenile',
+  note_summarizing: 'Özet hazırlanıyor...',
+  note_summary_show: 'Özeti Gör',
+  note_summary_hide: 'Gizle',
+  note_my_note: 'Notum',
+  note_add: 'Not Ekle',
+  note_placeholder: 'Bu film hakkında düşüncelerini yaz...',
+  note_saved: 'Kaydedildi ✓',
+  note_char_limit: '/ 500',
+  note_too_long: 'Not en fazla 500 karakter olabilir.',
+  note_delete: 'Sil',
 
   // Common
   loading: 'Yükleniyor...',

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   getWatchlist, removeFromWatchlist, markWatched, rateMovie, moveToCollection,
   getCollections, createCollection, updateCollection, deleteCollection,
+  summarizeMovie, updateNote,
 } from '../api/watchlist';
 import { useLang } from '../context/LangContext';
 import { useWatchlistContext } from '../context/WatchlistContext';
@@ -24,13 +25,17 @@ export default function Watchlist() {
   const [toggling, setToggling] = useState(null);
   const [rating, setRating] = useState(null);
   const [moving, setMoving] = useState(null);
+  const [summarizing, setSummarizing] = useState(new Set());
+  const [expandedSummaries, setExpandedSummaries] = useState(new Set());
+  // Note inline edit: { [itemId]: { draft: string, saving: bool } }
+  const [noteStates, setNoteStates] = useState({});
   const [tab, setTab] = useState('all');
   const [activeColId, setActiveColId] = useState(null); // null = show all
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 12;
 
   // Collection modals
   const [showNewListModal, setShowNewListModal] = useState(false);
@@ -53,24 +58,30 @@ export default function Watchlist() {
         let loadedItems = listData.items || [];
         setCollections(colData || []);
 
-        // Enrich items that are missing genre_ids (added before the genre_ids migration)
-        const missing = loadedItems.filter((i) => !i.genre_ids?.length);
+        // Enrich items missing genre_ids or poster_path
+        const missing = loadedItems.filter((i) => !i.genre_ids?.length || !i.poster_path);
         if (missing.length > 0) {
           const enriched = await Promise.allSettled(
             missing.map((i) =>
               getMovieDetail(i.tmdb_id, i.media_type || 'movie')
-                .then((d) => ({ id: i.id, genre_ids: (d.genres || []).map((g) => g.id) }))
+                .then((d) => ({
+                  id: i.id,
+                  genre_ids: (d.genres || []).map((g) => g.id),
+                  poster_path: d.poster_path || i.poster_path || null,
+                }))
                 .catch(() => null)
             )
           );
           const updateMap = Object.fromEntries(
             enriched
               .filter((r) => r.status === 'fulfilled' && r.value)
-              .map((r) => [r.value.id, r.value.genre_ids])
+              .map((r) => [r.value.id, r.value])
           );
           if (Object.keys(updateMap).length > 0) {
             loadedItems = loadedItems.map((i) =>
-              updateMap[i.id] ? { ...i, genre_ids: updateMap[i.id] } : i
+              updateMap[i.id]
+                ? { ...i, genre_ids: updateMap[i.id].genre_ids, poster_path: updateMap[i.id].poster_path }
+                : i
             );
           }
         }
@@ -83,7 +94,7 @@ export default function Watchlist() {
       }
     };
     load();
-  }, []);
+  }, [user]);
 
   // ── Item actions ────────────────────────────────────────────────────────────
 
@@ -122,6 +133,60 @@ export default function Watchlist() {
       setCollections(colData || []);
       refreshContext();
     } catch {} finally { setMoving(null); }
+  };
+
+  const handleSummarize = async (item) => {
+    setSummarizing((prev) => new Set([...prev, item.id]));
+    try {
+      const updated = await summarizeMovie(item.id);
+      setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, ai_summary: updated.ai_summary } : i)));
+      // Auto-expand summary after creation
+      setExpandedSummaries((prev) => new Set([...prev, item.id]));
+    } catch {} finally {
+      setSummarizing((prev) => { const s = new Set(prev); s.delete(item.id); return s; });
+    }
+  };
+
+  const toggleSummary = (itemId) => {
+    setExpandedSummaries((prev) => {
+      const s = new Set(prev);
+      s.has(itemId) ? s.delete(itemId) : s.add(itemId);
+      return s;
+    });
+  };
+
+  // Note editing helpers
+  const startEditNote = (item) => {
+    setNoteStates((prev) => ({ ...prev, [item.id]: { draft: item.personal_note || '', saving: false } }));
+  };
+  const cancelEditNote = (itemId) => {
+    setNoteStates((prev) => { const n = { ...prev }; delete n[itemId]; return n; });
+  };
+  const changeDraft = (itemId, val) => {
+    setNoteStates((prev) => ({ ...prev, [itemId]: { ...prev[itemId], draft: val } }));
+  };
+  const saveNote = async (itemId) => {
+    const ns = noteStates[itemId];
+    if (!ns) return;
+    if ((ns.draft || '').length > 500) return;
+    setNoteStates((prev) => ({ ...prev, [itemId]: { ...prev[itemId], saving: true } }));
+    try {
+      const updated = await updateNote(itemId, ns.draft);
+      setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, personal_note: updated.personal_note } : i)));
+      cancelEditNote(itemId);
+    } catch {
+      setNoteStates((prev) => ({ ...prev, [itemId]: { ...prev[itemId], saving: false } }));
+    }
+  };
+  const deleteNote = async (itemId) => {
+    setNoteStates((prev) => ({ ...prev, [itemId]: { ...(prev[itemId] || { draft: '' }), saving: true } }));
+    try {
+      const updated = await updateNote(itemId, '');
+      setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, personal_note: updated.personal_note } : i)));
+      cancelEditNote(itemId);
+    } catch {
+      setNoteStates((prev) => ({ ...prev, [itemId]: { ...(prev[itemId] || { draft: '' }), saving: false } }));
+    }
   };
 
   // ── Collection actions ──────────────────────────────────────────────────────
@@ -528,94 +593,215 @@ export default function Watchlist() {
                   <p>{t.wl_no_results}</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {visibleItems.map((item) => {
-                    const poster = item.poster_path
-                      ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-                      : null;
+                    const rawPath = item.poster_path || '';
+                    const posterPath = rawPath.startsWith('/') ? rawPath : rawPath ? `/${rawPath}` : '';
+                    const poster = posterPath ? `https://image.tmdb.org/t/p/w342${posterPath}` : null;
+                    const isSummarizing = summarizing.has(item.id);
+                    const summaryVisible = expandedSummaries.has(item.id);
+                    const ns = noteStates[item.id]; // { draft, saving } or undefined = view mode
+
                     return (
                       <div
                         key={item.id}
-                        className={`group bg-white dark:bg-gray-900 rounded-xl overflow-hidden border transition-all ${
+                        className={`bg-white dark:bg-gray-900 rounded-xl overflow-hidden border transition-all ${
                           item.watched
                             ? 'border-green-300 dark:border-green-800/60'
-                            : 'border-gray-200 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-700'
+                            : 'border-gray-200 dark:border-gray-800 hover:border-purple-400 dark:hover:border-purple-700'
                         }`}
                       >
-                        <Link
-                          to={`/movie/${item.tmdb_id}?type=${item.media_type}`}
-                          className="block aspect-[2/3] bg-gray-100 dark:bg-gray-800 relative"
-                        >
-                          {poster ? (
-                            <img
-                              src={poster}
-                              alt={item.title}
-                              className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${item.watched ? 'brightness-75' : ''}`}
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600 text-4xl">🎬</div>
-                          )}
-                          {item.watched && (
-                            <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">✓</div>
-                          )}
-                        </Link>
-                        <div className="p-3 space-y-2">
+                        {/* ── Top row: poster + info ── */}
+                        <div className="flex gap-4 p-4">
+                          {/* Poster */}
                           <Link
                             to={`/movie/${item.tmdb_id}?type=${item.media_type}`}
-                            className="text-gray-900 dark:text-white text-sm font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors line-clamp-2 leading-tight block"
+                            className="block flex-shrink-0 w-24 aspect-[2/3] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 relative"
                           >
-                            {item.title}
+                            {poster ? (
+                              <img
+                                src={poster}
+                                alt={item.title}
+                                className={`w-full h-full object-cover hover:scale-105 transition-transform duration-300 ${item.watched ? 'brightness-75' : ''}`}
+                                loading="lazy"
+                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                              />
+                            ) : null}
+                            <div
+                              className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600 text-3xl"
+                              style={{ display: poster ? 'none' : 'flex' }}
+                            >🎬</div>
+                            {item.watched && (
+                              <div className="absolute top-1.5 right-1.5 bg-green-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow">✓</div>
+                            )}
                           </Link>
-                          <p className="text-gray-400 dark:text-gray-600 text-xs">
-                            {new Date(item.added_at).toLocaleDateString('tr-TR')}
-                          </p>
 
-                          {/* Star rating */}
-                          <div className="flex items-center justify-center py-0.5">
+                          {/* Info + actions */}
+                          <div className="flex-1 min-w-0 flex flex-col gap-2">
+                            <Link
+                              to={`/movie/${item.tmdb_id}?type=${item.media_type}`}
+                              className="text-gray-900 dark:text-white text-sm font-semibold hover:text-purple-600 dark:hover:text-purple-400 transition-colors line-clamp-2 leading-snug"
+                            >
+                              {item.title}
+                            </Link>
+                            <p className="text-gray-400 dark:text-gray-500 text-xs">
+                              {new Date(item.added_at).toLocaleDateString('tr-TR')}
+                            </p>
+
+                            {/* Star rating */}
                             <StarRating
                               value={item.user_rating}
                               onChange={(val) => handleRate(item, val)}
                               disabled={rating === item.id}
                             />
+
+                            {/* Move to list */}
+                            {collections.length > 1 && (
+                              <select
+                                value={item.collection_id ?? ''}
+                                onChange={(e) => handleMove(item.id, e.target.value ? Number(e.target.value) : null)}
+                                disabled={moving === item.id}
+                                className="w-full text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 text-gray-600 dark:text-gray-400 focus:outline-none focus:border-purple-400 disabled:opacity-40"
+                              >
+                                <option value="">{t.wl_no_list}</option>
+                                {collections.map((col) => (
+                                  <option key={col.id} value={col.id}>{col.name}</option>
+                                ))}
+                              </select>
+                            )}
+
+                            {/* Watched + Remove */}
+                            <div className="flex gap-2 mt-auto">
+                              <button
+                                onClick={() => handleToggleWatched(item)}
+                                disabled={toggling === item.id}
+                                className={`flex-1 text-xs py-1.5 rounded-lg transition-colors disabled:opacity-40 font-medium ${
+                                  item.watched
+                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                                    : 'border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-green-400 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400'
+                                }`}
+                              >
+                                {toggling === item.id ? '...' : item.watched ? t.wl_watched_badge : t.wl_mark_watched}
+                              </button>
+                              <button
+                                onClick={() => handleRemove(item.id)}
+                                disabled={removing === item.id}
+                                className="flex-1 text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 border border-red-200 dark:border-red-900/50 hover:border-red-400 dark:hover:border-red-700 py-1.5 rounded-lg transition-colors disabled:opacity-40"
+                              >
+                                {removing === item.id ? '...' : t.wl_remove}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ── AI Summary + Note section ── */}
+                        <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-3 space-y-2">
+                          {/* Summary row: show/hide + create/refresh */}
+                          <div className="flex items-center gap-2">
+                            {item.ai_summary && (
+                              <button
+                                onClick={() => toggleSummary(item.id)}
+                                className="flex-1 text-xs py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-1"
+                              >
+                                {summaryVisible ? `▲ ${t.note_summary_hide}` : `▼ ${t.note_summary_show}`}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleSummarize(item)}
+                              disabled={isSummarizing}
+                              className={`text-xs py-1.5 rounded-lg border border-purple-200 dark:border-purple-900/50 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5 ${item.ai_summary ? 'px-3' : 'flex-1'}`}
+                            >
+                              {isSummarizing ? (
+                                <>
+                                  <span className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                                  {t.note_summarizing}
+                                </>
+                              ) : item.ai_summary ? `↻ ${t.note_refresh_summary}` : `✨ ${t.note_create_summary}`}
+                            </button>
                           </div>
 
-                          {/* Move to list */}
-                          {collections.length > 1 && (
-                            <select
-                              value={item.collection_id ?? ''}
-                              onChange={(e) => handleMove(item.id, e.target.value ? Number(e.target.value) : null)}
-                              disabled={moving === item.id}
-                              className="w-full text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-gray-600 dark:text-gray-400 focus:outline-none focus:border-purple-400 disabled:opacity-40"
-                            >
-                              <option value="">{t.wl_no_list}</option>
-                              {collections.map((col) => (
-                                <option key={col.id} value={col.id}>{col.name}</option>
-                              ))}
-                            </select>
+                          {/* Summary text (collapsible) */}
+                          {item.ai_summary && summaryVisible && (
+                            <div className="bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-lg px-3 py-2.5">
+                              <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">✨ {t.note_ai_summary}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{item.ai_summary}</p>
+                            </div>
                           )}
 
-                          {/* Watched toggle */}
-                          <button
-                            onClick={() => handleToggleWatched(item)}
-                            disabled={toggling === item.id}
-                            className={`w-full text-xs py-1.5 rounded-lg transition-colors disabled:opacity-40 font-medium ${
-                              item.watched
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
-                                : 'border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-green-400 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400'
-                            }`}
-                          >
-                            {toggling === item.id ? '...' : item.watched ? t.wl_watched_badge : t.wl_mark_watched}
-                          </button>
-
-                          {/* Remove */}
-                          <button
-                            onClick={() => handleRemove(item.id)}
-                            disabled={removing === item.id}
-                            className="w-full text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 border border-red-200 dark:border-red-900/50 hover:border-red-400 dark:hover:border-red-700 py-1.5 rounded-lg transition-colors disabled:opacity-40"
-                          >
-                            {removing === item.id ? t.loading : t.wl_remove}
-                          </button>
+                          {/* Personal note */}
+                          {ns ? (
+                            /* Edit mode: textarea + Kaydet + İptal */
+                            <div className="space-y-2">
+                              <textarea
+                                value={ns.draft}
+                                onChange={(e) => changeDraft(item.id, e.target.value)}
+                                placeholder={t.note_placeholder}
+                                rows={3}
+                                maxLength={500}
+                                autoFocus
+                                className={`w-full text-xs rounded-lg px-3 py-2 resize-none border focus:outline-none focus:ring-2 transition-colors bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 ${
+                                  (ns.draft || '').length > 500
+                                    ? 'border-red-400 focus:ring-red-400'
+                                    : 'border-gray-200 dark:border-gray-700 focus:ring-purple-500'
+                                }`}
+                              />
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`text-xs tabular-nums ${(ns.draft || '').length > 500 ? 'text-red-500' : 'text-gray-400'}`}>
+                                  {(ns.draft || '').length} {t.note_char_limit}
+                                </span>
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => cancelEditNote(item.id)}
+                                    disabled={ns.saving}
+                                    className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-40"
+                                  >
+                                    {t.cancel}
+                                  </button>
+                                  <button
+                                    onClick={() => saveNote(item.id)}
+                                    disabled={ns.saving || (ns.draft || '').length > 500}
+                                    className="text-xs px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-40"
+                                  >
+                                    {ns.saving ? '...' : t.save}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            /* View mode */
+                            item.personal_note ? (
+                              /* Not var: metin + Düzenle + Sil */
+                              <div className="space-y-1.5">
+                                <div className="rounded-lg border border-gray-100 dark:border-gray-800 px-3 py-2">
+                                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                                    📝 {item.personal_note}
+                                  </p>
+                                </div>
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => startEditNote(item)}
+                                    className="flex-1 text-xs py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-purple-400 dark:hover:border-purple-600 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                                  >
+                                    {t.wl_edit}
+                                  </button>
+                                  <button
+                                    onClick={() => deleteNote(item.id)}
+                                    className="flex-1 text-xs py-1.5 rounded-lg border border-red-200 dark:border-red-900/40 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                  >
+                                    {t.note_delete}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Not yok: tek buton */
+                              <button
+                                onClick={() => startEditNote(item)}
+                                className="w-full text-xs py-1.5 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 hover:border-purple-300 dark:hover:border-purple-700 hover:text-purple-500 dark:hover:text-purple-400 transition-colors"
+                              >
+                                + {t.note_add}
+                              </button>
+                            )
+                          )}
                         </div>
                       </div>
                     );

@@ -33,3 +33,9 @@ export const rateMovie = (id, rating) =>
 
 export const moveToCollection = (itemId, collectionId) =>
   client.patch(`/watchlist/${itemId}/move`, { collection_id: collectionId }).then((r) => r.data);
+
+export const summarizeMovie = (id) =>
+  client.post(`/watchlist/${id}/summarize`).then((r) => r.data);
+
+export const updateNote = (id, note) =>
+  client.patch(`/watchlist/${id}/note`, { personal_note: note }).then((r) => r.data);

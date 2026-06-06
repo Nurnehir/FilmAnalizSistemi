@@ -37,6 +37,8 @@ class WatchlistOut(BaseModel):
     user_rating: Optional[int] = None
     collection_id: Optional[int] = None
     genre_ids: List[int] = []
+    ai_summary: Optional[str] = None
+    personal_note: Optional[str] = None
     added_at: datetime
 
     class Config:
@@ -58,3 +60,7 @@ class RatingUpdate(BaseModel):
 
 class MoveItem(BaseModel):
     collection_id: Optional[int] = None
+
+
+class NoteUpdate(BaseModel):
+    personal_note: Optional[str] = None

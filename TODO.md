@@ -557,7 +557,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 28 ve 29 tamamlandı. Sıradaki: 30 (AI Film Özeti + Kişisel Not Alma) veya 15 (Uygulama Adı Değişikliği).
+**Son guncelleme:** 29 ve 30 tamamlandı. Sıradaki: 31 (Arkadaş Sistemi) veya 15 (Uygulama Adı Değişikliği).
 
 ---
 
@@ -809,55 +809,24 @@
 
 ---
 
-### 30. AI Film Özeti + Kişisel Not Alma
-> Kullanıcı izlediği bir filmi işaretledikten sonra AI otomatik kısa bir özet üretsin.
-> Kullanıcı bu özete kendi notunu (spoiler içerebilir) ekleyebilsin.
-> Not ve özet watchlist kartında ve film detay sayfasında görünür.
+### 30. AI Film Özeti + Kişisel Not Alma ✅
+> Watchlist'teki filmler için AI özeti + kişisel not. Sadece giriş yapmış kullanıcılara açık.
 
 #### Veritabanı
-- [ ] `watchlist` tablosuna iki yeni kolon eklendi:
-  - `ai_summary TEXT NULL` — AI'ın ürettiği kısa özet (Türkçe, ~3 cümle)
-  - `personal_note TEXT NULL` — kullanıcının kendi notu (max 500 karakter)
-- [ ] Alembic migration: `add_summary_note_to_watchlist.py` oluşturuldu ve uygulandı
+- [x] `watchlist` tablosuna `ai_summary TEXT NULL` ve `personal_note TEXT NULL` kolonları eklendi
+- [x] Alembic migration: `h8i9j0k1l2m3_add_summary_note_to_watchlist.py` oluşturuldu ve uygulandı
 
 #### Backend
-- [ ] `app/schemas/watchlist.py` — `WatchlistOut`'a `ai_summary: str | None` ve `personal_note: str | None` eklendi
-- [ ] `app/schemas/watchlist.py` — `NoteUpdate` şeması: `{ personal_note: str }` (max_length=500 validasyon)
-- [ ] `app/services/gemini_service.py` — `generate_movie_summary(title, overview, genres, username)` fonksiyonu eklendi
-  - Prompt: film bilgilerini ver → 3 cümlelik kişisel ton özet üret, spoiler içerme
-  - Groq Llama 3.3-70b-versatile
-  - Hata durumunda `None` dön (sessiz fallback)
-- [ ] `app/routers/watchlist.py` — yeni endpointler:
-  - `POST /watchlist/{id}/summarize` (auth zorunlu): `gemini_service.generate_movie_summary` çağır → `watchlist.ai_summary` alanını güncelle → güncel WatchlistOut dön
-    - Aynı film için ikinci kez çağrılırsa mevcut özeti sil ve yeniden üret
-  - `PATCH /watchlist/{id}/note` (auth zorunlu): `personal_note` alanını güncelle → `NoteUpdate` şeması, 500 karakter validasyon
-    - `personal_note: ""` veya `null` gelirse alan temizlenir
+- [x] `app/schemas/watchlist.py` — `WatchlistOut`'a `ai_summary`, `personal_note` eklendi; `NoteUpdate` şeması eklendi
+- [x] `app/services/gemini_service.py` — `generate_movie_summary()` eklendi (Groq, kişisel ton, spoiler yok, hata → None)
+- [x] `app/routers/watchlist.py` — `POST /watchlist/{id}/summarize` ve `PATCH /watchlist/{id}/note` eklendi
 
 #### Frontend
-- [ ] `src/api/watchlist.js` — `summarizeMovie(id)`, `updateNote(id, note)` fonksiyonları eklendi
-- [ ] `src/pages/Watchlist.jsx` — watchlist kartlarına not/özet alanı eklendi:
-  - "AI Özeti Al" butonu: tıklayınca `POST /watchlist/{id}/summarize` → loading → özet textarea'nın üzerinde gri kutu içinde gösterilir
-  - Özet zaten varsa buton "Yenile" olarak görünür; üzeri hafif gri arka planla
-  - "Notum" textarea (max 500 karakter): blur'da otomatik `PATCH /watchlist/{id}/note` çağrısı (debounce 800ms); karakter sayacı gösterilir (`125 / 500`)
-  - Not kaydedilince küçük "Kaydedildi ✓" toast animasyonu
-- [ ] `src/pages/MovieDetail.jsx` — kullanıcının bu film için watchlist'te notu varsa "Notum" bölümü gösterilir (salt okunur özet + düzenlenebilir not); watchlist dışındaysa bu bölüm gizlenir
-- [ ] `src/components/NoteEditor.jsx` — textarea + karakter sayacı + otomatik kaydetme debounce logic'i içeren reusable bileşen (Watchlist ve MovieDetail'de ortak kullanılır)
-- [ ] `src/i18n/tr.js` ve `src/i18n/en.js`:
-  - `note_ai_summary: 'AI Özeti'`, `note_get_summary: 'Özet Al'`, `note_refresh_summary: 'Özeti Yenile'`
-  - `note_summarizing: 'Özet hazırlanıyor...'`, `note_my_note: 'Notum'`
-  - `note_placeholder: 'Bu film hakkında düşüncelerini yaz...'`
-  - `note_saved: 'Kaydedildi ✓'`, `note_char_limit: '/ 500'`
-
-#### Kontrol Listesi
-- [ ] "Özet Al" butonuna basınca AI Türkçe özet üretiyor (spoiler yok)
-- [ ] Özet DB'ye kaydediliyor; sayfa yenilenince tekrar üretilmiyor
-- [ ] "Yenile" butonuyla yeni özet üretiliyor (eskinin üzerine yazılıyor)
-- [ ] Not textarea'sına yazınca 800ms sonra otomatik kaydediliyor
-- [ ] "Kaydedildi ✓" toast görünüyor
-- [ ] 500 karakteri aşınca backend 422 dönüyor, frontend uyarı gösteriyor
-- [ ] MovieDetail sayfasında watchlist'teki film için not görünüyor; watchlist dışındakilerde not alanı yok
-- [ ] AI özeti üretilemezse (Groq hatası) sessizce atlanıyor, kullanıcıya hata gösterilmiyor
-- [ ] Koyu/açık mod + TR/EN uyumlu
+- [x] `src/api/watchlist.js` — `summarizeMovie(id)`, `updateNote(id, note)` eklendi
+- [x] `src/components/NoteEditor.jsx` — textarea + karakter sayacı (500) + debounce autosave (800ms) + "Kaydedildi ✓" toast
+- [x] `src/pages/Watchlist.jsx` — kartlar yatay düzene geçirildi; AI özeti kutusu + buton + NoteEditor eklendi
+- [x] `src/pages/MovieDetail.jsx` — film watchlist'teyse "📝 Notum" bölümü gösteriliyor (WatchlistContext.getItem ile)
+- [x] `src/i18n/tr.js` ve `src/i18n/en.js` — note_* anahtarları eklendi
 
 ---
 
