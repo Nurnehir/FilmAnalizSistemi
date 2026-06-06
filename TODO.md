@@ -729,74 +729,38 @@
 
 ---
 
-### 28. Film Karşılaştırma (AI Destekli)
+### 28. Film Karşılaştırma (AI Destekli) ✅
 > Kullanıcı iki film seçer, AI her iki filmi birden değerlendirerek kişiselleştirilmiş bir
 > karşılaştırma metni üretir: senaryo, atmosfer, tempo, kime göre daha uygun.
 > Sonuçta "Sana göre hangisi?" sorusuna net bir öneri verilir.
 > Ön koşul: yok — bağımsız özellik, mevcut servisleri yeniden kullanır.
 
 #### Veritabanı
-- [ ] Yeni tablo: `comparisons`
-  ```sql
-  CREATE TABLE comparisons (
-      id           SERIAL PRIMARY KEY,
-      user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      tmdb_id_a    INTEGER NOT NULL,
-      tmdb_id_b    INTEGER NOT NULL,
-      media_type   VARCHAR(10) NOT NULL DEFAULT 'movie',
-      ai_result    TEXT NOT NULL,        -- AI'ın ürettiği karşılaştırma metni (JSON)
-      winner_id    INTEGER,              -- AI'ın önerdiği film tmdb_id (nullable)
-      created_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-  );
-  CREATE INDEX idx_comparisons_user ON comparisons(user_id);
-  ```
-- [ ] Alembic migration: `compare_table.py` oluşturuldu ve uygulandı
+- [x] Yeni tablo: `comparisons` — Alembic migration `g7h8i9j0k1l2_add_comparisons_table.py` oluşturuldu ve uygulandı
 
 #### Backend
-- [ ] `app/models/comparison.py` — SQLAlchemy ORM modeli oluşturuldu
-- [ ] `app/schemas/comparison.py` — `CompareRequest`, `CompareResponse` Pydantic şemaları
-  - `CompareRequest`: `{ tmdb_id_a: int, tmdb_id_b: int, media_type: str }`
-  - `CompareResponse`: `{ title_a, title_b, poster_a, poster_b, comparison: str, winner_id: int | null, ai_verdict: str }`
-- [ ] `app/services/gemini_service.py` — `compare_movies(movie_a: dict, movie_b: dict, username: str)` fonksiyonu eklendi
-  - Her iki filmin title, overview, genre, vote_average bilgileri prompt'a ekleniyor
-  - Prompt: senaryo, atmosfer, tempo, kime daha uygun, hangisi daha iyi — "sen" kipi, kişisel ton
-  - Yanıt JSON: `{ "comparison": "...", "winner_id": 12345, "verdict": "Sana göre X daha iyi çünkü..." }`
-  - Groq Llama 3.3-70b-versatile ile üretiliyor
-- [ ] `app/routers/compare.py` — yeni router
-  - `POST /compare` (auth zorunlu): iki film tmdb_id al → TMDB'den detay çek → Gemini'ye gönder → DB'ye kaydet → yanıt dön
-  - `GET /compare/history` (auth zorunlu): kullanıcının geçmiş karşılaştırmaları, limit/offset ile
-  - `GET /compare/{id}` (auth zorunlu): tek karşılaştırma detayı
-- [ ] `app/main.py`'e `compare` router'ı eklendi (`prefix="/compare"`)
+- [x] `app/models/comparison.py` — SQLAlchemy ORM modeli oluşturuldu
+- [x] `app/schemas/comparison.py` — `CompareRequest`, `CompareResponse`, `CompareHistoryItem` şemaları
+- [x] `app/services/gemini_service.py` — `compare_movies(movie_a, movie_b, username)` fonksiyonu eklendi (Groq Llama 3.3)
+- [x] `app/routers/compare.py` — `POST /compare`, `GET /compare/history`, `GET /compare/{id}` endpointleri
+- [x] `app/main.py`'e `compare` router'ı eklendi
 
 #### Frontend
-- [ ] `src/api/compare.js` — `compareMovies(tmdbIdA, tmdbIdB, mediaType)`, `getCompareHistory()` fonksiyonları
-- [ ] `src/pages/Compare.jsx` — karşılaştırma sayfası (`/compare` route, PrivateRoute)
-  - İki arama kutusu (debounce 400ms, `searchMovies` API'yi çağırır) yan yana
-  - Her kutunun altında sonuç dropdown'ı; film seçilince poster + başlık küçük kartla gösterilir
-  - İki film de seçilince "Karşılaştır" butonu aktif hale gelir
-  - Submit → loading → AI sonucu: iki poster yan yana, ortada karşılaştırma metni, altta "Kazanan" rozeti
-  - "Geçmiş Karşılaştırmalar" accordion bölümü (son 5 karşılaştırma)
-- [ ] `src/components/CompareCard.jsx` — tek bir karşılaştırma sonucunu gösteren kart bileşeni
-  - Sol: film A posteri + başlık, Sağ: film B posteri + başlık
-  - Orta: AI metni, altında kazanan rozeti (mor kenarlık + "✓ AI Önerisi")
-- [ ] `src/components/Navbar.jsx` — "Karşılaştır" nav linki eklendi (giriş yapılıysa görünür)
-- [ ] `src/App.jsx` — `/compare` route eklendi (PrivateRoute)
-- [ ] `src/i18n/tr.js` ve `src/i18n/en.js`:
-  - `compare_title: 'Film Karşılaştır'`, `compare_subtitle: 'İki film seç, AI hangisinin sana daha uygun olduğunu söylesin.'`
-  - `compare_search_a: 'Birinci Film'`, `compare_search_b: 'İkinci Film'`
-  - `compare_btn: 'Karşılaştır'`, `compare_loading: 'Karşılaştırılıyor...'`
-  - `compare_winner: 'AI Önerisi'`, `compare_history: 'Geçmiş Karşılaştırmalar'`
-  - `compare_no_history: 'Henüz karşılaştırma yapmadın.'`
+- [x] `src/api/compare.js` — `compareMovies`, `getCompareHistory`, `getComparisonById` fonksiyonları
+- [x] `src/pages/Compare.jsx` — FilmPicker bileşeni (debounce arama + dropdown), karşılaştırma sonucu, geçmiş accordion
+- [x] `src/components/Navbar.jsx` — "Karşılaştır" nav linki (sadece giriş yapılıysa)
+- [x] `src/App.jsx` — `/compare` route eklendi (PrivateRoute)
+- [x] `src/i18n/tr.js` ve `src/i18n/en.js` — compare_* anahtarları eklendi
 
 #### Kontrol Listesi
-- [ ] İki film seçilmeden "Karşılaştır" butonu disabled
-- [ ] Aynı filmi iki kez seçince uyarı gösteriliyor
-- [ ] AI karşılaştırma metni hem film A hem film B'ye değiniyor
-- [ ] Kazanan rozeti doğru filme gidiyor
-- [ ] Karşılaştırma DB'ye kaydediliyor
-- [ ] Geçmiş karşılaştırmalar sayfada görünüyor
-- [ ] Misafir → giriş yap modal açılıyor
-- [ ] Koyu/açık mod + TR/EN uyumlu
+- [x] İki film seçilmeden "Karşılaştır" butonu disabled
+- [x] Aynı filmi iki kez seçince diğer picker'da gri/disabled görünüyor
+- [x] AI karşılaştırma metni hem film A hem film B'ye değiniyor
+- [x] Kazanan rozeti mor ring + "✓ AI Önerisi" rozeti ile vurgulu
+- [x] Karşılaştırma DB'ye kaydediliyor
+- [x] Geçmiş karşılaştırmalar accordion'da görünüyor
+- [x] Misafir → PrivateRoute ile `/login`'e yönlendiriyor
+- [x] Koyu/açık mod + TR/EN uyumlu
 
 ---
 

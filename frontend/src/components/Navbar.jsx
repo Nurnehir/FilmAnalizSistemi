@@ -73,6 +73,7 @@ export default function Navbar() {
     { to: '/', label: t.nav_home },
     { to: '/recommend', label: t.nav_recommend },
     { to: '/watchlist', label: t.nav_watchlist },
+    ...(user ? [{ to: '/compare', label: t.nav_compare }] : []),
   ];
 
   return (

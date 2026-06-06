@@ -17,6 +17,7 @@ import Settings from './pages/Settings';
 import SearchResults from './pages/SearchResults';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Compare from './pages/Compare';
 
 function AppShell() {
   const { loginModalOpen, closeLoginModal } = useAuth();
@@ -33,6 +34,7 @@ function AppShell() {
         <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+        <Route path="/compare" element={<PrivateRoute><Compare /></PrivateRoute>} />
         <Route path="/movie/:id" element={<MovieDetail />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="*" element={<Navigate to="/" replace />} />

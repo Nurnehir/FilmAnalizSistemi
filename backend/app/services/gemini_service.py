@@ -174,6 +174,80 @@ async def analyze_mood(prompt: str, behavior_summary: str = "", username: str = 
         return _fallback_mood(prompt)
 
 
+COMPARE_PROMPT = """
+Kullanicinin adi: {username}
+
+{username} iki film arasinda karar veremiyor. Sen onun en yakin arkadasisin.
+Her iki filmi karsilastir ve kime daha uygun oldugunu soylle.
+
+Film A: {title_a}
+Tür: {genres_a}
+Puan: {rating_a}
+Özet: {overview_a}
+
+Film B: {title_b}
+Tür: {genres_b}
+Puan: {rating_b}
+Özet: {overview_b}
+
+Asagidaki JSON formatinda yalnizca bir cevap ver, baska hicbir sey yazma:
+{{
+  "comparison": "Her iki filmi senaryo, atmosfer ve tempo acisindan karsilastir. 3-4 cumle, samimi 'sen' kipi, {username}'e hitap et.",
+  "winner_id": {tmdb_id_a_or_b},
+  "verdict": "{username}, bu iki filmden sana daha uygun olan... diye baslat. 1-2 cumle, net ve kisisel tavsiye."
+}}
+
+winner_id icin sadece {tmdb_id_a} veya {tmdb_id_b} degerlerinden birini sec.
+"""
+
+
+async def compare_movies(movie_a: dict, movie_b: dict, username: str = "Kullanici") -> dict:
+    def genres_str(m):
+        genres = m.get("genres") or []
+        if genres and isinstance(genres[0], dict):
+            return ", ".join(g.get("name", "") for g in genres[:3])
+        return "Bilinmiyor"
+
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{
+                "role": "user",
+                "content": COMPARE_PROMPT.format(
+                    username=username,
+                    title_a=movie_a.get("title") or movie_a.get("name", "Film A"),
+                    genres_a=genres_str(movie_a),
+                    rating_a=movie_a.get("vote_average", 0),
+                    overview_a=(movie_a.get("overview", "") or "")[:200],
+                    title_b=movie_b.get("title") or movie_b.get("name", "Film B"),
+                    genres_b=genres_str(movie_b),
+                    rating_b=movie_b.get("vote_average", 0),
+                    overview_b=(movie_b.get("overview", "") or "")[:200],
+                    tmdb_id_a=movie_a.get("tmdb_id"),
+                    tmdb_id_b=movie_b.get("tmdb_id"),
+                    tmdb_id_a_or_b=f"{movie_a.get('tmdb_id')} veya {movie_b.get('tmdb_id')}",
+                ),
+            }],
+            temperature=0.6,
+            max_tokens=512,
+        )
+        text = response.choices[0].message.content
+        print(f"=== GROQ COMPARE: {text[:200]} ===", flush=True)
+        result = json.loads(_extract_json(text))
+        winner = result.get("winner_id")
+        if winner not in (movie_a.get("tmdb_id"), movie_b.get("tmdb_id")):
+            winner = movie_a.get("tmdb_id")
+        result["winner_id"] = winner
+        return result
+    except Exception as e:
+        print(f"=== GROQ COMPARE HATA: {type(e).__name__}: {str(e)[:200]} ===", flush=True)
+        return {
+            "comparison": f"{movie_a.get('title','Film A')} ve {movie_b.get('title','Film B')} birbirinden farklı deneyimler sunuyor.",
+            "winner_id": movie_a.get("tmdb_id"),
+            "verdict": f"İkisi de iyi seçimler, ama {movie_a.get('title','Film A')} biraz daha öne çıkıyor.",
+        }
+
+
 async def generate_recommendations(prompt: str, movies: list, behavior_summary: str = "", username: str = "Kullanici") -> dict:
     behavior_block = (
         f"\n\nKullanicinin son aktiviteleri (oneri kararini etkileyen ipucu):\n{behavior_summary}"
