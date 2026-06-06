@@ -965,3 +965,23 @@
 - [ ] Owner listeden ayrılınca liste siliniyor
 - [ ] Ortak listedeki filmde "Ekleyen: @kullanıcı" etiketi doğru
 - [ ] Koyu/açık mod + TR/EN uyumlu
+
+---
+
+### 32. İstatistik Grafiklerini chart.js ile Yeniden Yaz
+> 29. özellikte grafikler saf SVG/CSS ile yazıldı çünkü recharts React 19 + Vite ile uyumsuzdu.
+> `chart.js` + `react-chartjs-2` bu projede sorunsuz çalışır; tooltip, animasyon ve
+> responsive desteği ile mevcut grafikleri yenile.
+> Backend değişikliği yok — aynı `/stats/*` endpointleri kullanılır.
+
+- [ ] `npm install chart.js react-chartjs-2` — bağımlılık ekle
+- [ ] `frontend/Dockerfile` — `RUN npm install` (legacy-peer-deps gerekmez, chart.js React 19 uyumlu)
+- [ ] `src/pages/Stats.jsx` — mevcut inline SVG/CSS bileşenler kaldırılır:
+  - `DonutChart` → `<Doughnut>` (chart.js) ile değiştir
+  - `GenreChart` (CSS bar) → `<Bar layout="horizontal">` ile değiştir
+  - `RatingChart` (CSS bar) → `<Bar layout="horizontal">` ile değiştir
+  - `ActivityChart` (SVG) → `<Bar>` ile değiştir
+  - Her chart için `Chart.register(...registerables)` veya ihtiyaç kadar tree-shake
+- [ ] Koyu mod uyumu: `Chart.defaults.color`, `Chart.defaults.borderColor` tema değişkenleriyle set et
+- [ ] Tooltip Türkçe/İngilizce: `plugins.tooltip.callbacks.label` ile `${val} film` formatı
+- [ ] Koyu/açık mod + TR/EN uyumlu
