@@ -172,16 +172,24 @@ export default function MovieDetail() {
       )}
 
       {/* Backdrop */}
-      {movie.backdrop_url && (
-        <div className="relative h-72 sm:h-96 overflow-hidden">
-          <img
-            src={movie.backdrop_url}
-            alt={title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-gray-950 via-gray-50/60 dark:via-gray-950/60 to-transparent" />
-        </div>
-      )}
+      <div className="relative h-72 sm:h-96 overflow-hidden">
+        {movie.backdrop_url ? (
+          <>
+            <img
+              src={movie.backdrop_url}
+              alt={title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-gray-950 via-gray-50/60 dark:via-gray-950/60 to-transparent" />
+          </>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-800 via-gray-900 to-purple-950 flex items-end p-8">
+            <h2 className="text-white/30 text-4xl sm:text-6xl font-black uppercase tracking-widest line-clamp-2 select-none">
+              {title}
+            </h2>
+          </div>
+        )}
+      </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row gap-8">
@@ -194,8 +202,14 @@ export default function MovieDetail() {
                 className="w-40 sm:w-52 rounded-xl shadow-2xl -mt-20 sm:-mt-32 relative z-10"
               />
             ) : (
-              <div className="w-40 sm:w-52 aspect-[2/3] bg-gray-200 dark:bg-gray-800 rounded-xl flex items-center justify-center text-5xl">
-                🎬
+              <div className="w-40 sm:w-52 aspect-[2/3] bg-gradient-to-b from-gray-700 to-gray-900 rounded-xl flex flex-col items-center justify-center gap-3 -mt-20 sm:-mt-32 relative z-10 shadow-2xl p-3">
+                <svg className="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                </svg>
+                <p className="text-gray-400 text-xs text-center leading-tight font-medium px-1">
+                  {title}
+                </p>
               </div>
             )}
           </div>
@@ -204,20 +218,22 @@ export default function MovieDetail() {
           <div className="flex-1 space-y-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
-              <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                {year && <span>{year}</span>}
-                {runtime && <span>· {runtime}</span>}
-                {movie.vote_average > 0 && (
-                  <span className="text-yellow-500 dark:text-yellow-400 font-semibold">
-                    ★ {movie.vote_average?.toFixed(1)}
-                    {movie.vote_count && (
-                      <span className="text-gray-400 dark:text-gray-500 font-normal">
-                        {' '}({movie.vote_count?.toLocaleString('tr-TR')} oy)
-                      </span>
-                    )}
-                  </span>
-                )}
-              </div>
+              {(year || runtime || movie.vote_average > 0) && (
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  {year && <span>{year}</span>}
+                  {runtime && <span>· {runtime}</span>}
+                  {movie.vote_average > 0 && (
+                    <span className="text-yellow-500 dark:text-yellow-400 font-semibold">
+                      ★ {movie.vote_average?.toFixed(1)}
+                      {movie.vote_count && (
+                        <span className="text-gray-400 dark:text-gray-500 font-normal">
+                          {' '}({movie.vote_count?.toLocaleString('tr-TR')} oy)
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {movie.genres?.length > 0 && (
@@ -230,8 +246,10 @@ export default function MovieDetail() {
               </div>
             )}
 
-            {movie.overview && (
+            {movie.overview ? (
               <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{movie.overview}</p>
+            ) : (
+              <p className="text-gray-400 dark:text-gray-600 text-sm italic">{t.detail_no_overview}</p>
             )}
 
             <div className="flex flex-col gap-3">
@@ -240,13 +258,21 @@ export default function MovieDetail() {
                   movie={{ ...movie, tmdb_id: movie.tmdb_id, media_type: mediaType }}
                   className="px-5 py-2"
                 />
-                {trailer && (
+                {trailer ? (
                   <button
                     onClick={() => setShowTrailer(true)}
                     className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-semibold px-5 py-2 rounded-lg transition-colors"
                   >
                     ▶ {t.detail_trailer}
                   </button>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-600 italic">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                        d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                    </svg>
+                    {t.detail_no_trailer}
+                  </span>
                 )}
               </div>
               <WatchProviders providers={watchProviders} />
@@ -255,9 +281,9 @@ export default function MovieDetail() {
         </div>
 
         {/* Cast */}
-        {movie.cast?.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-lg font-bold mb-4">{t.detail_cast}</h2>
+        <section className="mt-10">
+          <h2 className="text-lg font-bold mb-4">{t.detail_cast}</h2>
+          {movie.cast?.length > 0 ? (
             <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
               {movie.cast.map((actor, i) => (
                 <div key={i} className="flex-shrink-0 w-20 text-center">
@@ -277,8 +303,10 @@ export default function MovieDetail() {
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="text-gray-400 dark:text-gray-600 text-sm italic">{t.detail_no_cast}</p>
+          )}
+        </section>
 
         {/* Reviews */}
         <section className="mt-10" id="reviews-section">

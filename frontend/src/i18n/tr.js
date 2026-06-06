@@ -82,6 +82,8 @@ const tr = {
   home_origin_foreign: 'Yabancı',
   home_load_more: 'Daha Fazla Yükle',
   home_no_more: 'Tüm içerikler yüklendi',
+  home_prev: '← Önceki',
+  home_next: 'Sonraki →',
 
   // Genre filter
   genre_filter_title: 'Türe Göre Filtrele',
@@ -155,6 +157,9 @@ const tr = {
   detail_runtime: 'Süre',
   detail_genres: 'Türler',
   detail_overview: 'Özet',
+  detail_no_overview: 'Bu film için özet bilgisi henüz mevcut değil.',
+  detail_no_cast: 'Oyuncu kadrosu bilgisi henüz eklenmemiş.',
+  detail_no_trailer: 'Fragman mevcut değil',
 
   // Profile
   profile_title: 'Profilim',

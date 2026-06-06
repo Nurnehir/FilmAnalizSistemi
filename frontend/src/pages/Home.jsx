@@ -1,88 +1,85 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { getTrending, discoverMovies, getNowPlaying } from '../api/movies';
 import MovieGrid from '../components/MovieGrid';
 import LoadingSpinner from '../components/LoadingSpinner';
-import LoadMoreSpinner from '../components/LoadMoreSpinner';
 import GenreSidebar from '../components/GenreSidebar';
+
+// Her sayfamız 3 TMDB sayfası = ~60 film
+const TMDB_PER_PAGE = 3;
+
+function getPaginationPages(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = [];
+  pages.push(1);
+  if (current > 3) pages.push('...');
+  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) pages.push(p);
+  if (current < total - 2) pages.push('...');
+  pages.push(total);
+  return pages;
+}
 
 export default function Home() {
   const { user } = useAuth();
   const { t, lang } = useLang();
 
   const [mediaType, setMediaType] = useState('movie');
-  const [viewMode, setViewMode] = useState('trending'); // 'trending' | 'now_playing'
-  const [originFilter, setOriginFilter] = useState('all'); // 'all' | 'domestic' | 'foreign'
-  const [movies, setMovies] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [trendLoading, setTrendLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [trendError, setTrendError] = useState(null);
+  const [viewMode, setViewMode] = useState('trending');
+  const [originFilter, setOriginFilter] = useState('all');
   const [selectedGenres, setSelectedGenres] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalOurPages, setTotalOurPages] = useState(1);
+  const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const sentinelRef = useRef(null);
-
-  // Filtre değişince listeyi sıfırla
-  useEffect(() => {
-    setSelectedGenres([]);
-    setMovies([]);
-    setPage(1);
-    setTotalPages(1);
-  }, [mediaType, viewMode, originFilter]);
 
   useEffect(() => {
-    setMovies([]);
-    setPage(1);
-    setTotalPages(1);
-  }, [selectedGenres]);
-
-  // Fetch: page değişince çalışır
-  useEffect(() => {
-    const isFirstPage = page === 1;
-    if (isFirstPage) setTrendLoading(true);
-    else setLoadingMore(true);
-    setTrendError(null);
+    setIsLoading(true);
+    setError(null);
 
     const langParam =
       originFilter === 'domestic' ? 'tr' :
       originFilter === 'foreign' ? '!tr' : '';
 
-    let fetchFn;
-    if (viewMode === 'now_playing') {
-      fetchFn = getNowPlaying(page, selectedGenres, langParam);
-    } else if (langParam || selectedGenres.length > 0) {
-      fetchFn = discoverMovies(selectedGenres, 'popularity.desc', mediaType, langParam, page);
-    } else {
-      fetchFn = getTrending(mediaType, page);
-    }
+    const tmdbStart = (currentPage - 1) * TMDB_PER_PAGE + 1;
 
-    fetchFn
-      .then((data) => {
-        const results = data.results || [];
-        setTotalPages(data.total_pages || 1);
-        setMovies((prev) => isFirstPage ? results : [...prev, ...results]);
-      })
-      .catch(() => { if (isFirstPage) setTrendError(t.home_error); })
-      .finally(() => { setTrendLoading(false); setLoadingMore(false); });
-  }, [page, mediaType, selectedGenres, viewMode, originFilter]);
+    const fetchPage = (p) => {
+      if (viewMode === 'now_playing') return getNowPlaying(p, selectedGenres, langParam);
+      if (langParam || selectedGenres.length > 0) return discoverMovies(selectedGenres, 'popularity.desc', mediaType, langParam, p);
+      return getTrending(mediaType, p);
+    };
 
-  // IntersectionObserver: sentinel'a ulaşınca sonraki sayfayı yükle
-  const handleObserver = useCallback((entries) => {
-    if (entries[0].isIntersecting && !loadingMore && !trendLoading && page < totalPages) {
-      setPage((p) => p + 1);
-    }
-  }, [loadingMore, trendLoading, page, totalPages]);
+    Promise.allSettled([
+      fetchPage(tmdbStart),
+      fetchPage(tmdbStart + 1),
+      fetchPage(tmdbStart + 2),
+    ]).then((results) => {
+      const combined = [];
+      let tmdbTotal = 1;
+      results.forEach((r) => {
+        if (r.status === 'fulfilled') {
+          combined.push(...(r.value.results || []));
+          tmdbTotal = Math.max(tmdbTotal, r.value.total_pages || 1);
+        }
+      });
+      setMovies(combined);
+      setTotalOurPages(Math.max(1, Math.ceil(tmdbTotal / TMDB_PER_PAGE)));
+    }).catch(() => setError(t.home_error))
+      .finally(() => setIsLoading(false));
+  }, [currentPage, mediaType, selectedGenres, viewMode, originFilter]);
 
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(handleObserver, { threshold: 0.1 });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [handleObserver]);
+  const changePage = (p) => {
+    setCurrentPage(p);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleViewMode  = (mode)   => { setViewMode(mode);     setSelectedGenres([]); setCurrentPage(1); };
+  const handleMediaType = (type)   => { setMediaType(type);    setSelectedGenres([]); setCurrentPage(1); };
+  const handleOrigin    = (origin) => { setOriginFilter(origin); setSelectedGenres([]); setCurrentPage(1); };
+  const handleGenres    = (genres) => { setSelectedGenres(genres); setCurrentPage(1); };
 
   const isNowPlaying = viewMode === 'now_playing';
   const sectionTitle = isNowPlaying
@@ -101,9 +98,7 @@ export default function Home() {
               {t.home_hero_title}{' '}
               <span className="text-purple-600 dark:text-purple-400">{t.home_hero_highlight}</span>
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-lg mb-6">
-              {t.home_hero_sub}
-            </p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg mb-6">{t.home_hero_sub}</p>
             {user ? (
               <Link
                 to="/recommend"
@@ -113,10 +108,7 @@ export default function Home() {
               </Link>
             ) : (
               <div className="flex items-center gap-4">
-                <Link
-                  to="/register"
-                  className="inline-flex bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
-                >
+                <Link to="/register" className="inline-flex bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
                   {t.home_free_start}
                 </Link>
                 <Link to="/login" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -135,7 +127,7 @@ export default function Home() {
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-xl font-bold">{sectionTitle}</h2>
 
-              {/* Trend / Vizyonda chip toggle */}
+              {/* Trend / Vizyonda */}
               <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
                 {[
                   { key: 'trending', label: t.home_trending_chip },
@@ -143,7 +135,7 @@ export default function Home() {
                 ].map(({ key, label }) => (
                   <button
                     key={key}
-                    onClick={() => setViewMode(key)}
+                    onClick={() => handleViewMode(key)}
                     className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                       viewMode === key
                         ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
@@ -155,7 +147,7 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Film / Dizi toggle — sadece Trend modunda (Vizyonda yalnızca film) */}
+              {/* Film / Dizi — sadece Trend modunda */}
               {!isNowPlaying && (
                 <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
                   {[
@@ -164,7 +156,7 @@ export default function Home() {
                   ].map(({ key, label }) => (
                     <button
                       key={key}
-                      onClick={() => setMediaType(key)}
+                      onClick={() => handleMediaType(key)}
                       className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                         mediaType === key
                           ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
@@ -177,7 +169,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Yerli / Yabancı toggle */}
+              {/* Yerli / Yabancı */}
               <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
                 {[
                   { key: 'all', label: t.home_origin_all },
@@ -186,7 +178,7 @@ export default function Home() {
                 ].map(({ key, label }) => (
                   <button
                     key={key}
-                    onClick={() => setOriginFilter(key)}
+                    onClick={() => handleOrigin(key)}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                       originFilter === key
                         ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
@@ -206,7 +198,6 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Mobile drawer toggle */}
               <button
                 className="lg:hidden flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors"
                 onClick={() => setDrawerOpen(true)}
@@ -225,29 +216,27 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Two-column layout: sidebar + grid */}
+          {/* Sidebar + Grid */}
           <div className="flex gap-6">
-            {/* Desktop sidebar */}
             <aside className="hidden lg:block w-48 shrink-0">
               <div className="sticky top-20 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
                 <GenreSidebar
                   mediaType={isNowPlaying ? 'movie' : mediaType}
-                    selected={selectedGenres}
-                    onChange={setSelectedGenres}
-                    t={t}
-                    lang={lang}
-                  />
-                </div>
-              </aside>
+                  selected={selectedGenres}
+                  onChange={handleGenres}
+                  t={t}
+                  lang={lang}
+                />
+              </div>
+            </aside>
 
-            {/* Main content */}
             <div className="flex-1 min-w-0">
-              {trendLoading ? (
+              {isLoading ? (
                 <div className="flex justify-center py-16">
                   <LoadingSpinner text={t.home_loading} />
                 </div>
-              ) : trendError ? (
-                <div className="text-center py-12 text-red-500 dark:text-red-400">{trendError}</div>
+              ) : error ? (
+                <div className="text-center py-12 text-red-500 dark:text-red-400">{error}</div>
               ) : (
                 <MovieGrid
                   movies={movies.map((m) => ({ ...m, media_type: m.media_type || mediaType }))}
@@ -255,17 +244,43 @@ export default function Home() {
                 />
               )}
 
-              {/* Infinite scroll sentinel */}
-              <div ref={sentinelRef} />
+              {/* Pagination */}
+              {!isLoading && !error && totalOurPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-10 flex-wrap">
+                  <button
+                    onClick={() => changePage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {t.home_prev}
+                  </button>
 
-              {/* Daha fazla yükleniyor */}
-              {loadingMore && <LoadMoreSpinner />}
+                  {getPaginationPages(currentPage, totalOurPages).map((p, i) =>
+                    p === '...' ? (
+                      <span key={`e${i}`} className="px-1 text-gray-400 dark:text-gray-600 text-sm select-none">…</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => changePage(p)}
+                        className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                          p === currentPage
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
 
-              {/* Tüm sayfalar yüklendi */}
-              {!trendLoading && !loadingMore && movies.length > 0 && page >= totalPages && (
-                <p className="text-center text-xs text-gray-400 dark:text-gray-600 py-6">
-                  {t.home_no_more}
-                </p>
+                  <button
+                    onClick={() => changePage(currentPage + 1)}
+                    disabled={currentPage === totalOurPages}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {t.home_next}
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -275,17 +290,11 @@ export default function Home() {
       {/* Mobile drawer */}
       {drawerOpen && (
         <>
-          <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setDrawerOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setDrawerOpen(false)} />
           <aside className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50 overflow-y-auto lg:hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
               <span className="font-semibold text-gray-900 dark:text-white">{t.genre_filter_title}</span>
-              <button
-                onClick={() => setDrawerOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
-              >
+              <button onClick={() => setDrawerOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -295,7 +304,7 @@ export default function Home() {
               <GenreSidebar
                 mediaType={isNowPlaying ? 'movie' : mediaType}
                 selected={selectedGenres}
-                onChange={(ids) => { setSelectedGenres(ids); setDrawerOpen(false); }}
+                onChange={(ids) => { handleGenres(ids); setDrawerOpen(false); }}
                 t={t}
                 lang={lang}
               />

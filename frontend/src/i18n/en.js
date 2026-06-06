@@ -82,6 +82,8 @@ const en = {
   home_origin_foreign: 'Foreign',
   home_load_more: 'Load More',
   home_no_more: 'All content loaded',
+  home_prev: '← Previous',
+  home_next: 'Next →',
 
   // Genre filter
   genre_filter_title: 'Filter by Genre',
@@ -155,6 +157,9 @@ const en = {
   detail_runtime: 'Runtime',
   detail_genres: 'Genres',
   detail_overview: 'Overview',
+  detail_no_overview: 'No overview available for this title.',
+  detail_no_cast: 'No cast information available.',
+  detail_no_trailer: 'No trailer available',
 
   // Profile
   profile_title: 'My Profile',
