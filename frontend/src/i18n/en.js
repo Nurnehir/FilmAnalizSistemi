@@ -80,6 +80,8 @@ const en = {
   home_origin_all: 'All',
   home_origin_domestic: 'Turkish',
   home_origin_foreign: 'Foreign',
+  home_load_more: 'Load More',
+  home_no_more: 'All content loaded',
 
   // Genre filter
   genre_filter_title: 'Filter by Genre',

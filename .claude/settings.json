@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s \"http://localhost:8000/movies/now-playing?original_language=tr\")",
+      "Bash(curl -s \"http://localhost:8000/movies/now-playing?original_language=!tr&genres=35\")"
+    ]
+  }
+}

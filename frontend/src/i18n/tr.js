@@ -80,6 +80,8 @@ const tr = {
   home_origin_all: 'Tümü',
   home_origin_domestic: 'Yerli',
   home_origin_foreign: 'Yabancı',
+  home_load_more: 'Daha Fazla Yükle',
+  home_no_more: 'Tüm içerikler yüklendi',
 
   // Genre filter
   genre_filter_title: 'Türe Göre Filtrele',

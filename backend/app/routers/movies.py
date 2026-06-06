@@ -21,21 +21,32 @@ async def discover(
     sort_by: str = Query("popularity.desc"),
     media_type: str = Query("movie", pattern="^(movie|tv)$"),
     original_language: str = Query("", description="Filter by original language, prefix ! to exclude (e.g. tr, !tr)"),
+    page: int = Query(1, ge=1),
 ):
     genre_ids = [int(g) for g in genres.split(",") if g.strip().isdigit()] if genres else []
     try:
         return await tmdb_service.discover_movies(
             genre_ids, sort_by, media_type,
             original_language=original_language or None,
+            page=page,
         )
     except Exception:
         raise HTTPException(status_code=503, detail="TMDB servisine ulasilamiyor")
 
 
 @router.get("/now-playing")
-async def now_playing(page: int = Query(1, ge=1)):
+async def now_playing(
+    page: int = Query(1, ge=1),
+    genres: str = Query("", description="Comma-separated TMDB genre IDs"),
+    original_language: str = Query("", description="Filter by original language (e.g. tr, !tr)"),
+):
+    genre_ids = [int(g) for g in genres.split(",") if g.strip().isdigit()] if genres else []
     try:
-        return await tmdb_service.get_now_playing(page)
+        return await tmdb_service.get_now_playing(
+            page=page,
+            genre_ids=genre_ids or None,
+            original_language=original_language or None,
+        )
     except Exception:
         raise HTTPException(status_code=503, detail="TMDB servisine ulasilamiyor")
 

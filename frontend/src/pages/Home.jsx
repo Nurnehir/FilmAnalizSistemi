@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { getTrending, discoverMovies, getNowPlaying } from '../api/movies';
 import MovieGrid from '../components/MovieGrid';
 import LoadingSpinner from '../components/LoadingSpinner';
+import LoadMoreSpinner from '../components/LoadMoreSpinner';
 import GenreSidebar from '../components/GenreSidebar';
 
 export default function Home() {
@@ -15,36 +16,73 @@ export default function Home() {
   const [viewMode, setViewMode] = useState('trending'); // 'trending' | 'now_playing'
   const [originFilter, setOriginFilter] = useState('all'); // 'all' | 'domestic' | 'foreign'
   const [movies, setMovies] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [trendLoading, setTrendLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [trendError, setTrendError] = useState(null);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const sentinelRef = useRef(null);
 
+  // Filtre değişince listeyi sıfırla
   useEffect(() => {
     setSelectedGenres([]);
+    setMovies([]);
+    setPage(1);
+    setTotalPages(1);
   }, [mediaType, viewMode, originFilter]);
 
   useEffect(() => {
-    setTrendLoading(true);
+    setMovies([]);
+    setPage(1);
+    setTotalPages(1);
+  }, [selectedGenres]);
+
+  // Fetch: page değişince çalışır
+  useEffect(() => {
+    const isFirstPage = page === 1;
+    if (isFirstPage) setTrendLoading(true);
+    else setLoadingMore(true);
     setTrendError(null);
-    let fetch;
+
+    const langParam =
+      originFilter === 'domestic' ? 'tr' :
+      originFilter === 'foreign' ? '!tr' : '';
+
+    let fetchFn;
     if (viewMode === 'now_playing') {
-      fetch = getNowPlaying(1);
+      fetchFn = getNowPlaying(page, selectedGenres, langParam);
+    } else if (langParam || selectedGenres.length > 0) {
+      fetchFn = discoverMovies(selectedGenres, 'popularity.desc', mediaType, langParam, page);
     } else {
-      const langParam =
-        originFilter === 'domestic' ? 'tr' :
-        originFilter === 'foreign' ? '!tr' : '';
-      if (langParam || selectedGenres.length > 0) {
-        fetch = discoverMovies(selectedGenres, 'popularity.desc', mediaType, langParam);
-      } else {
-        fetch = getTrending(mediaType, 1);
-      }
+      fetchFn = getTrending(mediaType, page);
     }
-    fetch
-      .then((data) => setMovies(data.results || []))
-      .catch(() => setTrendError(t.home_error))
-      .finally(() => setTrendLoading(false));
-  }, [mediaType, selectedGenres, viewMode, originFilter]);
+
+    fetchFn
+      .then((data) => {
+        const results = data.results || [];
+        setTotalPages(data.total_pages || 1);
+        setMovies((prev) => isFirstPage ? results : [...prev, ...results]);
+      })
+      .catch(() => { if (isFirstPage) setTrendError(t.home_error); })
+      .finally(() => { setTrendLoading(false); setLoadingMore(false); });
+  }, [page, mediaType, selectedGenres, viewMode, originFilter]);
+
+  // IntersectionObserver: sentinel'a ulaşınca sonraki sayfayı yükle
+  const handleObserver = useCallback((entries) => {
+    if (entries[0].isIntersecting && !loadingMore && !trendLoading && page < totalPages) {
+      setPage((p) => p + 1);
+    }
+  }, [loadingMore, trendLoading, page, totalPages]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(handleObserver, { threshold: 0.1 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   const isNowPlaying = viewMode === 'now_playing';
   const sectionTitle = isNowPlaying
@@ -117,7 +155,7 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Film / Dizi toggle — sadece Trend modunda */}
+              {/* Film / Dizi toggle — sadece Trend modunda (Vizyonda yalnızca film) */}
               {!isNowPlaying && (
                 <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
                   {[
@@ -139,30 +177,28 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Yerli / Yabancı toggle — sadece Trend modunda */}
-              {!isNowPlaying && (
-                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
-                  {[
-                    { key: 'all', label: t.home_origin_all },
-                    { key: 'domestic', label: t.home_origin_domestic },
-                    { key: 'foreign', label: t.home_origin_foreign },
-                  ].map(({ key, label }) => (
-                    <button
-                      key={key}
-                      onClick={() => setOriginFilter(key)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                        originFilter === key
-                          ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Yerli / Yabancı toggle */}
+              <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+                {[
+                  { key: 'all', label: t.home_origin_all },
+                  { key: 'domestic', label: t.home_origin_domestic },
+                  { key: 'foreign', label: t.home_origin_foreign },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setOriginFilter(key)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                      originFilter === key
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
 
-              {!isNowPlaying && selectedGenres.length > 0 && (
+              {selectedGenres.length > 0 && (
                 <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full">
                   {selectedGenres.length} {t.genre_filter_active}
                 </span>
@@ -170,35 +206,32 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Mobile drawer toggle — sadece Trend modunda */}
-              {!isNowPlaying && (
-                <button
-                  className="lg:hidden flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors"
-                  onClick={() => setDrawerOpen(true)}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M3 8h14M3 12h10" />
-                  </svg>
-                  {t.genre_filter_btn}
-                  {selectedGenres.length > 0 && (
-                    <span className="bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
-                      {selectedGenres.length}
-                    </span>
-                  )}
-                </button>
-              )}
+              {/* Mobile drawer toggle */}
+              <button
+                className="lg:hidden flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors"
+                onClick={() => setDrawerOpen(true)}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M3 8h14M3 12h10" />
+                </svg>
+                {t.genre_filter_btn}
+                {selectedGenres.length > 0 && (
+                  <span className="bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+                    {selectedGenres.length}
+                  </span>
+                )}
+              </button>
               <span className="text-gray-400 dark:text-gray-500 text-xs">{t.home_tmdb_live}</span>
             </div>
           </div>
 
           {/* Two-column layout: sidebar + grid */}
           <div className="flex gap-6">
-            {/* Desktop sidebar — sadece Trend modunda */}
-            {!isNowPlaying && (
-              <aside className="hidden lg:block w-48 shrink-0">
-                <div className="sticky top-20 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
-                  <GenreSidebar
-                    mediaType={mediaType}
+            {/* Desktop sidebar */}
+            <aside className="hidden lg:block w-48 shrink-0">
+              <div className="sticky top-20 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+                <GenreSidebar
+                  mediaType={isNowPlaying ? 'movie' : mediaType}
                     selected={selectedGenres}
                     onChange={setSelectedGenres}
                     t={t}
@@ -206,7 +239,6 @@ export default function Home() {
                   />
                 </div>
               </aside>
-            )}
 
             {/* Main content */}
             <div className="flex-1 min-w-0">
@@ -222,13 +254,26 @@ export default function Home() {
                   badge={isNowPlaying ? t.home_now_playing_badge : undefined}
                 />
               )}
+
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} />
+
+              {/* Daha fazla yükleniyor */}
+              {loadingMore && <LoadMoreSpinner />}
+
+              {/* Tüm sayfalar yüklendi */}
+              {!trendLoading && !loadingMore && movies.length > 0 && page >= totalPages && (
+                <p className="text-center text-xs text-gray-400 dark:text-gray-600 py-6">
+                  {t.home_no_more}
+                </p>
+              )}
             </div>
           </div>
         </section>
       </div>
 
-      {/* Mobile drawer — sadece Trend modunda */}
-      {!isNowPlaying && drawerOpen && (
+      {/* Mobile drawer */}
+      {drawerOpen && (
         <>
           <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -248,7 +293,7 @@ export default function Home() {
             </div>
             <div className="p-4">
               <GenreSidebar
-                mediaType={mediaType}
+                mediaType={isNowPlaying ? 'movie' : mediaType}
                 selected={selectedGenres}
                 onChange={(ids) => { setSelectedGenres(ids); setDrawerOpen(false); }}
                 t={t}

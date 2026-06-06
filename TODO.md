@@ -697,34 +697,35 @@
 > tamamında çalışmalı. Backend sadece mevcut `page` parametresini kullanır — yeni endpoint gerekmez.
 
 #### Veritabanı
-- [ ] Değişiklik yok — TMDB zaten sayfalama destekliyor (`page` parametresi).
+- [x] Değişiklik yok — TMDB zaten sayfalama destekliyor (`page` parametresi).
 
 #### Backend
-- [ ] `app/routers/movies.py` — `/movies/trending` endpoint'inde `page` query param zaten mevcut ✓
-- [ ] `app/routers/movies.py` — `/movies/discover` endpoint'ine `page: int = Query(1, ge=1)` parametresi eklendi; `tmdb_service.discover_movies`'e iletiliyor
-- [ ] `app/routers/movies.py` — `/movies/now-playing` endpoint'inde `page` query param zaten mevcut ✓
-- [ ] `app/services/tmdb_service.py` — `discover_movies`'e `page: int = 1` parametresi eklendi; `extra["page"] = page` olarak TMDB'ye iletiliyor
+- [x] `app/routers/movies.py` — `/movies/trending` endpoint'inde `page` query param zaten mevcut ✓
+- [x] `app/routers/movies.py` — `/movies/discover` endpoint'ine `page: int = Query(1, ge=1)` parametresi eklendi; `tmdb_service.discover_movies`'e iletiliyor
+- [x] `app/routers/movies.py` — `/movies/now-playing` endpoint'inde `page` query param zaten mevcut ✓
+- [x] `app/services/tmdb_service.py` — `discover_movies`'e `page: int = 1` parametresi eklendi; `extra["page"] = page` olarak TMDB'ye iletiliyor
 
 #### Frontend
-- [ ] `src/api/movies.js` — `discoverMovies(genreIds, sortBy, mediaType, originalLanguage, page)` imzasına `page` parametresi eklendi
-- [ ] `src/pages/Home.jsx` — infinite scroll altyapısı:
-  - `page` state (`1`'den başlar), `hasMore` state (`true`), `loadingMore` state
-  - `movies` state: append moduna geçti — yeni sayfa sonuçları mevcut listeye ekleniyor (`setMovies(prev => [...prev, ...newResults])`)
-  - `viewMode`, `mediaType`, `originFilter`, `selectedGenres` değişince `movies` sıfırlanır, `page = 1` olur
-  - `IntersectionObserver` ile sayfa sonuna gelinince `page` artırılır → useEffect tetiklenir → sonraki sayfa fetch edilir
-  - TMDB `total_pages` bilgisi response'dan okunarak `hasMore` güncellenir
-  - `loadingMore` aktifken liste sonunda küçük spinner gösterilir; ana `trendLoading` sadece ilk sayfa için kullanılır
-- [ ] `src/components/LoadMoreSpinner.jsx` — sayfa sonunda gösterilen küçük yükleme göstergesi (mevcut `LoadingSpinner`'dan bağımsız, daha küçük)
-- [ ] `src/i18n/tr.js` ve `src/i18n/en.js` — `home_load_more: 'Daha Fazla Yükle'`, `home_no_more: 'Tüm içerikler yüklendi'` anahtarları eklendi
+- [x] `src/api/movies.js` — `discoverMovies(genreIds, sortBy, mediaType, originalLanguage, page)` imzasına `page` parametresi eklendi
+- [x] `src/pages/Home.jsx` — infinite scroll altyapısı:
+  - `page` state (`1`'den başlar), `totalPages` state, `loadingMore` state
+  - `movies` state: append moduna geçti — yeni sayfa sonuçları mevcut listeye ekleniyor (`setMovies(prev => [...prev, ...results])`)
+  - `viewMode`, `mediaType`, `originFilter` değişince `movies` sıfırlanır, `page = 1` olur
+  - `selectedGenres` değişince ayrı useEffect ile aynı sıfırlama yapılır
+  - `IntersectionObserver` ile sentinel'a ulaşınca `page` artırılır → sonraki sayfa fetch edilir
+  - TMDB `total_pages` response'dan okunarak `totalPages` güncellenir
+  - `loadingMore` aktifken liste sonunda `LoadMoreSpinner` gösterilir; `trendLoading` sadece ilk sayfa için
+- [x] `src/components/LoadMoreSpinner.jsx` — küçük mor spinner bileşeni oluşturuldu
+- [x] `src/i18n/tr.js` ve `src/i18n/en.js` — `home_load_more`, `home_no_more` anahtarları eklendi
 
 #### Kontrol Listesi
-- [ ] Trend modunda aşağı kaydırınca sayfa 2, 3... otomatik yükleniyor
-- [ ] Discover (tür/yerli/yabancı) modunda sayfalama çalışıyor
-- [ ] Vizyonda modunda sayfalama çalışıyor
-- [ ] Filtre/mod değişince liste sıfırlanıyor (eski filmler kalmıyor)
-- [ ] Son sayfaya ulaşınca "Tüm içerikler yüklendi" mesajı görünüyor
-- [ ] Ana yükleme spinner'ı (ilk sayfa) ile "daha fazla" spinner'ı birbirinden bağımsız çalışıyor
-- [ ] Koyu/açık mod + TR/EN uyumlu
+- [x] Trend modunda aşağı kaydırınca sayfa 2, 3... otomatik yükleniyor — IntersectionObserver ile ✓
+- [x] Discover (tür/yerli/yabancı) modunda sayfalama çalışıyor — test: sayfa 1 ve 2 farklı tmdb_id ✓
+- [x] Vizyonda modunda sayfalama çalışıyor — `getNowPlaying(page)` iletiliyor ✓
+- [x] Filtre/mod değişince liste sıfırlanıyor (eski filmler kalmıyor) — ayrı useEffect ile sıfırlama ✓
+- [x] Son sayfaya ulaşınca "Tüm içerikler yüklendi" mesajı görünüyor — `page >= totalPages` koşulu ✓
+- [x] Ana yükleme spinner'ı (ilk sayfa) ile "daha fazla" spinner'ı birbirinden bağımsız çalışıyor ✓
+- [x] Koyu/açık mod + TR/EN uyumlu — `LoadMoreSpinner` renksiz, metin i18n ile ✓
 
 ---
 

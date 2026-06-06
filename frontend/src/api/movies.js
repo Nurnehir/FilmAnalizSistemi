@@ -15,13 +15,19 @@ export const getSimilar = (tmdbId, mediaType = 'movie') =>
 export const getMovieVideos = (tmdbId, mediaType = 'movie') =>
   client.get(`/movies/${tmdbId}/videos`, { params: { media_type: mediaType } }).then((r) => r.data);
 
-export const getNowPlaying = (page = 1) =>
-  client.get('/movies/now-playing', { params: { page } }).then((r) => r.data);
+export const getNowPlaying = (page = 1, genreIds = [], originalLanguage = '') =>
+  client.get('/movies/now-playing', {
+    params: {
+      page,
+      genres: genreIds.join(','),
+      original_language: originalLanguage,
+    },
+  }).then((r) => r.data);
 
 export const getWatchProviders = (tmdbId, mediaType = 'movie') =>
   client.get(`/movies/${tmdbId}/providers`, { params: { media_type: mediaType } }).then((r) => r.data);
 
-export const discoverMovies = (genreIds = [], sortBy = 'popularity.desc', mediaType = 'movie', originalLanguage = '') =>
+export const discoverMovies = (genreIds = [], sortBy = 'popularity.desc', mediaType = 'movie', originalLanguage = '', page = 1) =>
   client
     .get('/movies/discover', {
       params: {
@@ -29,6 +35,7 @@ export const discoverMovies = (genreIds = [], sortBy = 'popularity.desc', mediaT
         sort_by: sortBy,
         media_type: mediaType,
         original_language: originalLanguage,
+        page,
       },
     })
     .then((r) => r.data);

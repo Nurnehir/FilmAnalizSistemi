@@ -74,12 +74,13 @@ async def discover_movies(
     media_type: str = "movie",
     exclude_genre_ids: list = None,
     original_language: str = None,
+    page: int = 1,
 ) -> dict:
     extra = {
         "language": "tr-TR",
         "sort_by": sort_by,
         "vote_count.gte": 100,
-        "page": 1,
+        "page": page,
     }
     if genre_ids:
         extra["with_genres"] = "|".join(map(str, genre_ids))
@@ -131,19 +132,48 @@ async def get_videos(tmdb_id: int, media_type: str = "movie") -> list:
     return trailers or [v for v in results if v.get("site") in ("YouTube", "Vimeo")]
 
 
-async def get_now_playing(page: int = 1) -> dict:
-    async with httpx.AsyncClient() as client:
-        r = await client.get(
-            f"{BASE_URL}/movie/now_playing",
-            headers=HEADERS,
-            params={"language": "tr-TR", "page": page, "region": "TR"},
-        )
-        r.raise_for_status()
+async def get_now_playing(
+    page: int = 1,
+    genre_ids: list = None,
+    original_language: str = None,
+) -> dict:
+    from datetime import date, timedelta
+    # Filtre varsa discover + vizyondaki filmleri temsil eden parametreler kullan
+    if genre_ids or original_language:
+        today = date.today().isoformat()
+        sixty_days_ago = (date.today() - timedelta(days=60)).isoformat()
+        params = {
+            "language": "tr-TR",
+            "sort_by": "popularity.desc",
+            "with_release_type": "2|3",
+            "primary_release_date.gte": sixty_days_ago,
+            "primary_release_date.lte": today,
+            "vote_count.gte": 0,
+            "page": page,
+        }
+        if genre_ids:
+            params["with_genres"] = "|".join(map(str, genre_ids))
+        if original_language:
+            if original_language.startswith("!"):
+                params["without_original_language"] = original_language[1:]
+            else:
+                params["with_original_language"] = original_language
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"{BASE_URL}/discover/movie", headers=HEADERS, params=params)
+            r.raise_for_status()
+    else:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                f"{BASE_URL}/movie/now_playing",
+                headers=HEADERS,
+                params={"language": "tr-TR", "page": page, "region": "TR"},
+            )
+            r.raise_for_status()
     data = r.json()
     for item in data.get("results", []):
         item["poster_url"] = build_poster_url(item.get("poster_path"))
         item["backdrop_url"] = build_poster_url(item.get("backdrop_path"), "w1280")
-        item["tmdb_id"] = item.pop("id")
+        item["tmdb_id"] = item.pop("id", item.get("tmdb_id"))
         item["media_type"] = "movie"
     return data
 
