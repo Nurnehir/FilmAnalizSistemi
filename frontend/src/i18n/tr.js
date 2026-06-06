@@ -308,9 +308,13 @@ const tr = {
   stats_avg_rating: 'Ortalama Puan',
   stats_recommendations: 'Öneri İsteği',
   stats_watchlist: 'İzleme Listesi',
-  stats_genres: 'Tür Dağılımı',
-  stats_activity: 'Aylık Aktivite',
+  stats_genres_donut: 'Tür Dağılımı',
+  stats_genres_radar: 'Tür Dağılımı (Radar)',
+  stats_activity_bar: 'Aylık Aktivite',
+  stats_activity_line: 'Aylık Aktivite',
   stats_ratings_dist: 'Puan Dağılımı',
+  stats_watched_ratio: 'İzlendi / İzlenecek',
+  stats_to_watch: 'İzlenecek',
   stats_no_data: 'Henüz yeterli veri yok. Film ekleyip puanlamaya başla!',
 
   // Common

@@ -968,20 +968,20 @@
 
 ---
 
-### 32. İstatistik Grafiklerini chart.js ile Yeniden Yaz
+### 32. İstatistik Grafiklerini chart.js ile Yeniden Yaz ✅
 > 29. özellikte grafikler saf SVG/CSS ile yazıldı çünkü recharts React 19 + Vite ile uyumsuzdu.
 > `chart.js` + `react-chartjs-2` bu projede sorunsuz çalışır; tooltip, animasyon ve
 > responsive desteği ile mevcut grafikleri yenile.
 > Backend değişikliği yok — aynı `/stats/*` endpointleri kullanılır.
 
-- [ ] `npm install chart.js react-chartjs-2` — bağımlılık ekle
-- [ ] `frontend/Dockerfile` — `RUN npm install` (legacy-peer-deps gerekmez, chart.js React 19 uyumlu)
-- [ ] `src/pages/Stats.jsx` — mevcut inline SVG/CSS bileşenler kaldırılır:
-  - `DonutChart` → `<Doughnut>` (chart.js) ile değiştir
-  - `GenreChart` (CSS bar) → `<Bar layout="horizontal">` ile değiştir
-  - `RatingChart` (CSS bar) → `<Bar layout="horizontal">` ile değiştir
-  - `ActivityChart` (SVG) → `<Bar>` ile değiştir
-  - Her chart için `Chart.register(...registerables)` veya ihtiyaç kadar tree-shake
-- [ ] Koyu mod uyumu: `Chart.defaults.color`, `Chart.defaults.borderColor` tema değişkenleriyle set et
-- [ ] Tooltip Türkçe/İngilizce: `plugins.tooltip.callbacks.label` ile `${val} film` formatı
-- [ ] Koyu/açık mod + TR/EN uyumlu
+- [x] `npm install chart.js react-chartjs-2` — chart.js@4.5.1, react-chartjs-2@5.3.1 kuruldu
+- [x] `frontend/Dockerfile` — `RUN npm install` (legacy-peer-deps kaldırıldı, chart.js React 19 uyumlu)
+- [x] `src/pages/Stats.jsx` — mevcut inline SVG/CSS bileşenler kaldırıldı:
+  - `DonutChart` → `<Doughnut>` ile değiştirildi (cutout %62, legend sağda)
+  - `GenreChart` (CSS bar) → tür dağılımı donut legend'ına taşındı
+  - `RatingChart` (CSS bar) → `<Bar indexAxis="y">` ile değiştirildi (yatay, sarı)
+  - `ActivityChart` (SVG) → `<Bar>` ile değiştirildi (dikey, mor, son 12 ay)
+  - `ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend)` — tree-shake
+- [x] Koyu mod uyumu: her chart için `chartDefaults(isDark)` helper → renk/grid/tooltip bg dinamik
+- [x] Tooltip TR/EN: `callbacks.label` ile `${val} film` / `${val} films` formatı
+- [x] Koyu/açık mod + TR/EN uyumlu

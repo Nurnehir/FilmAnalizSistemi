@@ -308,9 +308,13 @@ const en = {
   stats_avg_rating: 'Avg. Rating',
   stats_recommendations: 'Recommendations',
   stats_watchlist: 'Watchlist Size',
-  stats_genres: 'Genre Distribution',
-  stats_activity: 'Monthly Activity',
+  stats_genres_donut: 'Genre Distribution',
+  stats_genres_radar: 'Genre Distribution (Radar)',
+  stats_activity_bar: 'Monthly Activity',
+  stats_activity_line: 'Monthly Activity',
   stats_ratings_dist: 'Rating Distribution',
+  stats_watched_ratio: 'Watched / To Watch',
+  stats_to_watch: 'To Watch',
   stats_no_data: 'Not enough data yet. Start adding and rating films!',
 
   // Common
