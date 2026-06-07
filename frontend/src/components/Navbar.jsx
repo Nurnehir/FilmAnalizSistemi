@@ -9,7 +9,7 @@ export default function Navbar() {
   const { user, logout, openLoginModal } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { lang, toggleLang, t } = useLang();
-  const { followerNotif } = useSocialNotif();
+  const { totalNotif } = useSocialNotif();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -123,7 +123,7 @@ export default function Navbar() {
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/60'
                     }`;
                     const isSocial = to === '/social';
-                    const badge = isSocial && followerNotif > 0 ? followerNotif : 0;
+                    const badge = isSocial && totalNotif > 0 ? totalNotif : 0;
                     const inner = (
                       <>
                         {label}

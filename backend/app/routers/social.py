@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
+from datetime import datetime
 
 from app.dependencies import get_db, get_current_user, get_current_user_optional
 from app.models.user import User
 from app.models.friendship import Friendship
 from app.models.watchlist_collection import WatchlistCollection
 from app.models.watchlist import Watchlist
+from app.models.shared_list import SharedListMember, SharedListItem
 from app.schemas.social import UserPublicOut, FollowOut, PublicCollection, PublicCollectionItem
 
 router = APIRouter(prefix="/social", tags=["social"])
@@ -114,6 +116,51 @@ def get_follower_count(
 ):
     count = db.query(func.count(Friendship.id)).filter(Friendship.following_id == current_user.id).scalar() or 0
     return {"count": count}
+
+
+@router.get("/notifications/count")
+def get_notifications_count(
+    since: Optional[datetime] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    follower_count = (
+        db.query(func.count(Friendship.id))
+        .filter(Friendship.following_id == current_user.id)
+        .scalar() or 0
+    )
+
+    shared_event_count = 0
+    if since:
+        # Ortak listelere davet (yeni üyelikler)
+        new_memberships = (
+            db.query(func.count(SharedListMember.list_id))
+            .filter(
+                SharedListMember.user_id == current_user.id,
+                SharedListMember.joined_at > since,
+            )
+            .scalar() or 0
+        )
+
+        # Üyesi olduğum listelere başkası film eklemiş
+        my_list_ids = (
+            db.query(SharedListMember.list_id)
+            .filter(SharedListMember.user_id == current_user.id)
+            .subquery()
+        )
+        new_items = (
+            db.query(func.count(SharedListItem.id))
+            .filter(
+                SharedListItem.list_id.in_(my_list_ids),
+                SharedListItem.added_by != current_user.id,
+                SharedListItem.added_at > since,
+            )
+            .scalar() or 0
+        )
+
+        shared_event_count = new_memberships + new_items
+
+    return {"follower_count": follower_count, "shared_event_count": shared_event_count}
 
 
 @router.get("/search", response_model=List[UserPublicOut])
