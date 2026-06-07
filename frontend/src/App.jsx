@@ -22,6 +22,7 @@ import Compare from './pages/Compare';
 import Stats from './pages/Stats';
 import Social from './pages/Social';
 import UserProfile from './pages/UserProfile';
+import SharedList from './pages/SharedList';
 
 function AppShell() {
   const { loginModalOpen, closeLoginModal } = useAuth();
@@ -41,6 +42,7 @@ function AppShell() {
         <Route path="/compare" element={<PrivateRoute><Compare /></PrivateRoute>} />
         <Route path="/stats" element={<PrivateRoute><Stats /></PrivateRoute>} />
         <Route path="/social" element={<PrivateRoute><Social /></PrivateRoute>} />
+        <Route path="/shared/:id" element={<PrivateRoute><SharedList /></PrivateRoute>} />
         <Route path="/user/:username" element={<UserProfile />} />
         <Route path="/movie/:id" element={<MovieDetail />} />
         <Route path="/search" element={<SearchResults />} />

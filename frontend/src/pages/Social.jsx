@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getFollowing, getFollowers, searchUsers, followUser, unfollowUser } from '../api/social';
+import { getSharedLists, createSharedList } from '../api/shared';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
 import { useSocialNotif } from '../context/SocialNotifContext';
@@ -64,12 +65,61 @@ function UserCard({ profile, onFollowToggle }) {
   );
 }
 
+function SharedListCard({ lst }) {
+  const { t } = useLang();
+  const { user } = useAuth();
+  const isOwner = user && lst.owner_id === user.id;
+
+  return (
+    <Link
+      to={`/shared/${lst.id}`}
+      className="block bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 hover:border-purple-400 dark:hover:border-purple-700 transition-colors"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-base">👥</span>
+            <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{lst.name}</p>
+            {isOwner && (
+              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold bg-purple-50 dark:bg-purple-900/20 px-1.5 py-0.5 rounded-full">
+                {t.social_owner_badge}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+            {lst.item_count} film · {lst.member_count} {t.social_members}
+          </p>
+        </div>
+        {/* Member avatars */}
+        <div className="flex -space-x-2 flex-shrink-0">
+          {lst.members.slice(0, 4).map(m => (
+            <div
+              key={m.user_id}
+              className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden border-2 border-white dark:border-gray-900"
+            >
+              {m.avatar_url
+                ? <img src={m.avatar_url} alt={m.username} className="w-full h-full object-cover" />
+                : m.username[0].toUpperCase()}
+            </div>
+          ))}
+          {lst.member_count > 4 && (
+            <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs text-gray-600 dark:text-gray-400 font-bold border-2 border-white dark:border-gray-900">
+              +{lst.member_count - 4}
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function Social() {
   const { t } = useLang();
   const { clearSocialNotif } = useSocialNotif();
   const [tab, setTab] = useState('following');
   const [following, setFollowing] = useState([]);
   const [followers, setFollowers] = useState([]);
+  const [sharedLists, setSharedLists] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -78,14 +128,20 @@ export default function Social() {
   const debounceRef = useRef(null);
   const searchWrapRef = useRef(null);
 
+  // New shared list modal
+  const [showNewShared, setShowNewShared] = useState(false);
+  const [newSharedName, setNewSharedName] = useState('');
+  const [creatingShared, setCreatingShared] = useState(false);
+
   useEffect(() => {
     clearSocialNotif();
     const load = async () => {
       setIsLoading(true);
       try {
-        const [f1, f2] = await Promise.all([getFollowing(), getFollowers()]);
+        const [f1, f2, sl] = await Promise.all([getFollowing(), getFollowers(), getSharedLists()]);
         setFollowing(f1);
         setFollowers(f2);
+        setSharedLists(sl);
       } catch {}
       setIsLoading(false);
     };
@@ -131,7 +187,27 @@ export default function Social() {
     }
   };
 
-  const list = tab === 'following' ? following : followers;
+  const handleCreateShared = async () => {
+    const name = newSharedName.trim();
+    if (!name) return;
+    setCreatingShared(true);
+    try {
+      const created = await createSharedList(name);
+      setSharedLists(prev => [created, ...prev]);
+      setNewSharedName('');
+      setShowNewShared(false);
+      setTab('shared');
+    } catch {}
+    setCreatingShared(false);
+  };
+
+  const tabs = [
+    { key: 'following', label: t.social_following, count: following.length },
+    { key: 'followers', label: t.social_followers, count: followers.length },
+    { key: 'shared',    label: t.social_shared_lists, count: sharedLists.length },
+  ];
+
+  const userList = tab === 'following' ? following : followers;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-10 px-4">
@@ -140,7 +216,6 @@ export default function Social() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t.social_title}</h1>
 
         {/* User search */}
-        {/* Kullanıcı arama — debounce dropdown */}
         <div ref={searchWrapRef} className="relative">
           <div className="relative">
             <input
@@ -168,28 +243,45 @@ export default function Social() {
 
         {/* Tabs */}
         <div className="flex gap-1 bg-gray-100 dark:bg-gray-800/60 rounded-xl p-1">
-          {['following', 'followers'].map(tabKey => (
+          {tabs.map(({ key, label, count }) => (
             <button
-              key={tabKey}
-              onClick={() => setTab(tabKey)}
+              key={key}
+              onClick={() => setTab(key)}
               className={`flex-1 text-sm py-2 rounded-lg font-medium transition-colors ${
-                tab === tabKey
+                tab === key
                   ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
-              {tabKey === 'following' ? t.social_following : t.social_followers}
-              <span className="ml-1.5 text-xs opacity-60">
-                {tabKey === 'following' ? following.length : followers.length}
-              </span>
+              {label}
+              <span className="ml-1.5 text-xs opacity-60">{count}</span>
             </button>
           ))}
         </div>
 
-        {/* List */}
+        {/* Content */}
         {isLoading ? (
           <div className="flex justify-center py-10"><LoadingSpinner /></div>
-        ) : list.length === 0 ? (
+        ) : tab === 'shared' ? (
+          <div className="space-y-3">
+            {/* New shared list button */}
+            <button
+              onClick={() => { setNewSharedName(''); setShowNewShared(true); }}
+              className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 hover:border-purple-400 dark:hover:border-purple-600 hover:text-purple-600 dark:hover:text-purple-400 transition-colors font-medium"
+            >
+              + {t.social_new_shared}
+            </button>
+            {sharedLists.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-4xl mb-3">👥</p>
+                <p className="text-gray-400 dark:text-gray-600 text-sm">{t.social_no_shared_lists}</p>
+                <p className="text-gray-400 dark:text-gray-600 text-xs mt-1">{t.social_no_shared_lists_sub}</p>
+              </div>
+            ) : (
+              sharedLists.map(lst => <SharedListCard key={lst.id} lst={lst} />)
+            )}
+          </div>
+        ) : userList.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-4xl mb-3">👥</p>
             <p className="text-gray-400 dark:text-gray-600 text-sm">
@@ -198,13 +290,47 @@ export default function Social() {
           </div>
         ) : (
           <div className="space-y-2">
-            {list.map(profile => (
+            {userList.map(profile => (
               <UserCard key={profile.id} profile={profile} onFollowToggle={handleFollowToggle} />
             ))}
           </div>
         )}
-
       </div>
+
+      {/* ── New Shared List Modal ── */}
+      {showNewShared && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNewShared(false)} />
+          <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{t.social_new_shared}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t.social_new_shared_subtitle}</p>
+            <input
+              value={newSharedName}
+              onChange={e => setNewSharedName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleCreateShared(); if (e.key === 'Escape') setShowNewShared(false); }}
+              placeholder={t.social_new_shared_placeholder}
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-purple-500 transition-colors"
+              autoFocus
+              maxLength={100}
+            />
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setShowNewShared(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleCreateShared}
+                disabled={creatingShared || !newSharedName.trim()}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-50"
+              >
+                {creatingShared ? '...' : t.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -557,7 +557,7 @@
 > Bir gorevi bitirince `[x]` isle, sonrakine gec.
 > Faz kontrolunu gecmeden bir sonraki faza gecme.
 
-**Son guncelleme:** 15, 29, 30, 31-A tamamlandı. Sıradaki: 31-B (Ortak İzleme Listesi) veya başka yeni özellik.
+**Son guncelleme:** 31-A ve 31-B tamamlandı (Sosyal sistem: takip, bildirim rozeti, ortak liste). Sıradaki: 32 (İstatistik grafikleri chart.js ile) veya yeni bir özellik.
 
 ---
 
@@ -910,68 +910,47 @@
 > **Ön koşul:** 31-A tamamlanmış olmalı.
 
 #### Veritabanı
-- [ ] Yeni tablolar: `shared_lists`, `shared_list_members`, `shared_list_items`
-  ```sql
-  CREATE TABLE shared_lists (
-      id        SERIAL PRIMARY KEY,
-      name      VARCHAR(100) NOT NULL DEFAULT 'Birlikte İzleyeceklerimiz',
-      owner_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-  );
-  CREATE TABLE shared_list_members (
-      list_id   INTEGER NOT NULL REFERENCES shared_lists(id) ON DELETE CASCADE,
-      user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      PRIMARY KEY (list_id, user_id)
-  );
-  CREATE TABLE shared_list_items (
-      id          SERIAL PRIMARY KEY,
-      list_id     INTEGER NOT NULL REFERENCES shared_lists(id) ON DELETE CASCADE,
-      tmdb_id     INTEGER NOT NULL,
-      media_type  VARCHAR(10) NOT NULL DEFAULT 'movie',
-      title       VARCHAR(255) NOT NULL,
-      poster_path VARCHAR(255),
-      added_by    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      added_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      CONSTRAINT unique_shared_item UNIQUE (list_id, tmdb_id, media_type)
-  );
-  ```
-- [ ] Alembic migration: `add_shared_lists_tables.py`
+- [x] Yeni tablolar: `shared_lists`, `shared_list_members`, `shared_list_items` oluşturuldu
+- [x] Alembic migration: `j0k1l2m3n4o5_add_shared_lists_tables.py` oluşturuldu ve uygulandı
 
 #### Backend
-- [ ] `app/models/shared_list.py` — SQLAlchemy modelleri (SharedList, SharedListMember, SharedListItem)
-- [ ] `app/schemas/social.py`'e `SharedListCreate`, `SharedListOut`, `SharedListItemAdd` eklendi
-- [ ] `app/routers/shared.py` — yeni router (`prefix="/shared"`)
-  - `POST /shared` (auth) — liste oluştur
-  - `POST /shared/{list_id}/invite/{user_id}` (auth, owner) — üye davet et
-  - `DELETE /shared/{list_id}/leave` (auth) — ayrıl (owner ise liste silinir)
+- [x] `app/models/shared_list.py` — SharedList, SharedListMember, SharedListItem ORM modelleri
+- [x] `app/schemas/shared.py` — SharedListCreate, SharedListItemAdd, SharedMemberOut, SharedListItemOut, SharedListOut, SharedListSummary şemaları
+- [x] `app/routers/shared.py` — yeni router (`prefix="/shared"`)
+  - `POST /shared` (auth) — liste oluştur (owner otomatik üye)
   - `GET /shared` (auth) — katıldığım ortak listeler
   - `GET /shared/{list_id}` (auth, üyeler) — liste detayı + filmler
+  - `POST /shared/{list_id}/invite/{user_id}` (auth, owner) — üye davet et
+  - `DELETE /shared/{list_id}/leave` (auth) — ayrıl (owner ise liste silinir)
   - `POST /shared/{list_id}/items` (auth, üyeler) — film ekle
-  - `DELETE /shared/{list_id}/items/{item_id}` (auth, üyeler) — film sil
-- [ ] `app/main.py`'e `shared` router eklendi
+  - `DELETE /shared/{list_id}/items/{item_id}` (auth, üye/owner/ekleyen) — film sil
+- [x] `app/main.py`'e `shared` router eklendi
 
 #### Frontend
-- [ ] `src/api/shared.js` — `createSharedList`, `inviteToList`, `leaveList`, `getSharedLists`, `getSharedListDetail`, `addSharedItem`, `removeSharedItem`
-- [ ] `src/pages/Social.jsx`'e "Ortak Listelerim" sekmesi eklendi
-  - Liste kartları (isim, üye avatarları, film sayısı)
-  - "Yeni Ortak Liste" butonu → modal (isim + kullanıcı adı ile davet)
-- [ ] `src/pages/SharedList.jsx` — `/shared/:id` (PrivateRoute)
-  - Üye avatarları satırı
-  - Film grid'i — her filmde "Ekleyen: @kullanıcı" etiketi
-  - "Film Ekle" arama modalı
-  - "Listeden Ayrıl" butonu
-- [ ] `src/App.jsx` — `/shared/:id` route eklendi
-- [ ] `src/i18n/tr.js` ve `src/i18n/en.js`:
+- [x] `src/api/shared.js` — `createSharedList`, `inviteToList`, `leaveList`, `getSharedLists`, `getSharedListDetail`, `addSharedItem`, `removeSharedItem`
+- [x] `src/pages/Social.jsx` — "Ortak Listeler" sekmesi eklendi (3. sekme)
+  - SharedListCard bileşeni: isim, üye avatarları (-space-x-2), film sayısı, sahip rozeti
+  - "Yeni Ortak Liste" dashed button → modal
+  - Oluşturulan liste otomatik "Ortak Listeler" sekmesine geçirir
+- [x] `src/pages/SharedList.jsx` — `/shared/:id` (PrivateRoute)
+  - Header: liste adı, owner bilgisi, film sayısı
+  - Üye satırı: avatar + username linkleri, owner 👑 ikonu
+  - Film grid (2 kolon): poster, başlık, "Ekleyen: @kullanıcı" linki, kaldır butonu
+  - "Film Ekle" modalı: debounce TMDB arama → tıklayınca ekle
+  - "Davet Et" modalı (sadece owner): debounce kullanıcı arama, zaten üye olanlar filtrelenir
+  - "Listeden Ayrıl" modalı: owner için ek uyarı (liste silinir)
+- [x] `src/App.jsx` — `/shared/:id` route eklendi (PrivateRoute)
+- [x] `src/i18n/tr.js` ve `src/i18n/en.js`:
   - `social_shared_lists`, `social_new_shared`, `social_invite`, `social_leave`, `social_added_by`
+  - `social_add_film`, `social_shared_empty`, `social_members`, `social_owner_badge` vb.
 
 #### Kontrol Listesi
-- [ ] Ortak liste oluşturulup üye davet edilebiliyor
-- [ ] Davet edilen üye film ekleyip silebiliyor
-- [ ] Owner listeden ayrılınca liste tamamen siliniyor
-- [ ] Üye olmayan biri `/shared/:id`'ye girince 403 alıyor
-- [ ] Her filmde "Ekleyen: @kullanıcı" etiketi doğru
-- [ ] Koyu/açık mod + TR/EN uyumlu
+- [x] Ortak liste oluşturulup üye davet edilebiliyor
+- [x] Davet edilen üye film ekleyip silebiliyor
+- [x] Owner listeden ayrılınca liste tamamen siliniyor
+- [x] Üye olmayan biri `/shared/:id`'ye girince 403 alıyor
+- [x] Her filmde "Ekleyen: @kullanıcı" etiketi doğru
+- [x] Koyu/açık mod + TR/EN uyumlu
 
 ---
 
