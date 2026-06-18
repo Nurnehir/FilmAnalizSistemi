@@ -8,7 +8,9 @@
       "Bash(node -e \"require\\('./node_modules/recharts'\\)\")",
       "Bash(npx vite *)",
       "Bash(sed -n '35,55p' /Users/nurnehirarca/GitHub/FilmAnalizSistemi/frontend/src/pages/Login.jsx)",
-      "Bash(sed -n '35,55p' /Users/nurnehirarca/GitHub/FilmAnalizSistemi/frontend/src/pages/Register.jsx)"
+      "Bash(sed -n '35,55p' /Users/nurnehirarca/GitHub/FilmAnalizSistemi/frontend/src/pages/Register.jsx)",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(data[0]['text']\\)\")",
+      "Bash(awk -F/ '{depth=NF-1; indent=\"\"; for\\(i=0;i<depth;i++\\) indent=indent\"│   \"; if\\(depth>0\\) printf \"%s├── %s\\\\n\", indent, $NF; else print $NF}')"
     ]
   }
 }
